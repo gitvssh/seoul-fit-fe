@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: seoul-fit-dev
+resources:
+  - ../../base
+  # The backend overlay owns the shared Namespace object, avoiding two Argo CD
+  # Applications tracking the same cluster-scoped resource.
+  # Domain is undecided. Enable only after replacing PLACEHOLDER-DEV-HOST.
+  # - ingressroute.yaml
+images:
+  - name: registry.damecasol.com/seoul-fit/frontend
+    newName: registry.damecasol.com/seoul-fit/frontend
+    digest: sha256:PLACEHOLDER
+patches:
+  - target:
+      kind: Deployment
+      name: seoul-fit-fe
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: BACKEND_INTERNAL_URL
+            value: http://seoul-fit-backend.seoul-fit-dev.svc.cluster.local:8080
+  - target:
+      kind: VaultAuth
+      name: seoul-fit-fe
+    patch: |-
+      - op: replace
+        path: /spec/kubernetes/role
+        value: seoul-fit-dev
+  - target:
+      kind: VaultStaticSecret
+      name: seoul-fit-fe-env
+    patch: |-
+      - op: replace
+        path: /spec/path
+        value: projects/seoul-fit/fe-dev
