@@ -4,13 +4,10 @@
  */
 
 import axios from 'axios';
-import { env } from '@/config/environment';
+import { getBackendInternalUrl } from '@/config/environment';
 import { loadAllParks } from '@/lib/seoulApi';
 import { Park, ParkSearchParams, ParkApiResponse } from '../model/types';
 import { convertParks, paginateParks } from '../lib/converter';
-
-const BACKEND_BASE_URL = env.backendBaseUrl;
-const BACKEND_URL = env.backendBaseUrl;
 
 /**
  * 백엔드에서 전체 공원 데이터 조회
@@ -21,7 +18,7 @@ async function fetchParksFromBackend(
 ): Promise<Park[] | null> {
   try {
     const response = await axios.get<ParkApiResponse>(
-      `${BACKEND_BASE_URL}/api/parks/all`,
+      `${getBackendInternalUrl()}/api/parks/all`,
       {
         params: { page, size },
         timeout: 5000, // 타임아웃 5초
@@ -115,7 +112,7 @@ export async function fetchNearbyParks(
 ): Promise<Park[]> {
   try {
     const response = await fetch(
-      `${BACKEND_URL}/api/parks/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`
+      `${getBackendInternalUrl()}/api/parks/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`
     );
 
     if (!response.ok) {

@@ -1,6 +1,6 @@
 // hooks/useCurrentLocationMarker.ts
 import { useEffect, useRef, useCallback } from 'react';
-import type { KakaoMap, KakaoMarker, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, KakaoMarker, WindowWithKakao } from '@/shared/lib/kakao';
 
 // 디바운싱 유틸리티
 const debounce = <T extends (...args: never[]) => unknown>(

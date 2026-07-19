@@ -3,7 +3,7 @@ import { TouristRestaurant, RestaurantDataStatistics } from '@/lib/types';
 import { env } from '@/config/environment';
 import type { Facility, RestaurantInfo } from '@/entities/facility/model/types';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 /**
  * 최신 음식점 정보 조회

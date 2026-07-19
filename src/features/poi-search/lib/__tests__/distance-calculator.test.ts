@@ -38,9 +38,9 @@ describe('Distance Calculator', () => {
 
   describe('addDistanceToPOIs', () => {
     const pois: Location[] = [
-      { name: 'POI 1', lat: 37.5665, lng: 126.9780 },
-      { name: 'POI 2', lat: 37.5700, lng: 126.9800 },
-      { name: 'POI 3', lat: 37.5600, lng: 126.9700 }
+      { code: 'poi-1', name: 'POI 1', lat: 37.5665, lng: 126.9780 },
+      { code: 'poi-2', name: 'POI 2', lat: 37.5700, lng: 126.9800 },
+      { code: 'poi-3', name: 'POI 3', lat: 37.5600, lng: 126.9700 }
     ]
 
     it('adds distance to all POIs', () => {
@@ -72,9 +72,9 @@ describe('Distance Calculator', () => {
 
   describe('sortPOIsByDistance', () => {
     const poisWithDistance: POIWithDistance[] = [
-      { name: 'Far', lat: 37.5700, lng: 126.9850, distance: 1000 },
-      { name: 'Near', lat: 37.5665, lng: 126.9780, distance: 100 },
-      { name: 'Medium', lat: 37.5680, lng: 126.9800, distance: 500 }
+      { code: 'far', name: 'Far', lat: 37.5700, lng: 126.9850, distance: 1000 },
+      { code: 'near', name: 'Near', lat: 37.5665, lng: 126.9780, distance: 100 },
+      { code: 'medium', name: 'Medium', lat: 37.5680, lng: 126.9800, distance: 500 }
     ]
 
     it('sorts POIs by distance in ascending order', () => {
@@ -106,9 +106,9 @@ describe('Distance Calculator', () => {
 
   describe('filterPOIsByRadius', () => {
     const poisWithDistance: POIWithDistance[] = [
-      { name: 'Within 500m', lat: 37.5665, lng: 126.9780, distance: 300 },
-      { name: 'Exactly 500m', lat: 37.5670, lng: 126.9785, distance: 500 },
-      { name: 'Outside 500m', lat: 37.5700, lng: 126.9850, distance: 800 }
+      { code: 'within', name: 'Within 500m', lat: 37.5665, lng: 126.9780, distance: 300 },
+      { code: 'exact', name: 'Exactly 500m', lat: 37.5670, lng: 126.9785, distance: 500 },
+      { code: 'outside', name: 'Outside 500m', lat: 37.5700, lng: 126.9850, distance: 800 }
     ]
 
     it('filters POIs within specified radius', () => {

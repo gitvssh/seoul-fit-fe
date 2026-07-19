@@ -16,7 +16,7 @@ const consoleSpy = {
 }
 
 describe('Notifications API', () => {
-  const mockBaseUrl = 'http://localhost:8080'
+  const mockBaseUrl = 'http://127.0.0.1:8080'
   const mockAccessToken = 'test-access-token'
   const mockUserId = 123
   
@@ -32,13 +32,12 @@ describe('Notifications API', () => {
   const mockNotification: Notification = {
     id: 1,
     userId: mockUserId,
-    type: 'INFO',
+    type: 'info',
     title: '테스트 알림',
     message: '테스트 메시지입니다',
-    status: 'UNREAD',
+    read: false,
+    status: 'SENT',
     createdAt: '2024-01-20T10:00:00Z',
-    readAt: null,
-    data: {}
   }
 
   describe('getNotifications', () => {

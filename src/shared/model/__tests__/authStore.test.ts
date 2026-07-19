@@ -3,8 +3,10 @@ import Cookies from 'js-cookie'
 
 // Mock dependencies
 jest.mock('js-cookie')
-jest.mock('@/shared/config/env', () => ({
-  createApiEndpoint: (path: string) => `http://localhost:8080${path}`
+jest.mock('@/config/environment', () => ({
+  env: {
+    createPublicBackendEndpoint: (path: string) => `http://127.0.0.1:8080${path}`
+  }
 }))
 
 // Mock fetch
@@ -39,7 +41,7 @@ describe('AuthStore', () => {
     status: 'active',
     oauthProvider: 'kakao',
     oauthUserId: 'kakao123',
-    profileImageUrl: 'https://example.com/profile.jpg',
+    profileImageUrl: 'https://images.test.invalid/profile.jpg',
     interests: [
       { id: 1, interestCategory: '체육시설' },
       { id: 2, interestCategory: '문화시설' }
@@ -172,7 +174,7 @@ describe('AuthStore', () => {
 
     it('validates token with API when user exists', async () => {
       // Setup initial state with user
-      useAuthStore.getState().setAuth(mockUser, 'valid-token')
+      useAuthStore.getState().setAuth(mockUser, 'valid-token');
       
       (Cookies.get as jest.Mock).mockReturnValue('valid-token')
       ;(fetch as jest.Mock).mockResolvedValue({
@@ -195,7 +197,7 @@ describe('AuthStore', () => {
     })
 
     it('refreshes token when access token is expired', async () => {
-      useAuthStore.getState().setAuth(mockUser, 'expired-token', 'refresh-token')
+      useAuthStore.getState().setAuth(mockUser, 'expired-token', 'refresh-token');
       
       (Cookies.get as jest.Mock)
         .mockReturnValueOnce('expired-token') // access_token
@@ -231,7 +233,7 @@ describe('AuthStore', () => {
     })
 
     it('clears auth when refresh fails', async () => {
-      useAuthStore.getState().setAuth(mockUser, 'expired-token')
+      useAuthStore.getState().setAuth(mockUser, 'expired-token');
       
       (Cookies.get as jest.Mock)
         .mockReturnValueOnce('expired-token')
@@ -250,7 +252,7 @@ describe('AuthStore', () => {
     })
 
     it('handles network errors gracefully', async () => {
-      useAuthStore.getState().setAuth(mockUser, 'token')
+      useAuthStore.getState().setAuth(mockUser, 'token');
       
       (Cookies.get as jest.Mock).mockReturnValue('token')
       ;(fetch as jest.Mock).mockRejectedValue(new Error('Network error'))

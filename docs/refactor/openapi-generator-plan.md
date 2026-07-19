@@ -171,8 +171,8 @@ info:
   description: 서울시 공공시설 정보 API
 
 servers:
-  - url: https://api.seoul-fit.com
-    description: Production
+  - url: http://backend:8080
+    description: Cluster-internal backend
   - url: http://localhost:3000
     description: Development
 

@@ -12,7 +12,7 @@ import type {
 } from '../model/types';
 import type { SubwayStationRow } from '@/lib/seoulApi';
 import { serverCache } from '@/lib/serverCache';
-import { dataScheduler } from '@/lib/scheduler';
+import { dataScheduler } from '@/shared/lib/scheduler';
 import {
   formatArrivalMessage,
   formatTime,

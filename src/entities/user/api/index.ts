@@ -2,7 +2,7 @@
 import { env } from '@/config/environment';
 import { UserResult, UserInterests } from '@/lib/types';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 export interface UpdateUserRequest {
   nickname?: string;

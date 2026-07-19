@@ -17,6 +17,7 @@ const customJestConfig = {
     '^@widgets/(.*)$': '<rootDir>/src/widgets/$1',
   },
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  modulePathIgnorePatterns: ['<rootDir>/.next/'],
   moduleDirectories: ['node_modules', '<rootDir>/'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',

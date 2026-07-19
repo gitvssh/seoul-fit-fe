@@ -16,14 +16,14 @@ import {
 global.fetch = jest.fn()
 
 describe('Auth API', () => {
-  const mockBaseUrl = 'http://localhost:8080'
+  const mockBaseUrl = 'http://127.0.0.1:8080'
   
   beforeEach(() => {
     jest.clearAllMocks()
     // Mock environment
     jest.mock('@/config/environment', () => ({
       env: {
-        backendBaseUrl: mockBaseUrl
+        publicBackendUrl: mockBaseUrl
       }
     }))
   })
@@ -162,8 +162,8 @@ describe('Auth API', () => {
         oauthUserId: 'kakao123',
         nickname: 'Test User',
         email: 'test@example.com',
-        profileImageUrl: 'https://example.com/profile.jpg',
-        interests: [{ id: 1, interestCategory: '체육시설' }]
+        profileImageUrl: 'https://images.test.invalid/profile.jpg',
+        interests: [{ id: 1, interestCategory: 'sports' }]
       }
       
       const mockResponse = {
@@ -320,7 +320,7 @@ describe('Auth API', () => {
       await getOAuthUrl('google', 'http://localhost:3000/auth/callback', 'profile email', 'random-state')
       
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('scope=profile%20email'),
+        expect.stringContaining('scope=profile+email'),
         expect.any(Object)
       )
       expect(fetch).toHaveBeenCalledWith(

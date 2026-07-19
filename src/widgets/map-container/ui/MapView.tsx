@@ -28,7 +28,7 @@ import type {
   FacilityCategory,
   ClusteredFacility,
 } from '@/lib/types';
-import type { KakaoMap, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
 
 // Provider 기반으로 단순화된 Props
 interface MapViewProps {

@@ -24,7 +24,9 @@ _버전: 1.0.0_
 
 ```typescript
 // API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+import { env } from '@/config/environment';
+
+const API_BASE_URL = env.publicBackendUrl;
 
 // 공통 헤더
 const defaultHeaders = {

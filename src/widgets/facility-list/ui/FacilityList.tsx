@@ -9,7 +9,7 @@ import { ScrollArea } from '@/shared/ui/scroll-area';
 import { X, Star, Navigation, Clock, MapPin, Bookmark, ExternalLink } from 'lucide-react';
 
 import type { Facility } from '@/lib/types';
-import { FACILITY_CONFIGS } from '@/lib/facilityIcons';
+import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 
 interface FacilityListProps {
   facilities: Facility[];

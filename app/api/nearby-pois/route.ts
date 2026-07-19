@@ -4,9 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/config/environment';
-
-const BACKEND_URL = env.backendBaseUrl;
+import { getBackendInternalUrl } from '@/config/environment';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,6 +24,7 @@ export async function GET(request: NextRequest) {
     const lat = parseFloat(latParam);
     const lng = parseFloat(lngParam);
     const radius = radiusParam ? parseFloat(radiusParam) : 1.5; // km 단위
+    const backendUrl = getBackendInternalUrl();
 
     // 좌표 유효성 검증
     if (isNaN(lat) || isNaN(lng)) {
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
     // 첫 페이지만 가져오기 (성능을 위해)
     while (hasMore && page < 5) { // 최대 5페이지(5000개)만 조회
       const backendResponse = await fetch(
-        `${BACKEND_URL}/api/search/index?page=${page}&size=${pageSize}`,
+        `${backendUrl}/api/search/index?page=${page}&size=${pageSize}`,
         {
           method: 'GET',
           headers: {

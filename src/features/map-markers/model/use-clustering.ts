@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Facility, ClusteredFacility, FacilityCategory } from '@/lib/types';
-import { getFacilityIcon } from '@/lib/facilityIcons';
+import { getFacilityIcon } from '@/shared/lib/icons/facility';
 
 interface MarkerData {
   id: string;

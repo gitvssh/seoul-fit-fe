@@ -26,7 +26,7 @@ describe('useAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     
-    ;(useAuthStore as jest.Mock).mockReturnValue({
+    ;(useAuthStore as unknown as jest.Mock).mockReturnValue({
       setAuth: mockSetAuth,
       clearAuth: mockClearAuth,
       accessToken: 'test-token',
@@ -231,8 +231,8 @@ describe('useAuth', () => {
           'kakao123',
           'Test User',
           'test@example.com',
-          [{ id: 1, interestCategory: '체육시설' }],
-          'https://example.com/profile.jpg'
+          [{ id: 1, interestCategory: 'sports' }],
+          'https://images.test.invalid/profile.jpg'
         )
       })
       
@@ -241,8 +241,8 @@ describe('useAuth', () => {
         oauthUserId: 'kakao123',
         nickname: 'Test User',
         email: 'test@example.com',
-        interests: [{ id: 1, interestCategory: '체육시설' }],
-        profileImageUrl: 'https://example.com/profile.jpg'
+        interests: [{ id: 1, interestCategory: 'sports' }],
+        profileImageUrl: 'https://images.test.invalid/profile.jpg'
       })
       expect(mockSetAuth).toHaveBeenCalled()
       expect(mockHandleLoginSuccess).toHaveBeenCalled()
@@ -291,7 +291,7 @@ describe('useAuth', () => {
     })
 
     it('throws error when no refresh token available', async () => {
-      ;(useAuthStore as jest.Mock).mockReturnValue({
+      ;(useAuthStore as unknown as jest.Mock).mockReturnValue({
         setAuth: mockSetAuth,
         clearAuth: mockClearAuth,
         accessToken: 'test-token',
@@ -342,7 +342,7 @@ describe('useAuth', () => {
     })
 
     it('clears auth when no access token', async () => {
-      ;(useAuthStore as jest.Mock).mockReturnValue({
+      ;(useAuthStore as unknown as jest.Mock).mockReturnValue({
         setAuth: mockSetAuth,
         clearAuth: mockClearAuth,
         accessToken: null,

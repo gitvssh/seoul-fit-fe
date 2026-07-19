@@ -22,7 +22,7 @@ export interface UserInterestResponse {
 
 export const getUserInterests = async (userId: number): Promise<UserInterestResponse> => {
   try {
-    const response = await fetch(`${env.backendBaseUrl}/api/users/interests`, {
+    const response = await fetch(`${env.publicBackendUrl}/api/users/interests`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export const getUserInterests = async (userId: number): Promise<UserInterestResp
 };
 
 export const updateUserInterests = async (userId: number, interests: string[]): Promise<void> => {
-  const response = await fetch(`${env.backendBaseUrl}/api/users/interests`, {
+  const response = await fetch(`${env.publicBackendUrl}/api/users/interests`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

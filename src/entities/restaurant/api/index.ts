@@ -4,9 +4,7 @@
  */
 
 import type { Restaurant, RestaurantRaw } from '../model/types';
-import { getBackendUrl } from '@/shared/config/env';
-
-const BACKEND_URL = getBackendUrl();
+import { getBackendInternalUrl } from '@/config/environment';
 
 /**
  * 백엔드 원본 데이터를 프론트엔드 형식으로 변환
@@ -65,7 +63,7 @@ export const calculateDistance = (
  */
 export const fetchAllRestaurants = async (): Promise<Restaurant[]> => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/restaurants/all`, {
+    const response = await fetch(`${getBackendInternalUrl()}/api/v1/restaurants/all`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -94,7 +92,7 @@ export const fetchNearbyRestaurants = async (
 ): Promise<Restaurant[]> => {
   try {
     const response = await fetch(
-      `${BACKEND_URL}/api/v1/restaurants/nearby?latitude=${lat}&longitude=${lng}`,
+      `${getBackendInternalUrl()}/api/v1/restaurants/nearby?latitude=${lat}&longitude=${lng}`,
       {
         method: 'GET',
         headers: {

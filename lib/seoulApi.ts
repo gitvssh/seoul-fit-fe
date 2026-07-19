@@ -1,7 +1,9 @@
 // lib/seoulApi.ts - 서울 API 직접 호출 서비스
 
 const API_KEY = process.env.SEOUL_API_KEY || '';
-const BASE_URL = process.env.SEOUL_API_BASE_URL || 'http://openapi.seoul.go.kr:8088';
+import { env } from '@/config/environment';
+
+const BASE_URL = env.seoulApiBaseUrl;
 
 // 지하철 역 정보 타입
 export interface SubwayStationRow {

@@ -1,6 +1,6 @@
 // hooks/useKakaoMap.ts
 import { useState, useEffect, useCallback } from 'react';
-import type { KakaoMap, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
 import { KAKAO_MAP_API_KEY } from '@/config/kakao';
 
 interface MapPosition {

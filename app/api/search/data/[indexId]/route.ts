@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBackendUrl } from '@/shared/config/env';
-
-const BACKEND_BASE_URL = getBackendUrl();
+import { getBackendInternalUrl } from '@/config/environment';
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: 'indexId가 필요합니다.' }, { status: 400 });
     }
 
-    const response = await fetch(`${BACKEND_BASE_URL}/api/search/data/${indexId}`, {
+    const response = await fetch(`${getBackendInternalUrl()}/api/search/data/${indexId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

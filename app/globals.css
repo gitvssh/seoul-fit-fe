@@ -5,6 +5,8 @@
 @tailwind utilities;
 
 :root {
+  --font-geist-sans: Arial, Helvetica, sans-serif;
+  --font-geist-mono: 'Courier New', monospace;
   --radius: 0.625rem;
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

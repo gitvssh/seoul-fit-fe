@@ -2,7 +2,7 @@
 import { CulturalSpace, CulturalEvent, CulturalReservation } from '@/lib/types';
 import { env } from '@/config/environment';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 // ===== Cultural Spaces =====
 

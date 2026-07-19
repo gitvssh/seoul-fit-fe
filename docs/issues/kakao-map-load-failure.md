@@ -68,7 +68,7 @@ NEXT_PUBLIC_KAKAO_MAP_API_KEY=8bb6267aba6b69af4605b7fd2dd75c96
 - http://localhost:3000
 - http://127.0.0.1:3000
 - http://localhost:*
-- https://seoul-fit.vercel.app (Vercel 배포 시)
+- 실제 배포 도메인 (환경별 등록)
 ```
 
 #### 3. 카카오맵 API 활성화 확인

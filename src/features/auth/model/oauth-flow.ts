@@ -16,7 +16,7 @@ import type {
   AuthResponse 
 } from './types';
 
-const BACKEND_URL = env.backendBaseUrl;
+const BACKEND_URL = env.publicBackendUrl;
 const KAKAO_CLIENT_ID = env.kakaoClientId;
 const REDIRECT_URI = env.kakaoRedirectUri;
 
@@ -181,7 +181,7 @@ export const useOAuthCallback = () => {
           oauthUserId: userInfo.oauthUserId,
           nickname: userInfo.nickname || `tester_${userInfo.oauthUserId}`,
           email: userInfo.email || `${userInfo.oauthUserId}@test.com`,
-          profileImageUrl: userInfo.profileImageUrl || 'https://example.com/profile.jpg',
+          profileImageUrl: userInfo.profileImageUrl || '',
           interests,
         }),
       });

@@ -3,10 +3,8 @@
  * @description 무더위 쉼터 관련 비즈니스 로직 및 API 호출
  */
 
-import { env } from '@/config/environment';
+import { getBackendInternalUrl } from '@/config/environment';
 import { CoolingShelter, CoolingShelterSearchParams } from '../model/types';
-
-const BACKEND_URL = env.backendBaseUrl;
 
 /**
  * 위치 기반 무더위 쉼터 조회
@@ -16,9 +14,10 @@ export async function fetchNearbyCoolingShelters(
 ): Promise<CoolingShelter[]> {
   try {
     const { lat, lng, radius = 1 } = params;
+    const backendUrl = getBackendInternalUrl();
     
     const response = await fetch(
-      `${BACKEND_URL}/api/v1/cooling-shelters/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
+      `${backendUrl}/api/v1/cooling-shelters/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
       {
         method: 'GET',
         headers: {

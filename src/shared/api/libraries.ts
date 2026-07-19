@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { Library } from '@/lib/types';
 
-const API_BASE_URL = '/api/v1/libraries';
+const API_BASE_URL = '/api/libraries';
 
 // API 응답 타입 정의
 interface ApiResponse<T> {
@@ -43,8 +43,8 @@ export async function fetchNearbyLibraries(
   radius: number = 2
 ): Promise<Library[]> {
   try {
-    const response = await axios.get<ApiResponse<Library>>(`${API_BASE_URL}/nearby`, {
-      params: { latitude, longitude, radius },
+    const response = await axios.get<ApiResponse<Library>>(API_BASE_URL, {
+      params: { lat: latitude, lng: longitude, radius },
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -63,8 +63,8 @@ export async function fetchAllLibraries(
   size: number = 100
 ): Promise<LibrariesResponse> {
   try {
-    const response = await axios.get<Library[]>(`${API_BASE_URL}/all`, {
-      params: { page, size },
+    const response = await axios.get<Library[]>(API_BASE_URL, {
+      params: { all: true, page, size },
       timeout: 15000,
       headers: {
         'Content-Type': 'application/json',

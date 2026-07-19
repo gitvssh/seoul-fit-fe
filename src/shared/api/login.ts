@@ -19,7 +19,7 @@ export const kakaoLogout = async () => {
   }
 
   try {
-    const BACKEND_URL = env.backendBaseUrl;
+    const BACKEND_URL = env.publicBackendUrl;
     const response = await fetch(`${BACKEND_URL}/api/auth/oauth/logout`, {
       method: 'POST',
       headers: {

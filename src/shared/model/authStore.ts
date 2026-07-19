@@ -1,7 +1,7 @@
 import { create } from 'zustand'; // React용 경량 상태 관리 라이브러리
 import { persist } from 'zustand/middleware'; // Zustand 미들웨어 기능 (persist : 데이터 영속성 제공)
 import Cookies from 'js-cookie'; // 브라우저 쿠키 조작 라이브러리
-import { createApiEndpoint } from '@/shared/config/env';
+import { env } from '@/config/environment';
 
 // User 정보
 interface User {
@@ -84,10 +84,11 @@ export const useAuthStore = create<AuthToken>()(
       // User 상태 확인
       checkAuthStatus: async () => {
         set({ isLoading: true });
-        const accessToken = Cookies.get('access_token') || localStorage.getItem('access_token');
+        const cookieAccessToken = Cookies.get('access_token');
+        const accessToken = cookieAccessToken || localStorage.getItem('access_token');
 
         // localStorage에서 복원했다면 쿠키에도 다시 저장
-        if (accessToken && !Cookies.get('access_token')) {
+        if (accessToken && !cookieAccessToken) {
           Cookies.set('access_token', accessToken, {
             expires: 30,
             secure: false,
@@ -109,7 +110,7 @@ export const useAuthStore = create<AuthToken>()(
           try {
             // OAuth 정보로 사용자 정보 조회
             const response = await fetch(
-              createApiEndpoint(`/api/users/me?oauthUserId=${currentState.user.oauthUserId}&oauthProvider=${currentState.user.oauthProvider}`),
+              env.createPublicBackendEndpoint(`/api/users/me?oauthUserId=${currentState.user.oauthUserId}&oauthProvider=${currentState.user.oauthProvider}`),
               {
                 method: 'GET',
                 headers: {
@@ -157,7 +158,7 @@ export const useAuthStore = create<AuthToken>()(
               const refreshToken = Cookies.get('refresh_token');
 
               if (refreshToken) {
-                const refreshResponse = await fetch(createApiEndpoint('/api/auth/refresh'), {
+                const refreshResponse = await fetch(env.createPublicBackendEndpoint('/api/auth/refresh'), {
                   method: 'POST',
                   headers: {
                     'Refresh-Token': refreshToken,

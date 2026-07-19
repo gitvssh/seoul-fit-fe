@@ -1,9 +1,9 @@
 // hooks/useMapMarkers.ts - Improved version with clustering
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-import type { KakaoMap, KakaoCustomOverlay, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, KakaoCustomOverlay, WindowWithKakao } from '@/shared/lib/kakao';
 import { createCustomMarkerContent } from '@/shared/lib/utils/marker';
 import type { Facility, FacilityCategory, ClusteredFacility } from '@/lib/types';
-import { FACILITY_CONFIGS, getFacilityIcon } from '@/lib/facilityIcons';
+import { FACILITY_CONFIGS, getFacilityIcon } from '@/shared/lib/icons/facility';
 
 // 개선된 디바운싱 유틸리티
 const debounce = <T extends (...args: any[]) => any>(

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { env } from '@/config/environment';
 
 export default function AuthError() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function AuthError() {
 
           <button
             onClick={() =>
-              (window.location.href = 'http://localhost:8080/oauth2/authorization/kakao')
+              (window.location.href = `${env.publicBackendUrl}/oauth2/authorization/kakao`)
             }
             className='w-full px-6 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors'
           >

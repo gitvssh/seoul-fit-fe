@@ -1,6 +1,6 @@
 // utils/marker.ts
 import type { FacilityCategory, Facility } from '@/lib/types';
-import { getFacilityIcon } from '@/lib/facilityIcons';
+import { getFacilityIcon } from '@/shared/lib/icons/facility';
 
 /**
  * POI 마커 HTML 콘텐츠 생성

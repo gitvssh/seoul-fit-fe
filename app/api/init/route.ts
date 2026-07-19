@@ -1,7 +1,7 @@
 // app/api/init/route.ts - 서버 초기화 API
 
 import { NextResponse } from 'next/server';
-import { dataScheduler } from '@/lib/scheduler';
+import { dataScheduler } from '@/shared/lib/scheduler';
 
 /**
  * GET 서버 초기화 및 스케줄러 시작

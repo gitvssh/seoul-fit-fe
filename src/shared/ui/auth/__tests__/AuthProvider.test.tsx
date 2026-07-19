@@ -11,7 +11,7 @@ describe('AuthProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     
-    ;(useAuthStore as jest.Mock).mockReturnValue({
+    ;(useAuthStore as unknown as jest.Mock).mockReturnValue({
       checkAuthStatus: mockCheckAuthStatus
     })
   })
@@ -82,7 +82,7 @@ describe('AuthProvider', () => {
     
     // Mock auth store change
     const newMockCheckAuthStatus = jest.fn()
-    ;(useAuthStore as jest.Mock).mockReturnValue({
+    ;(useAuthStore as unknown as jest.Mock).mockReturnValue({
       checkAuthStatus: newMockCheckAuthStatus
     })
     

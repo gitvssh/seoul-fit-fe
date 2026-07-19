@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { KakaoMap, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
 
 export type ZoomRange = 'far' | 'medium' | 'close';
 

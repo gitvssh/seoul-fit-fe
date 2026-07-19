@@ -15,7 +15,7 @@ export async function getNearbyRestaurants(lat: number, lng: number): Promise<Re
     }
 
     // Next.js API Route 호출
-    const apiUrl = `/api/v1/restaurants?lat=${lat}&lng=${lng}`;
+    const apiUrl = `/api/restaurants?lat=${lat}&lng=${lng}`;
 
     const response = await fetch(apiUrl, {
       method: 'GET',

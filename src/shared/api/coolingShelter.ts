@@ -1,7 +1,7 @@
 import { CoolingCenter, Facility, FACILITY_CATEGORIES } from '@/lib/types';
 import { env } from '@/config/environment';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 export interface CoolingShelterResponse {
   status: 'success' | 'fail';
@@ -45,7 +45,7 @@ export async function getNearbyCoolingShelters(
   longitude: number
 ): Promise<CoolingCenter[]> {
   try {
-    const response = await fetch(`/api/v1/cooling-shelters?lat=${latitude}&lng=${longitude}`, {
+    const response = await fetch(`/api/cooling-shelter?lat=${latitude}&lng=${longitude}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

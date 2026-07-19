@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { FACILITY_CONFIGS } from '@/lib/facilityIcons';
+import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 import type { UserInfo } from '../model/types';
 
 interface SignupFormProps {

@@ -2,7 +2,7 @@
 import { Notification, NotificationPage } from '@/lib/types';
 import { env } from '@/config/environment';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 /**
  * 알림 목록 조회
@@ -82,7 +82,7 @@ export async function getNotificationHistory(
     notifications: result.content || [],
     content: result.content || [],
     totalCount: result.totalElements || 0,
-    hasMore: !result.last,
+    hasMore: result.last === false,
   };
 }
 

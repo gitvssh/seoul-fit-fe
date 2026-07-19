@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const BACKEND_URL = 'http://localhost:8080';
+import { getBackendInternalUrl } from '@/config/environment';
 
 /**
  * GET 레스토랑 API 프록시
@@ -15,12 +14,13 @@ export async function GET(request: NextRequest) {
     const latParam = searchParams.get('lat');
     const lngParam = searchParams.get('lng');
     const all = searchParams.get('all');
+    const backendUrlBase = getBackendInternalUrl();
 
     // 백엔드 URL 결정
     let backendUrl: string;
     
     if (all === 'true') {
-      backendUrl = `${BACKEND_URL}/api/v1/restaurants/all`;
+      backendUrl = `${backendUrlBase}/api/v1/restaurants/all`;
     } else if (latParam && lngParam) {
       const lat = parseFloat(latParam);
       const lng = parseFloat(lngParam);
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         );
       }
       
-      backendUrl = `${BACKEND_URL}/api/v1/restaurants/nearby?latitude=${lat}&longitude=${lng}`;
+      backendUrl = `${backendUrlBase}/api/v1/restaurants/nearby?latitude=${lat}&longitude=${lng}`;
     } else {
       return NextResponse.json(
         { error: '위도(lat)와 경도(lng) 파라미터 또는 all=true가 필요합니다.' },

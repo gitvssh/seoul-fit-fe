@@ -5,7 +5,7 @@
 
 import { BikeStationRaw, BikeStation, BikeStationSearchParams, BikeStationSearchResult } from '../model/types';
 import { serverCache } from '@/lib/serverCache';
-import { dataScheduler } from '@/lib/scheduler';
+import { dataScheduler } from '@/shared/lib/scheduler';
 import { calculateDistance } from '@/entities/restaurant/api';
 
 /**

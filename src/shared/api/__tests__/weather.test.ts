@@ -1,4 +1,4 @@
-import { getWeatherData } from '../weather'
+import { clearWeatherCache, getWeatherData } from '../weather'
 import axios from 'axios'
 
 jest.mock('axios')
@@ -7,6 +7,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>
 describe('Weather API', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    clearWeatherCache()
   })
 
   describe('getWeatherData', () => {

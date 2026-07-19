@@ -43,6 +43,10 @@ interface OpenWeatherAPIResponse {
 const weatherCache = new Map<string, { data: WeatherAPIResponse; timestamp: number }>();
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
+export function clearWeatherCache(): void {
+  weatherCache.clear();
+}
+
 function getCacheKey(lat: number, lng: number): string {
   return `${lat.toFixed(4)},${lng.toFixed(4)}`;
 }

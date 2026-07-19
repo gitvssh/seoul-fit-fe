@@ -1,4 +1,4 @@
-import { cn } from '../utils'
+import { cn } from '@/shared/lib/utils'
 
 describe('cn utility function', () => {
   it('merges class names correctly', () => {

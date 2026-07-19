@@ -2,7 +2,7 @@
 import { AirQuality } from '@/lib/types';
 import { env } from '@/config/environment';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 /**
  * 대기질 정보 전체 조회

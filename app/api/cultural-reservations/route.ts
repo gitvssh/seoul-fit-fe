@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBackendInternalUrl } from '@/config/environment';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `http://localhost:8080/api/v1/cultural-reservations/nearby?latitude=${lat}&longitude=${lng}`,
+      `${getBackendInternalUrl()}/api/v1/cultural-reservations/nearby?latitude=${lat}&longitude=${lng}`,
       {
         method: 'GET',
         headers: {

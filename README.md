@@ -43,7 +43,7 @@
 
 ### 사전 요구사항
 
-- **Node.js** 18.0 이상
+- **Node.js** 20.0 이상
 - **npm** 9.0 이상
 - **Git** 버전 관리용
 
@@ -74,11 +74,11 @@
    # 서울 열린데이터 API 키 (필수)
    SEOUL_API_KEY=your_seoul_open_data_key
    
-   # 백엔드 API URL (선택사항 - 기본값: localhost)
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/
-   
-   # 환경 설정
-   NODE_ENV=development
+   # 브라우저가 직접 호출할 백엔드 URL (빌드타임)
+   NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8080
+
+   # Route Handler가 호출할 백엔드 URL (런타임)
+   BACKEND_INTERNAL_URL=http://127.0.0.1:8080
    ```
    
    ### 🔑 API 키 발급 방법:
@@ -252,7 +252,6 @@ seoul-fit-fe/
 
 ## 🔗 링크
 
-- **[라이브 데모](https://seoul-fit-fe.vercel.app)** - 지금 사용해보세요!
 - **[이슈 트래커](https://github.com/your-username/seoul-fit-fe/issues)** - 버그 신고
 - **[토론](https://github.com/your-username/seoul-fit-fe/discussions)** - 커뮤니티 채팅
 - **[로드맵](docs/community/roadmap.md)** - 향후 계획

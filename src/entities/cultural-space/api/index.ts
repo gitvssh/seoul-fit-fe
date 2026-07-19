@@ -3,10 +3,8 @@
  * @description 문화공간 관련 비즈니스 로직 및 API 호출
  */
 
-import { env } from '@/config/environment';
+import { getBackendInternalUrl } from '@/config/environment';
 import { CulturalSpace, CulturalSpaceSearchParams } from '../model/types';
-
-const BACKEND_URL = env.backendBaseUrl;
 
 /**
  * 위치 기반 문화공간 조회
@@ -16,9 +14,10 @@ export async function fetchNearbyCulturalSpaces(
 ): Promise<CulturalSpace[]> {
   try {
     const { lat, lng, radius = 2 } = params;
+    const backendUrl = getBackendInternalUrl();
     
     const response = await fetch(
-      `${BACKEND_URL}/api/v1/cultural-spaces/nearby?latitude=${lat}&longitude=${lng}${radius ? `&radius=${radius}` : ''}`,
+      `${backendUrl}/api/v1/cultural-spaces/nearby?latitude=${lat}&longitude=${lng}${radius ? `&radius=${radius}` : ''}`,
       {
         method: 'GET',
         headers: {

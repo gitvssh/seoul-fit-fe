@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Check, LogOut, Settings, User } from 'lucide-react';
 import { X } from 'lucide-react';
 import type { UserPreferences, FacilityCategory } from '@/lib/types';
-import { FACILITY_CONFIGS } from '@/lib/facilityIcons';
+import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 import { useAuthStore } from '@/shared/model/authStore';
 import WarningModal from '@/shared/ui/warning-modal';
 

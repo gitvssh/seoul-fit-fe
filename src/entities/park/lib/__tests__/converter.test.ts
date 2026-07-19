@@ -17,7 +17,7 @@ describe('Park Converter', () => {
     LONGITUDE: '126.9910',
     LATITUDE: '37.5512',
     USE_REFER: '24시간 개방',
-    P_IMG: 'https://example.com/namsan.jpg'
+    P_IMG: 'https://images.test.invalid/namsan.jpg'
   }
 
   describe('convertParkRowToAppFormat', () => {
@@ -34,7 +34,7 @@ describe('Park Converter', () => {
         longitude: 126.9910,
         latitude: 37.5512,
         useReference: '24시간 개방',
-        imageUrl: 'https://example.com/namsan.jpg'
+        imageUrl: 'https://images.test.invalid/namsan.jpg'
       })
     })
 
@@ -146,7 +146,7 @@ describe('Park Converter', () => {
       longitude: 126.9780 + i * 0.001,
       latitude: 37.5665 + i * 0.001,
       useReference: '24시간',
-      imageUrl: `https://example.com/park${i + 1}.jpg`
+      imageUrl: `https://images.test.invalid/park${i + 1}.jpg`
     }))
 
     it('paginates correctly with page 0', () => {

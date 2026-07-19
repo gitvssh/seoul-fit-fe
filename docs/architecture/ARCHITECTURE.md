@@ -322,7 +322,7 @@ class FacilityService {
 ```typescript
 // 중앙화된 에러 처리
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: env.publicBackendUrl,
   timeout: 10000,
 });
 

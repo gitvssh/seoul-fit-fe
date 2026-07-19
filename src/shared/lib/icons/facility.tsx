@@ -13,7 +13,7 @@ import {
   CalendarCheck,
 } from 'lucide-react';
 import { FACILITY_CATEGORIES, type FacilityCategory, type Facility } from '@/lib/types';
-import { getSubwayLineColor, getSubwayIconSVG } from '@/lib/subwayColors';
+import { getSubwayLineColor, getSubwayIconSVG } from '@/shared/lib/icons/subway-colors';
 
 export interface FacilityConfig {
   icon: React.ReactNode;

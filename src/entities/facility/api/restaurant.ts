@@ -2,7 +2,7 @@
 import { env } from '@/config/environment';
 import { TouristRestaurant, RestaurantDataStatistics } from '@/lib/types';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 /**
  * 최신 음식점 정보 조회

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { KakaoMap, WindowWithKakao } from '@/lib/kakao-map';
+import type { KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
 import { useLocationTrigger } from './useLocationTrigger';
 
 export interface LocationInfo {

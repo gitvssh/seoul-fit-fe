@@ -1,6 +1,6 @@
 import { env } from '@/config/environment';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 export interface LocationTriggerRequest {
   userId: string;

@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBackendInternalUrl } from '@/config/environment';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
+    const all = searchParams.get('all');
 
-    if (!lat || !lng) {
+    if (all !== 'true' && (!lat || !lng)) {
       return NextResponse.json({ error: '위도와 경도가 필요합니다.' }, { status: 400 });
     }
 
+    const endpoint = all === 'true'
+      ? '/api/v1/libraries/all'
+      : `/api/v1/libraries/nearby?latitude=${lat}&longitude=${lng}`;
     const response = await fetch(
-      `http://localhost:8080/api/v1/libraries/nearby?latitude=${lat}&longitude=${lng}`,
+      `${getBackendInternalUrl()}${endpoint}`,
       {
         method: 'GET',
         headers: {

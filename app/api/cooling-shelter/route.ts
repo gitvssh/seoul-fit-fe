@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBackendInternalUrl } from '@/config/environment';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `http://localhost:8080/api/v1/cooling-shelters/nearby?latitude=${lat}&longitude=${lng}&radius=1`,
+      `${getBackendInternalUrl()}/api/v1/cooling-shelters/nearby?latitude=${lat}&longitude=${lng}&radius=1`,
       {
         method: 'GET',
         headers: {

@@ -9,25 +9,19 @@ describe('NotificationStore', () => {
   const mockNotification: Notification = {
     id: 1,
     userId: 123,
-    type: 'INFO',
+    type: 'info',
     title: '테스트 알림',
     message: '테스트 메시지입니다',
-    status: 'UNREAD',
+    read: false,
+    status: 'SENT',
     createdAt: '2024-01-20T10:00:00Z',
-    readAt: null,
-    data: {}
   }
 
   const mockNotificationPage: NotificationPage = {
+    notifications: [mockNotification],
     content: [mockNotification],
-    totalElements: 1,
-    totalPages: 1,
-    size: 10,
-    number: 0,
-    first: true,
-    last: true,
-    numberOfElements: 1,
-    empty: false
+    totalCount: 1,
+    hasMore: false
   }
 
   beforeEach(() => {
@@ -123,7 +117,7 @@ describe('NotificationStore', () => {
   describe('markAsRead', () => {
     it('marks notification as read and updates local state', async () => {
       // Setup initial state
-      const unreadNotification = { ...mockNotification, status: 'UNREAD' as const }
+      const unreadNotification = { ...mockNotification, status: 'SENT' as const }
       useNotificationStore.setState({
         notifications: [unreadNotification],
         unreadCount: 3
@@ -170,7 +164,7 @@ describe('NotificationStore', () => {
       await markAsRead(1, 123, 'test-token')
       
       // State should remain unchanged on error
-      expect(useNotificationStore.getState().notifications[0].status).toBe('UNREAD')
+      expect(useNotificationStore.getState().notifications[0].status).toBe('SENT')
       expect(useNotificationStore.getState().unreadCount).toBe(1)
       expect(consoleErrorSpy).toHaveBeenCalledWith('알림 읽음 처리 실패:', expect.any(Error))
       
@@ -181,8 +175,8 @@ describe('NotificationStore', () => {
   describe('markAllAsRead', () => {
     it('marks all notifications as read', async () => {
       const notifications = [
-        { ...mockNotification, id: 1, status: 'UNREAD' as const },
-        { ...mockNotification, id: 2, status: 'UNREAD' as const },
+        { ...mockNotification, id: 1, status: 'SENT' as const },
+        { ...mockNotification, id: 2, status: 'SENT' as const },
         { ...mockNotification, id: 3, status: 'READ' as const, readAt: '2024-01-20T09:00:00Z' }
       ]
       
@@ -217,7 +211,7 @@ describe('NotificationStore', () => {
       await markAllAsRead(123, 'test-token')
       
       // State should remain unchanged on error
-      expect(useNotificationStore.getState().notifications[0].status).toBe('UNREAD')
+      expect(useNotificationStore.getState().notifications[0].status).toBe('SENT')
       expect(useNotificationStore.getState().unreadCount).toBe(1)
       expect(consoleErrorSpy).toHaveBeenCalledWith('모든 알림 읽음 처리 실패:', expect.any(Error))
       

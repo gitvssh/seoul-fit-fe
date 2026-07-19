@@ -6,7 +6,7 @@
 import { env } from '@/config/environment';
 import type { Facility, SportsFacilityInfo } from '@/entities/facility/model/types';
 
-const BASE_URL = env.backendBaseUrl;
+const BASE_URL = env.publicBackendUrl;
 
 // 백엔드 응답 타입 정의
 interface SportsApiResponse {
