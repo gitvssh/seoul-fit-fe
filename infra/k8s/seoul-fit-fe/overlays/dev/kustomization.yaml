@@ -5,8 +5,8 @@ resources:
   - ../../base
   # The backend overlay owns the shared Namespace object, avoiding two Argo CD
   # Applications tracking the same cluster-scoped resource.
-  # Domain is undecided. Enable only after replacing PLACEHOLDER-DEV-HOST.
-  # - ingressroute.yaml
+  # host는 httproute.yaml 참조 (TLS는 Gateway 종단)
+  - httproute.yaml
 images:
   - name: registry.damecasol.com/seoul-fit/frontend
     newName: registry.damecasol.com/seoul-fit/frontend
