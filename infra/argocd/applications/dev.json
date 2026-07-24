@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "name": "seoul-fit-fe-dev",
+  "environment": "dev",
+  "targetRevision": "master",
+  "sourcePath": "infra/k8s/seoul-fit-fe/overlays/dev",
+  "namespace": "seoul-fit-dev",
+  "syncClass": "manual"
+}
