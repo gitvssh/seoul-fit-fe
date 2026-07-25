@@ -168,19 +168,23 @@ export const useMapMarkers = ({
   }, [visibleFacilities]);
 
   const descriptors = useMemo<MarkerDescriptor[]>(() => {
-    const singleMarkers = clusteredData.singleFacilities.map<MarkerDescriptor>(facility => ({
-      key: `facility:${facility.category}:${facility.id}`,
-      item: facility,
-      isCluster: false,
-      content: createCustomMarkerContent(
-        facility.category,
-        facility.congestionLevel,
-        facility.id,
-        facility
-      ),
-      positionSignature: `${facility.position.lat},${facility.position.lng}`,
-      zIndex: 1000,
-    }));
+    const singleMarkers = clusteredData.singleFacilities.map<MarkerDescriptor>(facility => {
+      // 일부 공공데이터 응답은 타입 계약과 달리 숫자 ID를 반환하므로 DOM ID 생성 전에 정규화합니다.
+      const facilityId = String(facility.id);
+      return {
+        key: `facility:${facility.category}:${facilityId}`,
+        item: facility,
+        isCluster: false,
+        content: createCustomMarkerContent(
+          facility.category,
+          facility.congestionLevel,
+          facilityId,
+          facility
+        ),
+        positionSignature: `${facility.position.lat},${facility.position.lng}`,
+        zIndex: 1000,
+      };
+    });
     const clusterMarkers = clusteredData.clusters.map<MarkerDescriptor>(cluster => ({
       key: `cluster:${cluster.id}`,
       item: cluster,
@@ -345,7 +349,7 @@ export const useMapMarkers = ({
 
   const highlightMarker = useCallback((facilityId: string, highlight = true) => {
     markerEntriesRef.current.forEach(entry => {
-      if (entry.isCluster || entry.item.id !== facilityId) return;
+      if (entry.isCluster || String(entry.item.id) !== facilityId) return;
 
       entry.element.style.transform = highlight ? 'scale(1.2)' : 'scale(1)';
       entry.element.style.zIndex = highlight ? '1002' : '1000';

@@ -5,13 +5,14 @@ import { getFacilityIcon } from '@/shared/lib/icons/facility';
 const escapeHtml = (value: string): string =>
   value.replace(
     /[&<>"']/g,
-    character => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;',
-    })[character]!
+    character =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character]!
   );
 
 const safeExternalUrl = (value?: string): string | null => {
@@ -94,13 +95,13 @@ export const createCustomMarkerContent = (
   const facilityIcon = getFacilityIcon(facilityCategory, facility);
   const categoryBgColor = facilityIcon.color;
   const iconSVG = facilityIcon.svg;
-  const safeFacilityId = escapeHtml(facilityId);
+  const safeFacilityId = escapeHtml(String(facilityId));
 
   // 따릉이 마커의 경우 상태 뱃지 추가
   let statusBadge = '';
   if (facilityCategory === 'bike' && facility?.bikeFacility) {
-    const availableBikes = (facility.bikeFacility as any).availableBikes || 
-                          facility.bikeFacility.parkingBikeTotCnt || 0;
+    const availableBikes =
+      (facility.bikeFacility as any).availableBikes || facility.bikeFacility.parkingBikeTotCnt || 0;
 
     // 이용 가능한 자전거 수에 따른 색상 결정
     let badgeColor = '#EF4444'; // 빨간색: 이용불가 (0대)
@@ -292,23 +293,32 @@ export function createMarkerElement(info: MarkerInfo): HTMLElement {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     cursor: pointer;
   `;
-  
+
   const icon = document.createElement('span');
-  icon.textContent = info.type === 'restaurant' ? '🍽️' : 
-                    info.type === 'park' ? '🌳' :
-                    info.type === 'library' ? '📚' :
-                    info.type === 'bike' ? '🚲' :
-                    info.type === 'cultural' ? '🎭' :
-                    info.type === 'sports' ? '⚽' :
-                    info.type === 'shelter' ? '🏠' : '📍';
-  
+  icon.textContent =
+    info.type === 'restaurant'
+      ? '🍽️'
+      : info.type === 'park'
+        ? '🌳'
+        : info.type === 'library'
+          ? '📚'
+          : info.type === 'bike'
+            ? '🚲'
+            : info.type === 'cultural'
+              ? '🎭'
+              : info.type === 'sports'
+                ? '⚽'
+                : info.type === 'shelter'
+                  ? '🏠'
+                  : '📍';
+
   element.appendChild(icon);
   return element;
 }
 
 export function getMarkerImage(type: string): string {
   const baseUrl = '/images/markers';
-  
+
   switch (type) {
     case 'restaurant':
       return `${baseUrl}/restaurant.png`;
@@ -341,28 +351,44 @@ export function formatInfoWindowContent(info: MarkerInfo): string {
       <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #333;">
         ${safeName}
       </h3>
-      ${safeAddress ? `
+      ${
+        safeAddress
+          ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
           📍 ${safeAddress}
         </p>
-      ` : ''}
-      ${safeDescription ? `
+      `
+          : ''
+      }
+      ${
+        safeDescription
+          ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
           ${safeDescription}
         </p>
-      ` : ''}
-      ${safePhone ? `
+      `
+          : ''
+      }
+      ${
+        safePhone
+          ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
           📞 ${safePhone}
         </p>
-      ` : ''}
-      ${safeWebsite ? `
+      `
+          : ''
+      }
+      ${
+        safeWebsite
+          ? `
         <p style="margin: 4px 0; font-size: 14px;">
           <a href="${escapeHtml(safeWebsite)}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none;">
             🌐 웹사이트 방문
           </a>
         </p>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 }

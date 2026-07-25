@@ -75,4 +75,22 @@ describe('useMapMarkers', () => {
     expect(retainedOverlay.setMap).toHaveBeenCalledTimes(1);
     expect(retainedOverlay.setMap).toHaveBeenLastCalledWith(map);
   });
+
+  it('normalizes numeric public-data IDs before creating marker DOM content', () => {
+    const numericIdFacility = {
+      ...createFacility('831', 37.55, 126.99),
+      id: 831 as unknown as string,
+    };
+
+    renderHook(() =>
+      useMapMarkers({
+        mapInstance: {} as KakaoMap,
+        mapStatus: { success: true, loading: false, error: null },
+        visibleFacilities: [numericIdFacility],
+        onFacilitySelect: jest.fn(),
+      })
+    );
+
+    expect(overlayInstances.length).toBeGreaterThan(0);
+  });
 });
