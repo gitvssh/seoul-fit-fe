@@ -3,7 +3,6 @@ import { env } from '@/config/environment';
 const BASE_URL = env.publicBackendUrl;
 
 export interface LocationTriggerRequest {
-  userId: string;
   latitude: number;
   longitude: number;
   radius?: number;
@@ -36,7 +35,7 @@ export async function evaluateLocationTriggers(
     try {
       const { useNotificationStore } = await import('@/store/notificationStore');
       const { fetchUnreadCount } = useNotificationStore.getState();
-      await fetchUnreadCount(parseInt(request.userId), accessToken);
+      await fetchUnreadCount(0, accessToken);
     } catch (notificationError) {
       // 알림 개수 업데이트 실패해도 위치 트리거는 성공으로 처리
       console.error('알림 개수 업데이트 실패:', notificationError);

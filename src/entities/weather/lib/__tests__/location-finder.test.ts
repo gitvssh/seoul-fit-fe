@@ -1,4 +1,4 @@
-import { findNearestLocation } from '../location-finder'
+import { findNearestAreaMatch, findNearestLocation } from '../location-finder'
 import { SEOUL_LOCATIONS } from '@/shared/lib/data/seoul-locations'
 
 describe('findNearestLocation', () => {
@@ -53,5 +53,14 @@ describe('findNearestLocation', () => {
     const result = findNearestLocation(37.5665, 126.9780, testLocations)
     // Should return the first one when distances are equal
     expect(result?.name).toBe('Location A')
+  })
+
+  it('reports the distance to the nearest supported live-data area', () => {
+    const exact = findNearestAreaMatch(37.4979, 127.0276)
+    expect(exact.location.code).toBe('POI014')
+    expect(exact.distanceKm).toBeCloseTo(0, 5)
+
+    const far = findNearestAreaMatch(37.75, 127.25)
+    expect(far.distanceKm).toBeGreaterThan(3)
   })
 })

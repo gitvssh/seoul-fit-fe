@@ -42,10 +42,11 @@ export const useAuthStore = create<AuthToken>()(
 
       // User Token 상태 설정
       setAuth: (user: User, accessToken: string, refreshToken?: string) => {
+        const secureCookie = window.location.protocol === 'https:';
         // 쿠키에 토큰 저장
         Cookies.set('access_token', accessToken, {
           expires: 7, // 7일 후 만료
-          secure: false, // HTTPS만 허용 (개발 환경은 false)
+          secure: secureCookie,
           sameSite: 'lax', // CSRF 공격 방지
         });
         localStorage.setItem('access_token', accessToken);
@@ -53,7 +54,7 @@ export const useAuthStore = create<AuthToken>()(
         if (refreshToken) {
           Cookies.set('refresh_token', refreshToken, {
             expires: 30, // 30일 후 만료
-            secure: false,
+            secure: secureCookie,
             sameSite: 'lax',
           });
         }
@@ -91,7 +92,7 @@ export const useAuthStore = create<AuthToken>()(
         if (accessToken && !cookieAccessToken) {
           Cookies.set('access_token', accessToken, {
             expires: 30,
-            secure: false,
+            secure: window.location.protocol === 'https:',
             sameSite: 'lax',
           });
         }
@@ -106,11 +107,11 @@ export const useAuthStore = create<AuthToken>()(
         const currentState = get();
 
         // persist된 user 정보가 있으면 토큰 유효성 검증
-        if (currentState.user?.oauthUserId && currentState.user?.oauthProvider) {
+        if (currentState.user) {
           try {
             // OAuth 정보로 사용자 정보 조회
             const response = await fetch(
-              env.createPublicBackendEndpoint(`/api/users/me?oauthUserId=${currentState.user.oauthUserId}&oauthProvider=${currentState.user.oauthProvider}`),
+              env.createPublicBackendEndpoint('/api/users/me'),
               {
                 method: 'GET',
                 headers: {
@@ -125,7 +126,19 @@ export const useAuthStore = create<AuthToken>()(
 
               // 유효한 accessToken인 경우 User 상태 업데이트
               set({
-                user: userResult.user,
+                user: {
+                  ...currentState.user,
+                  id: userResult.id,
+                  nickname: userResult.nickname,
+                  profileImageUrl: userResult.profileImageUrl || '',
+                  status: String(userResult.status || 'active').toLowerCase(),
+                  interests: (userResult.interests || []).map(
+                    (interestCategory: string, id: number) => ({
+                      id,
+                      interestCategory,
+                    })
+                  ),
+                },
                 accessToken,
                 refreshToken: Cookies.get('refresh_token') || null,
                 isAuthenticated: true,
@@ -139,7 +152,6 @@ export const useAuthStore = create<AuthToken>()(
                     import('@/services/triggers').then(({ evaluateLocationTriggers }) => {
                       evaluateLocationTriggers(
                         {
-                          userId: userResult.user.id.toString(),
                           latitude: position.coords.latitude,
                           longitude: position.coords.longitude,
                           radius: 1000,
@@ -177,7 +189,6 @@ export const useAuthStore = create<AuthToken>()(
                         import('@/services/triggers').then(({ evaluateLocationTriggers }) => {
                           evaluateLocationTriggers(
                             {
-                              userId: tokenData.user.id.toString(),
                               latitude: position.coords.latitude,
                               longitude: position.coords.longitude,
                               radius: 1000,

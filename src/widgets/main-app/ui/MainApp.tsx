@@ -14,12 +14,14 @@ import type { HeaderRef, MapContainerRef } from '@/shared/types';
 import type { FacilityCategory } from '@/lib/types';
 
 import type { MapStatus } from '@/shared/types/map';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 export interface MainAppProps {
   className?: string;
 }
 
 export const MainApp: React.FC<MainAppProps> = ({ className }) => {
+  const { locale } = useI18n();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -72,6 +74,12 @@ export const MainApp: React.FC<MainAppProps> = ({ className }) => {
 
   return (
     <div className={className || 'h-screen flex flex-col'}>
+      <a
+        href='#main-map'
+        className='sr-only z-[100] rounded-md bg-white px-4 py-2 text-blue-800 shadow focus:not-sr-only focus:fixed focus:left-3 focus:top-3'
+      >
+        {locale === 'en' ? 'Skip to map and place results' : '지도와 장소 결과로 건너뛰기'}
+      </a>
       {/* 헤더 섹션 - 고정 */}
       <div className='sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm'>
         <Header
@@ -97,7 +105,12 @@ export const MainApp: React.FC<MainAppProps> = ({ className }) => {
       )}
 
       {/* 지도 영역 - 전체 화면에서 헤더 제외한 나머지 */}
-      <div className='flex-1 relative'>
+      <main
+        id='main-map'
+        tabIndex={-1}
+        aria-label={locale === 'en' ? 'Map and place results' : '지도와 장소 결과'}
+        className='relative flex-1'
+      >
         <MapContainer
           ref={mapContainerRef}
           preferences={preferences}
@@ -112,7 +125,7 @@ export const MainApp: React.FC<MainAppProps> = ({ className }) => {
           showWarning={showWarning}
           onWarningClose={() => setShowWarning(false)}
         />
-      </div>
+      </main>
 
       {/* 로그아웃 모달 */}
       <LogoutModal

@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/shared/ui/button';
 import { RefreshCw, CloudRain, Sun, Cloud, Thermometer, Wind, Droplets } from 'lucide-react';
 import { WeatherData } from '@/lib/types';
+import { getLiveDataStatus } from '@/features/recommendation/lib/live-data';
 
 interface WeatherPanelProps {
   showWeather: boolean;
@@ -78,7 +79,9 @@ const getWeatherIcon = (data: WeatherData) => {
   }
 };
 
-const WeatherContent: React.FC<{ data: WeatherData }> = ({ data }) => (
+const WeatherContent: React.FC<{ data: WeatherData }> = ({ data }) => {
+  const status = getLiveDataStatus(data.timestamp);
+  return (
   <div className='space-y-3'>
     {/* 장소 정보 */}
     <div className='flex items-center gap-2 p-2 bg-gray-50 rounded-lg'>
@@ -87,7 +90,9 @@ const WeatherContent: React.FC<{ data: WeatherData }> = ({ data }) => (
       </div>
       <div className='flex-1 min-w-0'>
         <div className='text-sm font-medium text-gray-900 truncate'>{data.AREA_NM}</div>
-        <div className='text-xs text-gray-500'>실시간 기상정보</div>
+        <div className='text-xs text-gray-500'>
+          서울시 도시데이터 · {status.label} {status.referenceTimeLabel}
+        </div>
       </div>
     </div>
 
@@ -157,7 +162,8 @@ const WeatherContent: React.FC<{ data: WeatherData }> = ({ data }) => (
       </div>
     )}
   </div>
-);
+  );
+};
 
 const WeatherErrorState: React.FC = () => (
   <div className='flex flex-col items-center py-6 text-center'>

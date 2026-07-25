@@ -1,9 +1,35 @@
 import { env } from '@/config/environment';
 
+const OAUTH_STATE_KEY = 'seoul-fit.oauth.state';
+
+const createOAuthState = (): string => {
+  const bytes = new Uint8Array(24);
+  window.crypto.getRandomValues(bytes);
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
 export const kakaoLogin = () => {
-  const KAKAO_CLIENT_ID = env.kakaoClientId;
-  const REDIRECT_URI = env.kakaoRedirectUri;
-  window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${KAKAO_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+  const state = createOAuthState();
+  sessionStorage.setItem(OAUTH_STATE_KEY, state);
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: env.kakaoClientId,
+    redirect_uri: env.kakaoRedirectUri,
+    state,
+  });
+  window.location.href = `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
+};
+
+export const consumeOAuthState = (receivedState?: string): boolean => {
+  const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+  sessionStorage.removeItem(OAUTH_STATE_KEY);
+  return Boolean(
+    expectedState
+      && receivedState
+      && expectedState.length === receivedState.length
+      && expectedState === receivedState
+  );
 };
 
 export const kakaoLogout = async () => {

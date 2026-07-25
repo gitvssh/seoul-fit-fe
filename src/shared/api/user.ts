@@ -14,7 +14,6 @@ export interface UpdateUserRequest {
 }
 
 export interface UserInterestRequest {
-  userId: number;
   interests: UserInterests[];
 }
 
@@ -40,8 +39,8 @@ export async function getUser(userId: number, accessToken: string): Promise<User
 /**
  * 내 정보 조회
  */
-export async function getMyInfo(oauthUserId: string, oauthProvider: string, accessToken: string): Promise<UserResult> {
-  const response = await fetch(`${BASE_URL}/api/users/me?oauthUserId=${oauthUserId}&oauthProvider=${oauthProvider}`, {
+export async function getMyInfo(accessToken: string): Promise<UserResult> {
+  const response = await fetch(`${BASE_URL}/api/users/me`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -100,14 +99,13 @@ export async function deleteUser(userId: number, accessToken: string): Promise<v
 /**
  * 사용자 관심사 조회
  */
-export async function getUserInterests(userId: number, accessToken: string) {
+export async function getUserInterests(accessToken: string) {
   const response = await fetch(`${BASE_URL}/api/users/interests`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(userId),
   });
 
   if (!response.ok) {
@@ -127,7 +125,7 @@ export async function updateUserInterests(request: UserInterestRequest, accessTo
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify({ interests: request.interests }),
   });
 
   if (!response.ok) {

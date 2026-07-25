@@ -1,11 +1,13 @@
 import { kakaoLogin, kakaoLogout } from '@/shared/api/login';
 import { useCallback } from 'react';
 import { useAuthStore } from '@/shared/model/authStore';
+import { trackEvent } from '@/shared/lib/analytics/analytics';
 
 export function useKakaoLogin() {
   const { clearAuth } = useAuthStore();
 
   const login = useCallback(() => {
+    trackEvent('login_started', { entry_point: 'sidebar' });
     kakaoLogin();
   }, []);
 

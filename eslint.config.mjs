@@ -75,14 +75,24 @@ const eslintConfig = [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       'max-lines-per-function': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-script-url': 'off',
     },
   },
 
   {
-    files: ['**/*.config.js', '**/*.config.ts', '**/*.config.mjs'],
+    files: [
+      '*.config.js',
+      '*.config.ts',
+      '*.config.mjs',
+      '**/*.config.js',
+      '**/*.config.ts',
+      '**/*.config.mjs',
+    ],
     rules: {
       // Relax some rules for config files
       '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
       'no-console': 'off',
     },
   },

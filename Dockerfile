@@ -10,21 +10,24 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_APP_URL
-ARG NEXT_PUBLIC_BACKEND_URL
-ARG NEXT_PUBLIC_KAKAO_CLIENT_ID
-ARG NEXT_PUBLIC_KAKAO_MAP_API_KEY
-ARG NEXT_PUBLIC_KAKAO_REDIRECT_URI
-ARG NEXT_PUBLIC_OPENWEATHER_API_KEY
-
-ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
-    NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL \
-    NEXT_PUBLIC_KAKAO_CLIENT_ID=$NEXT_PUBLIC_KAKAO_CLIENT_ID \
-    NEXT_PUBLIC_KAKAO_MAP_API_KEY=$NEXT_PUBLIC_KAKAO_MAP_API_KEY \
-    NEXT_PUBLIC_KAKAO_REDIRECT_URI=$NEXT_PUBLIC_KAKAO_REDIRECT_URI \
-    NEXT_PUBLIC_OPENWEATHER_API_KEY=$NEXT_PUBLIC_OPENWEATHER_API_KEY
-
-RUN npm run build
+# Public browser configuration is embedded by Next.js at build time. BuildKit
+# secrets keep its source values out of shell arguments and image layers; the
+# resulting public values remain available only where the browser requires them.
+RUN --mount=type=secret,id=next_public_app_url,required=false \
+    --mount=type=secret,id=next_public_backend_url,required=false \
+    --mount=type=secret,id=next_public_kakao_client_id,required=false \
+    --mount=type=secret,id=next_public_kakao_map_api_key,required=false \
+    --mount=type=secret,id=next_public_kakao_redirect_uri,required=false \
+    --mount=type=secret,id=next_public_ga_measurement_id,required=false \
+    set -eu; \
+    read_secret() { if [ -f "$1" ]; then tr -d '\\r\\n' < "$1"; fi; }; \
+    export NEXT_PUBLIC_APP_URL="$(read_secret /run/secrets/next_public_app_url)"; \
+    export NEXT_PUBLIC_BACKEND_URL="$(read_secret /run/secrets/next_public_backend_url)"; \
+    export NEXT_PUBLIC_KAKAO_CLIENT_ID="$(read_secret /run/secrets/next_public_kakao_client_id)"; \
+    export NEXT_PUBLIC_KAKAO_MAP_API_KEY="$(read_secret /run/secrets/next_public_kakao_map_api_key)"; \
+    export NEXT_PUBLIC_KAKAO_REDIRECT_URI="$(read_secret /run/secrets/next_public_kakao_redirect_uri)"; \
+    export NEXT_PUBLIC_GA_MEASUREMENT_ID="$(read_secret /run/secrets/next_public_ga_measurement_id)"; \
+    npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app

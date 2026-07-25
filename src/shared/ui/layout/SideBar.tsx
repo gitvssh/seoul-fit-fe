@@ -1,7 +1,7 @@
 // components/layout/SideBar.tsx - Improved version with better animations
 'use client';
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Check, LogOut, Settings, User } from 'lucide-react';
 import { X } from 'lucide-react';
@@ -10,6 +10,9 @@ import { FACILITY_CATEGORIES } from '@/lib/types';
 import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 import { useAuthStore } from '@/shared/model/authStore';
 import WarningModal from '@/shared/ui/warning-modal';
+import { useFocusTrap } from '@/shared/lib/hooks/useFocusTrap';
+import { useI18n } from '@/shared/i18n/I18nProvider';
+import type { MessageKey } from '@/shared/i18n/messages';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,37 +36,10 @@ export default function SideBar({
   onWarningClose,
 }: SidebarProps) {
   const { isAuthenticated, user } = useAuthStore();
+  const { t } = useI18n();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  // 사이드바 열릴 때 초기 설정 (필요한 경우)
-  useEffect(() => {
-    // 추가 초기화 로직이 필요한 경우 여기에 추가
-  }, [isOpen]);
-
-  // 키보드 접근성 및 포커스 관리
-  useEffect(() => {
-    if (isOpen) {
-      // 사이드바가 열리면 첫 번째 포커스 가능한 요소에 포커스
-      const focusableElements = sidebarRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-
-      if (focusableElements && focusableElements.length > 0) {
-        (focusableElements[0] as HTMLElement).focus();
-      }
-
-      // ESC 키로 닫기
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          onClose();
-        }
-      };
-
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, onClose]);
+  useFocusTrap(sidebarRef, isOpen, onClose);
 
   // 선택된 항목 수 계산 (메모화)
   const selectedCount = React.useMemo(
@@ -74,11 +50,9 @@ export default function SideBar({
   // 카테고리 토글 핸들러 (최적화)
   const handleToggle = useCallback(
     (type: FacilityCategory) => {
-      console.log('[SideBar] 토글 시도:', type);
-      console.log('[SideBar] 현재 activeCategories:', activeCategories);
       onCategoryToggle(type);
     },
-    [onCategoryToggle, activeCategories]
+    [onCategoryToggle]
   );
 
   // 키보드 접근성을 위한 핸들러
@@ -107,16 +81,16 @@ export default function SideBar({
     e.stopPropagation();
   }, []);
 
+  if (!isOpen) {
+    return <WarningModal isOpen={showWarning || false} onClose={onWarningClose || (() => {})} />;
+  }
+
   return (
     <>
       {/* 오버레이 배경 (개선된 애니메이션) */}
       <div
         ref={overlayRef}
-        className={`fixed inset-0 bg-black transition-all duration-300 ease-out z-[59] ${
-          isOpen
-            ? 'opacity-30 backdrop-blur-sm'
-            : 'opacity-0 pointer-events-none backdrop-blur-none'
-        }`}
+        className='fixed inset-0 z-[59] bg-black opacity-30 backdrop-blur-sm'
         onClick={handleOverlayClick}
         aria-hidden='true'
       />
@@ -124,9 +98,7 @@ export default function SideBar({
       {/* 사이드바 (개선된 애니메이션과 접근성) */}
       <aside
         ref={sidebarRef}
-        className={`fixed inset-y-0 right-0 z-[60] w-80 max-w-[85vw] md:w-96 bg-white border-l border-gray-200 shadow-2xl transform transition-all duration-300 ease-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className='fixed inset-y-0 right-0 z-[60] w-80 max-w-[85vw] md:w-96 bg-white border-l border-gray-200 shadow-2xl'
         onClick={handleSidebarClick}
         role='dialog'
         aria-modal='true'
@@ -140,17 +112,17 @@ export default function SideBar({
               <div className='flex items-center space-x-3'>
                 <Settings className='w-6 h-6 text-gray-600' />
                 <h2 id='sidebar-title' className='text-xl font-semibold text-gray-800'>
-                  지도 마커 설정
+                  {t('sidebar.title')}
                 </h2>
               </div>
               <div className='flex items-center space-x-3'>
                 <div className='bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium transition-colors'>
-                  {selectedCount}개 선택
+                  {t('sidebar.selected', { count: selectedCount })}
                 </div>
                 <button
                   onClick={onClose}
                   className='p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  aria-label='메뉴 닫기'
+                  aria-label={t('sidebar.close')}
                 >
                   <X className='w-5 h-5 text-gray-600' />
                 </button>
@@ -160,7 +132,7 @@ export default function SideBar({
             {/* 설명 영역 */}
             <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 transition-colors duration-200'>
               <p id='sidebar-description' className='text-sm text-gray-700'>
-                지도에 표시할 마커를 선택하세요. 체크된 카테고리의 시설만 지도에 표시됩니다.
+                {t('sidebar.description')}
               </p>
             </div>
           </div>
@@ -186,6 +158,9 @@ export default function SideBar({
               ].map((facilityType, index) => {
                 const config = FACILITY_CONFIGS[facilityType];
                 const isSelected = activeCategories.includes(facilityType);
+                const categoryLabelKey = `category.${facilityType}` as MessageKey;
+                const categoryDescriptionKey =
+                  `categoryDescription.${facilityType}` as MessageKey;
 
                 return (
                   <div
@@ -214,10 +189,10 @@ export default function SideBar({
                       </div>
                       <div className='flex-1 min-w-0'>
                         <h3 className='font-semibold text-gray-800 group-hover:text-gray-900 text-base transition-colors duration-200'>
-                          {config.label}
+                          {t(categoryLabelKey)}
                         </h3>
                         <p className='text-sm text-gray-500 mt-1 leading-relaxed'>
-                          {config.description}
+                          {t(categoryDescriptionKey)}
                         </p>
                       </div>
                     </div>
@@ -251,7 +226,7 @@ export default function SideBar({
                     {user?.profileImageUrl ? (
                       <Image
                         src={user.profileImageUrl}
-                        alt='프로필'
+                        alt={t('sidebar.profile')}
                         width={32}
                         height={32}
                         className='w-8 h-8 rounded-full'
@@ -262,7 +237,7 @@ export default function SideBar({
                       </div>
                     )}
                     <span className='text-sm font-medium text-gray-700'>
-                      {user?.nickname || '사용자'}
+                      {user?.nickname || t('sidebar.defaultUser')}
                     </span>
                   </div>
                   <button
@@ -270,7 +245,7 @@ export default function SideBar({
                     className='flex items-center space-x-2 text-sm text-gray-600 hover:text-red-600 transition-colors duration-200 p-2 rounded-lg hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400'
                   >
                     <LogOut className='w-4 h-4' />
-                    <span>로그아웃</span>
+                    <span>{t('sidebar.logout')}</span>
                   </button>
                 </>
               ) : (
@@ -281,7 +256,7 @@ export default function SideBar({
                   <svg className='w-4 h-4' viewBox='0 0 24 24' fill='currentColor'>
                     <path d='M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3z' />
                   </svg>
-                  <span>카카오 로그인</span>
+                  <span>{t('sidebar.login')}</span>
                 </button>
               )}
             </div>

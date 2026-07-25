@@ -4,6 +4,7 @@ import { Badge } from '@/shared/ui/badge';
 import { RefreshCw, Users, TrendingUp, Clock } from 'lucide-react';
 import { CongestionData } from '@/lib/types';
 import { getCongestionClass, getCongestionColor } from '@/shared/api/congestion';
+import { getLiveDataStatus } from '@/features/recommendation/lib/live-data';
 
 interface CongestionPanelProps {
   showCongestion: boolean;
@@ -76,6 +77,7 @@ const CongestionContent: React.FC<{ data: CongestionData }> = ({ data }) => {
   const congestionLevel = data.AREA_CONGEST_LVL || data.level || '보통';
   const areaName = data.AREA_NM || data.facilityId || '현재 위치 주변';
   const congestionMessage = data.AREA_CONGEST_MSG || '';
+  const status = getLiveDataStatus(data.timestamp);
   
   return (
     <div className='space-y-3'>
@@ -88,7 +90,7 @@ const CongestionContent: React.FC<{ data: CongestionData }> = ({ data }) => {
           <div className='text-sm font-semibold text-gray-900'>{areaName}</div>
           <div className='text-xs text-gray-500 flex items-center gap-1'>
             <Clock className='h-3 w-3' />
-            실시간 업데이트
+            {status.label} · {status.referenceTimeLabel}
           </div>
         </div>
       </div>

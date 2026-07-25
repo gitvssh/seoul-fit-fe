@@ -7,13 +7,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  findNearestAreaCode,
+  findNearestAreaMatch,
   fetchSeoulWeatherData,
   transformWeatherData,
   getWeatherFromCache,
   saveWeatherToCache,
   validateApiResponse,
 } from '@/entities/weather';
+import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
+
+const MAX_LIVE_AREA_DISTANCE_KM = 3;
 
 /**
  * GET 서울시 실시간 도시데이터 API 호출
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
     const lng = parseFloat(lngParam);
 
     // 좌표 유효성 검증
-    if (isNaN(lat) || isNaN(lng)) {
+    if (!isValidSeoulCoordinate(lat, lng)) {
       return NextResponse.json(
         {
           error: '올바른 좌표 형식이 아닙니다.',
@@ -51,7 +54,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 가장 가까운 장소 코드 찾기
-    const nearestAreaCode = findNearestAreaCode(lat, lng);
+    const nearestArea = findNearestAreaMatch(lat, lng);
+    if (nearestArea.distanceKm > MAX_LIVE_AREA_DISTANCE_KM) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '현재 위치는 서울 실시간 도시데이터 지원 지점과 거리가 있습니다.',
+          code: 'OUTSIDE_LIVE_AREA',
+          data: null,
+        },
+        { status: 404 }
+      );
+    }
+    const nearestAreaCode = nearestArea.location.code;
 
     // 캐시 확인
     const cachedData = getWeatherFromCache(nearestAreaCode);

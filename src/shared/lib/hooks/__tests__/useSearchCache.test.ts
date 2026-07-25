@@ -14,6 +14,21 @@ const bikeStation = {
 
 function mockInitialLoad() {
   ;(fetch as jest.Mock).mockImplementation((url: string) => {
+    if (url.startsWith('/api/search/index')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => [
+          {
+            id: 101,
+            name: '남산공원',
+            address: '서울특별시 중구',
+            refTable: 'park',
+            refId: 42,
+          },
+        ],
+      })
+    }
+
     if (url.startsWith('/api/subway')) {
       return Promise.resolve({
         ok: true,
@@ -37,14 +52,21 @@ describe('useSearchCache', () => {
     mockInitialLoad()
   })
 
-  it('loads subway and bike data into the cache', async () => {
+  it('loads the backend POI index with subway and bike data into the cache', async () => {
     const { result } = renderHook(() => useSearchCache())
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.searchCache).toHaveLength(2)
-    expect(result.current.totalCount).toBe(2)
-    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(result.current.searchCache).toHaveLength(3)
+    expect(result.current.totalCount).toBe(3)
+    expect(result.current.search('남산')).toEqual([
+      expect.objectContaining({
+        category: 'park',
+        ref_table: 'park',
+        ref_id: 42,
+      }),
+    ])
+    expect(fetch).toHaveBeenCalledTimes(3)
   })
 
   it('searches the in-memory cache', async () => {

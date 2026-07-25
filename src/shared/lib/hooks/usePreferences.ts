@@ -19,6 +19,32 @@ const defaultPreferences: UserPreferences = {
   theme: 'light',
 };
 
+const FACILITY_PREFERENCE_KEYS: FacilityCategory[] = [
+  'sports',
+  'culture',
+  'restaurant',
+  'library',
+  'park',
+  'subway',
+  'bike',
+  'cooling_shelter',
+  'cultural_event',
+  'cultural_reservation',
+];
+
+const FACILITY_TO_INTEREST_MAP: Record<FacilityCategory, string> = {
+  sports: 'SPORTS',
+  culture: 'CULTURE',
+  restaurant: 'RESTAURANTS',
+  library: 'LIBRARY',
+  park: 'PARK',
+  subway: 'SUBWAY',
+  bike: 'BIKE',
+  cooling_shelter: 'COOLING_SHELTER',
+  cultural_event: 'CULTURAL_EVENT',
+  cultural_reservation: 'CULTURAL_RESERVATION',
+};
+
 export function usePreferences() {
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -30,7 +56,7 @@ export function usePreferences() {
     if (!isAuthenticated || !user?.id) return;
 
     try {
-      const userInterests = await getUserInterests(user.id);
+      const userInterests = await getUserInterests();
       // 모든 선호도를 false로 초기화
       const userPreferences: UserPreferences = {
         sports: false,
@@ -88,7 +114,9 @@ export function usePreferences() {
     };
 
     // 최소 1개 선택 검증
-    const selectedCount = Object.values(newPreferences).filter(Boolean).length;
+    const selectedCount = FACILITY_PREFERENCE_KEYS.filter(
+      category => newPreferences[category]
+    ).length;
     if (selectedCount === 0) {
       setShowWarning(true);
       return;
@@ -98,24 +126,11 @@ export function usePreferences() {
 
     if (isAuthenticated && user?.id) {
       try {
-        const facilityToInterestMap: Record<FacilityCategory, string> = {
-          sports: 'SPORTS',
-          culture: 'CULTURE',
-          restaurant: 'RESTAURANTS',
-          library: 'LIBRARY',
-          park: 'PARK',
-          subway: 'SUBWAY',
-          bike: 'BIKE',
-          cooling_shelter: 'COOLING_SHELTER',
-          cultural_event: 'CULTURAL_EVENT',
-          cultural_reservation: 'CULTURAL_RESERVATION',
-        };
+        const selectedInterests = FACILITY_PREFERENCE_KEYS
+          .filter(category => newPreferences[category])
+          .map(category => FACILITY_TO_INTEREST_MAP[category]);
 
-        const selectedInterests = Object.entries(newPreferences)
-          .filter(([_, isSelected]) => isSelected)
-          .map(([category]) => facilityToInterestMap[category as FacilityCategory]);
-
-        await updateUserInterests(user.id, selectedInterests);
+        await updateUserInterests(selectedInterests);
       } catch (error) {
         console.error('선호도 업데이트 실패:', error);
         setPreferences(preferences);
@@ -132,7 +147,7 @@ export function usePreferences() {
     if (isAuthenticated && user?.id) {
       setIsLoaded(false);
       try {
-        const userInterests = await getUserInterests(user.id);
+        const userInterests = await getUserInterests();
         // 모든 선호도를 false로 초기화
         const userPreferences: UserPreferences = {
           sports: false,

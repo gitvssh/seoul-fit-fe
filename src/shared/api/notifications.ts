@@ -27,11 +27,11 @@ export async function getNotifications(accessToken: string): Promise<Notificatio
  * 읽지 않은 알림 개수 조회
  */
 export async function getUnreadNotificationCount(
-  userId: number,
+  _userId: number,
   accessToken: string
 ): Promise<number> {
   try {
-    const response = await fetch(`${BASE_URL}/api/notifications/unread-count?userId=${userId}`, {
+    const response = await fetch(`${BASE_URL}/api/notifications/unread-count`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -56,13 +56,13 @@ export async function getUnreadNotificationCount(
  * 알림 히스토리 조회 (페이지네이션)
  */
 export async function getNotificationHistory(
-  userId: number,
+  _userId: number,
   accessToken: string,
   page: number = 0,
   size: number = 20
 ): Promise<NotificationPage> {
   const response = await fetch(
-    `${BASE_URL}/api/notifications?userId=${userId}&page=${page}&size=${size}`,
+    `${BASE_URL}/api/notifications?page=${page}&size=${size}`,
     {
       method: 'GET',
       headers: {
@@ -91,11 +91,11 @@ export async function getNotificationHistory(
  */
 export async function markNotificationAsRead(
   notificationId: number,
-  userId: number,
+  _userId: number,
   accessToken: string
 ): Promise<void> {
   const response = await fetch(
-    `${BASE_URL}/api/notifications/${notificationId}/read?userId=${userId}`,
+    `${BASE_URL}/api/notifications/${notificationId}/read`,
     {
       method: 'PATCH',
       headers: {
@@ -114,11 +114,11 @@ export async function markNotificationAsRead(
  * 모든 알림 읽음 처리
  */
 export async function markAllNotificationsAsRead(
-  userId: number,
+  _userId: number,
   accessToken: string
 ): Promise<void> {
   const response = await fetch(
-    `${BASE_URL}/api/notifications/read-all?userId=${userId}`,
+    `${BASE_URL}/api/notifications/read-all`,
     {
       method: 'PATCH',
       headers: {

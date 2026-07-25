@@ -1,5 +1,6 @@
 import type { Facility } from '@/lib/types';
 import type { SearchItem } from '@/shared/lib/hooks/useSearchCache';
+import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
 
 // 카테고리별 상세 데이터 타입 정의
 interface LibraryData {
@@ -118,23 +119,32 @@ export function convertSearchResultToFacility(
   searchItem: SearchItem
 ): Facility | null {
   try {
+    let facility: Facility | null;
     switch (category) {
       case 'library':
-        return convertLibraryToFacility(data, searchItem);
+        facility = convertLibraryToFacility(data, searchItem);
+        break;
       case 'park':
-        return convertParkToFacility(data, searchItem);
+        facility = convertParkToFacility(data, searchItem);
+        break;
       case 'cultural_event':
-        return convertCulturalEventToFacility(data, searchItem);
+        facility = convertCulturalEventToFacility(data, searchItem);
+        break;
       case 'cultural_reservation':
-        return convertCulturalReservationToFacility(data, searchItem);
+        facility = convertCulturalReservationToFacility(data, searchItem);
+        break;
       case 'cooling_center':
-        return convertCoolingCenterToFacility(data, searchItem);
+        facility = convertCoolingCenterToFacility(data, searchItem);
+        break;
       case 'restaurant':
-        return convertRestaurantToFacility(data, searchItem);
+        facility = convertRestaurantToFacility(data, searchItem);
+        break;
       default:
         console.warn('지원하지 않는 카테고리:', category);
         return null;
     }
+
+    return isValidSeoulCoordinate(facility.position.lat, facility.position.lng) ? facility : null;
   } catch (error) {
     console.error('데이터 변환 실패:', error);
     return null;
@@ -148,8 +158,8 @@ function convertLibraryToFacility(data: LibraryData, searchItem: SearchItem): Fa
     name: data.lbrryName || data.name || searchItem.name,
     category: 'library',
     position: {
-      lat: data.xcnts || data.latitude || 0,
-      lng: data.ydnts || data.longitude || 0,
+      lat: data.ydnts || data.latitude || 0,
+      lng: data.xcnts || data.longitude || 0,
     },
     address: data.adres || data.address || searchItem.address || '',
     phone: data.telNo || data.phoneNumber,

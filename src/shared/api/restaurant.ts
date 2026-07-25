@@ -10,7 +10,7 @@ export async function getNearbyRestaurants(lat: number, lng: number): Promise<Re
   try {
     // 좌표 유효성 검증
     if (isNaN(lat) || isNaN(lng)) {
-      console.error('올바르지 않은 좌표입니다:', { lat, lng });
+      console.error('올바르지 않은 좌표입니다.');
       return [];
     }
 

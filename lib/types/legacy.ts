@@ -64,6 +64,10 @@ export interface WeatherData {
   UV_MSG: string;          // 자외선 메시지
   PM25_INDEX: string;      // 초미세먼지 정도
   PM10_INDEX: string;      // 미세먼지 정도
+  /** 서울시 데이터 조회 시각 */
+  timestamp?: string;
+  /** 서버 메모리 캐시 응답 여부 */
+  cached?: boolean;
 }
 
 // 지하철 도착 정보
@@ -227,12 +231,17 @@ export interface Notification {
   userId: number;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'error' | 'success';
+  type: string;
   read: boolean;
   status?: 'SENT' | 'READ';
   createdAt: string;
   sentAt?: string;
   readAt?: string;
+  subscriptionId?: number | null;
+  reason?: string | null;
+  deepLink?: string | null;
+  dataObservedAt?: string | null;
+  providerStatus?: string;
 }
 
 // 알림 페이지

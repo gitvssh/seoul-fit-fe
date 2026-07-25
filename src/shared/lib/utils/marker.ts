@@ -2,6 +2,28 @@
 import type { FacilityCategory, Facility } from '@/lib/types';
 import { getFacilityIcon } from '@/shared/lib/icons/facility';
 
+const escapeHtml = (value: string): string =>
+  value.replace(
+    /[&<>"']/g,
+    character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[character]!
+  );
+
+const safeExternalUrl = (value?: string): string | null => {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * POI 마커 HTML 콘텐츠 생성
  * @param poiName POI 이름
@@ -9,12 +31,14 @@ import { getFacilityIcon } from '@/shared/lib/icons/facility';
  * @returns HTML 문자열
  */
 export const createPOIMarkerContent = (poiName: string, poiCode: string): string => {
+  const safeName = escapeHtml(poiName);
+  const safeCode = escapeHtml(poiCode);
   return `
-    <div 
-      id="poi-marker-${poiCode}" 
+    <div
+      id="poi-marker-${safeCode}"
       class="poi-marker"
-      data-poi-code="${poiCode}"
-      data-poi-name="${poiName}"
+      data-poi-code="${safeCode}"
+      data-poi-name="${safeName}"
       style="
         position: relative;
         display: flex;
@@ -31,7 +55,7 @@ export const createPOIMarkerContent = (poiName: string, poiCode: string): string
         z-index: 999;
         user-select: none;
       "
-      title="${poiName}"
+      title="${safeName}"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -70,6 +94,7 @@ export const createCustomMarkerContent = (
   const facilityIcon = getFacilityIcon(facilityCategory, facility);
   const categoryBgColor = facilityIcon.color;
   const iconSVG = facilityIcon.svg;
+  const safeFacilityId = escapeHtml(facilityId);
 
   // 따릉이 마커의 경우 상태 뱃지 추가
   let statusBadge = '';
@@ -104,10 +129,10 @@ export const createCustomMarkerContent = (
   }
 
   return `
-    <div 
-      id="marker-${facilityId}" 
+    <div
+      id="marker-${safeFacilityId}"
       class="custom-marker" 
-      data-facility-id="${facilityId}"
+      data-facility-id="${safeFacilityId}"
       data-category="${facilityCategory}"
       data-crowd-level="${crowdLevel}"
       style="
@@ -219,7 +244,7 @@ export const toggleMarkerTooltip = (
   if (show && !existingTooltip) {
     const tooltip = document.createElement('div');
     tooltip.className = 'marker-tooltip';
-    tooltip.innerHTML = content;
+    tooltip.textContent = content;
     tooltip.style.cssText = `
       position: absolute;
       bottom: 100%;
@@ -305,29 +330,35 @@ export function getMarkerImage(type: string): string {
 }
 
 export function formatInfoWindowContent(info: MarkerInfo): string {
+  const safeName = escapeHtml(info.name);
+  const safeAddress = info.address ? escapeHtml(info.address) : null;
+  const safeDescription = info.description ? escapeHtml(info.description) : null;
+  const safePhone = info.phone ? escapeHtml(info.phone) : null;
+  const safeWebsite = safeExternalUrl(info.website);
+
   return `
     <div class="info-window" style="padding: 12px; min-width: 200px;">
       <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #333;">
-        ${info.name}
+        ${safeName}
       </h3>
-      ${info.address ? `
+      ${safeAddress ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          📍 ${info.address}
+          📍 ${safeAddress}
         </p>
       ` : ''}
-      ${info.description ? `
+      ${safeDescription ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          ${info.description}
+          ${safeDescription}
         </p>
       ` : ''}
-      ${info.phone ? `
+      ${safePhone ? `
         <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          📞 ${info.phone}
+          📞 ${safePhone}
         </p>
       ` : ''}
-      ${info.website ? `
+      ${safeWebsite ? `
         <p style="margin: 4px 0; font-size: 14px;">
-          <a href="${info.website}" target="_blank" style="color: #3b82f6; text-decoration: none;">
+          <a href="${escapeHtml(safeWebsite)}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none;">
             🌐 웹사이트 방문
           </a>
         </p>

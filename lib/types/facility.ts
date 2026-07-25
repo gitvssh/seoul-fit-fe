@@ -39,6 +39,8 @@ export interface BaseFacility {
   phone?: string;
   /** 웹사이트 URL */
   website?: string;
+  /** 예약 또는 예매 페이지 URL */
+  reservationUrl?: string;
   /** 운영시간 */
   operatingHours?: string;
   /** 혼잡도 */
@@ -55,10 +57,20 @@ export interface BaseFacility {
   description?: string;
   /** 예약 가능 여부 */
   isReservable?: boolean;
+  /** 실내 시설 여부. 알 수 없으면 값을 생략합니다. */
+  isIndoor?: boolean;
   /** 시설 이미지 URL */
   imageUrl?: string;
   /** 태그 */
   tags?: string[];
+  /** 원천 데이터 제공 기관 또는 시스템 */
+  dataSource?: string;
+  /** 원천 데이터 안내 페이지 */
+  dataSourceUrl?: string;
+  /** 원천 데이터의 마지막 갱신 시각(ISO 8601) */
+  sourceUpdatedAt?: string;
+  /** 수집기가 판정한 데이터 신선도 */
+  freshnessStatus?: 'live' | 'recent' | 'stale' | 'unknown';
 }
 
 // 체육시설 특화 정보

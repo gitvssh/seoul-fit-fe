@@ -15,11 +15,8 @@ export const usePOI = () => {
     error: null,
   });
 
-  // Debug log
-  console.log('[usePOI] 훅 초기화됨');
-
   const fetchNearbyPOIs = useCallback(async (lat: number, lng: number, radius: number = 1.5) => {
-    console.log(`[usePOI] fetchNearbyPOIs 호출됨: (${lat}, ${lng}), radius: ${radius}`);
+    console.log(`[usePOI] fetchNearbyPOIs 호출됨: radius=${radius}`);
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {

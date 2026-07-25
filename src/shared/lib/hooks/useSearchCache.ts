@@ -112,6 +112,10 @@ export interface SearchItem {
     | 'restaurant';
   ref_table?: string;
   ref_id?: number;
+  position?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 // 검색 히스토리 아이템 타입
@@ -194,7 +198,7 @@ export const useSearchCache = () => {
   const [error, setError] = useState<string | null>(null);
 
   // 카테고리 매핑 함수
-  const getCategoryFromRefTable = (refTable: string): SearchItem['category'] => {
+  const getCategoryFromRefTable = (refTable: string): SearchItem['category'] | null => {
     switch (refTable) {
       case 'libraries':
         return 'library';
@@ -209,7 +213,7 @@ export const useSearchCache = () => {
       case 'restaurants':
         return 'restaurant';
       default:
-        return 'library'; // fallback
+        return null;
     }
   };
 
@@ -221,13 +225,52 @@ export const useSearchCache = () => {
 
       console.log('검색 데이터 로딩 시작...');
 
-      // 2개 API 병렬 호출 (POI는 FacilityProvider에서 처리)
-      const [subwayRes, bikeRes] = await Promise.allSettled([
+      // backend POI 검색 인덱스와 실시간 교통 항목을 병렬로 적재한다.
+      const [poiRes, subwayRes, bikeRes] = await Promise.allSettled([
+        fetch('/api/search/index?page=0&size=20000'),
         fetch('/api/subway?lat=37.5665&lng=126.9780'),
         fetch('/api/bike-stations?lat=37.5665&lng=126.9780&radius=30'),
       ]);
 
       const combinedData: SearchItem[] = [];
+
+      if (poiRes.status === 'fulfilled' && poiRes.value.ok) {
+        const poiData = (await poiRes.value.json()) as Array<{
+          id: number;
+          name: string;
+          address?: string;
+          remark?: string;
+          aliases?: string;
+          refTable?: string;
+          refId?: number;
+          ref_table?: string;
+          ref_id?: number;
+        }>;
+
+        if (Array.isArray(poiData)) {
+          poiData.forEach(item => {
+            const refTable = item.refTable || item.ref_table;
+            const refId = item.refId ?? item.ref_id;
+            if (!refTable || refId === undefined) return;
+
+            const category = getCategoryFromRefTable(refTable);
+            if (!category) return;
+
+            combinedData.push({
+              id: String(item.id),
+              name: item.name,
+              address: item.address,
+              remark: item.remark,
+              aliases: item.aliases,
+              category,
+              ref_table: refTable,
+              ref_id: refId,
+            });
+          });
+        }
+      } else {
+        console.warn('POI 검색 인덱스 로드 실패');
+      }
 
       // 지하철 데이터 처리
       if (subwayRes.status === 'fulfilled' && subwayRes.value.ok) {
@@ -242,6 +285,8 @@ export const useSearchCache = () => {
               name: string;
               route?: string;
               line?: string;
+              lat?: number;
+              lng?: number;
             }
 
             const subwayItems: SearchItem[] = subwayData.data.stations.map(
@@ -250,6 +295,10 @@ export const useSearchCache = () => {
                 name: station.name,
                 category: 'subway' as const,
                 remark: station.route || station.line,
+                position:
+                  typeof station.lat === 'number' && typeof station.lng === 'number'
+                    ? { lat: station.lat, lng: station.lng }
+                    : undefined,
               })
             );
             combinedData.push(...subwayItems);
@@ -277,12 +326,18 @@ export const useSearchCache = () => {
             code?: string;
             stationId?: string;
             name: string;
+            lat?: number;
+            lng?: number;
           }
 
           const bikeItems: SearchItem[] = bikeData.data.stations.map((station: BikeStation) => ({
             id: station.code || `bike_${station.stationId}`,
             name: station.name,
             category: 'bike' as const,
+            position:
+              typeof station.lat === 'number' && typeof station.lng === 'number'
+                ? { lat: station.lat, lng: station.lng }
+                : undefined,
           }));
           combinedData.push(...bikeItems);
           console.log(`따릉이 데이터 로드: ${bikeItems.length}개`);
@@ -290,9 +345,6 @@ export const useSearchCache = () => {
       } else {
         console.warn('따릉이 데이터 로드 실패');
       }
-
-      // POI 데이터는 FacilityProvider에서 처리하므로 여기서는 제외
-      console.log('POI 데이터는 FacilityProvider에서 별도 처리됩니다.');
 
       setSearchCache(combinedData);
       console.log(`총 검색 데이터: ${combinedData.length}개`);
@@ -353,6 +405,7 @@ export const useSearchCache = () => {
             category: item.category,
             ref_table: item.ref_table,
             ref_id: item.ref_id,
+            position: item.position,
             score: maxScore,
           };
         })

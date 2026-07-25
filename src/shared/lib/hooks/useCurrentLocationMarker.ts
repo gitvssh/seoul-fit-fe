@@ -119,7 +119,7 @@ export const useCurrentLocationMarker = ({
       // 드래그 종료 시 위치 업데이트 (디바운싱 적용)
       const debouncedLocationChange = debounce((lat: number, lng: number) => {
         if (onLocationChange) {
-          console.log(`마커 드래그로 위치 변경: ${lat}, ${lng}`);
+          console.log('마커 드래그로 위치 변경');
           onLocationChange(lat, lng);
         }
       }, 1000); // 1초 디바운싱

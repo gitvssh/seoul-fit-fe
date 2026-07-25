@@ -32,11 +32,11 @@ export function useSearchMarker() {
           if (facility.position.lat !== 0 && facility.position.lng !== 0) {
             // 지도 중심 이동
             if (onMapMove) {
-              console.log('지도 이동:', facility.position);
+              console.log('검색 결과로 지도 이동');
               onMapMove(facility.position.lat, facility.position.lng);
             }
           } else {
-            console.warn('좌표가 0,0입니다. 지도 이동하지 않음:', facility.position);
+            console.warn('유효한 좌표가 없어 지도 이동을 생략합니다.');
           }
 
           // 상세 바텀시트 표시

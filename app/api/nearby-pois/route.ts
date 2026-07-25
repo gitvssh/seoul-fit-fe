@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[POI API] 백엔드 조회: lat=${lat}, lng=${lng}, radius=${radius}`);
+      console.log(`[POI API] 백엔드 조회: radius=${radius}`);
     }
 
     // 백엔드 API 호출 - 전체 POI 인덱스 가져오기 (페이징 처리)

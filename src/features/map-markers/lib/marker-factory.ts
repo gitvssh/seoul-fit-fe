@@ -2,6 +2,18 @@
 import type { FacilityCategory, Facility } from '@/lib/types';
 import { getFacilityIcon } from '@/shared/lib/icons/facility';
 
+const escapeHtml = (value: string): string =>
+  value.replace(
+    /[&<>"']/g,
+    character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[character]!
+  );
+
 /**
  * POI 마커 HTML 콘텐츠 생성
  * @param poiName POI 이름
@@ -9,12 +21,14 @@ import { getFacilityIcon } from '@/shared/lib/icons/facility';
  * @returns HTML 문자열
  */
 export const createPOIMarkerContent = (poiName: string, poiCode: string): string => {
+  const safeName = escapeHtml(poiName);
+  const safeCode = escapeHtml(poiCode);
   return `
-    <div 
-      id="poi-marker-${poiCode}" 
+    <div
+      id="poi-marker-${safeCode}"
       class="poi-marker"
-      data-poi-code="${poiCode}"
-      data-poi-name="${poiName}"
+      data-poi-code="${safeCode}"
+      data-poi-name="${safeName}"
       style="
         position: relative;
         display: flex;
@@ -31,7 +45,7 @@ export const createPOIMarkerContent = (poiName: string, poiCode: string): string
         z-index: 999;
         user-select: none;
       "
-      title="${poiName}"
+      title="${safeName}"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -70,6 +84,7 @@ export const createCustomMarkerContent = (
   const facilityIcon = getFacilityIcon(facilityCategory, facility);
   const categoryBgColor = facilityIcon.color;
   const iconSVG = facilityIcon.svg;
+  const safeFacilityId = escapeHtml(facilityId);
 
   // 따릉이 마커의 경우 상태 뱃지 추가
   let statusBadge = '';
@@ -104,10 +119,10 @@ export const createCustomMarkerContent = (
   }
 
   return `
-    <div 
-      id="marker-${facilityId}" 
-      class="custom-marker" 
-      data-facility-id="${facilityId}"
+    <div
+      id="marker-${safeFacilityId}"
+      class="custom-marker"
+      data-facility-id="${safeFacilityId}"
       data-category="${facilityCategory}"
       data-crowd-level="${crowdLevel}"
       style="
@@ -219,7 +234,7 @@ export const toggleMarkerTooltip = (
   if (show && !existingTooltip) {
     const tooltip = document.createElement('div');
     tooltip.className = 'marker-tooltip';
-    tooltip.innerHTML = content;
+    tooltip.textContent = content;
     tooltip.style.cssText = `
       position: absolute;
       bottom: 100%;

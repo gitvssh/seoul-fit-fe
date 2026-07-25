@@ -7,8 +7,9 @@
 
 'use client';
 
-import React, { useCallback } from 'react';
-import { MapProvider } from './providers/MapProvider';
+import React, { Suspense, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { MapProvider, useMapContext } from './providers/MapProvider';
 import { FacilityProvider, useFacilityContext } from './providers/FacilityProvider';
 import { MapView } from './MapView';
 import { ClusterBottomSheetWrapper } from './ClusterBottomSheetWrapper';
@@ -22,6 +23,42 @@ import type {
   ClusteredFacility 
 } from '@/lib/types';
 import type { SearchItem } from '@/shared/lib/hooks/useSearchCache';
+import { convertSearchResultToFacility } from '@/shared/api/searchDetail';
+import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
+import { env } from '@/config/environment';
+
+const SEARCH_TO_FACILITY_CATEGORY: Record<SearchItem['category'], FacilityCategory> = {
+  subway: 'subway',
+  bike: 'bike',
+  library: 'library',
+  park: 'park',
+  cultural_event: 'cultural_event',
+  cultural_reservation: 'cultural_reservation',
+  cooling_center: 'cooling_shelter',
+  restaurant: 'restaurant',
+};
+
+const PUBLIC_TO_FACILITY_CATEGORY: Record<string, FacilityCategory> = {
+  park: 'park',
+  library: 'library',
+  restaurant: 'restaurant',
+  'cultural-event': 'cultural_event',
+  'cultural-reservation': 'cultural_reservation',
+  'cooling-center': 'cooling_shelter',
+};
+
+const SEARCH_TO_PUBLIC_SLUG: Partial<Record<SearchItem['category'], string>> = {
+  park: 'park',
+  library: 'library',
+  restaurant: 'restaurant',
+  cultural_event: 'cultural-event',
+  cultural_reservation: 'cultural-reservation',
+  cooling_center: 'cooling-center',
+};
+
+function normalized(value?: string): string {
+  return (value || '').toLocaleLowerCase('ko-KR').replace(/[\s\-_.()[\]]/g, '');
+}
 
 // MapContainer Props
 interface MapContainerProps {
@@ -80,28 +117,211 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
   onWarningClose,
   forwardedRef,
 }) => {
-  const { activeCategories, toggleCategory } = useFacilityContext();
+  const searchParams = useSearchParams();
+  const deepLinkAppliedRef = React.useRef<string | null>(null);
+  const [selectionMessage, setSelectionMessage] = React.useState('');
+  const { panTo, setZoom, mapStatus } = useMapContext();
+  const {
+    facilities,
+    activeCategories,
+    toggleCategory,
+    activateCategory,
+    addTransientFacility,
+    selectFacility,
+  } = useFacilityContext();
+
+  const revealFacility = useCallback(
+    (
+      facility: Facility,
+      selectionSource: 'public_place' | 'search_result' = 'search_result'
+    ) => {
+      if (!isValidSeoulCoordinate(facility.position.lat, facility.position.lng)) {
+        throw new Error('선택한 장소의 위치 정보가 올바르지 않습니다.');
+      }
+
+      addTransientFacility(facility);
+      activateCategory(facility.category);
+      panTo(facility.position);
+      setZoom(3);
+      selectFacility(facility, selectionSource);
+      setSelectionMessage(`${facility.name} 위치로 이동했습니다.`);
+    },
+    [activateCategory, addTransientFacility, panTo, selectFacility, setZoom]
+  );
+
+  const resolveSearchFacility = useCallback(
+    async (searchItem: SearchItem): Promise<Facility> => {
+      const category = SEARCH_TO_FACILITY_CATEGORY[searchItem.category];
+      const itemName = normalized(searchItem.name);
+      const itemAddress = normalized(searchItem.address);
+      const existing = facilities.find(facility => {
+        if (facility.category !== category) return false;
+        if (String(facility.id) === String(searchItem.ref_id || searchItem.id)) return true;
+        if (normalized(facility.name) !== itemName) return false;
+        return !itemAddress || !facility.address || normalized(facility.address) === itemAddress;
+      });
+      if (existing) return existing;
+
+      if (
+        searchItem.position &&
+        isValidSeoulCoordinate(searchItem.position.lat, searchItem.position.lng)
+      ) {
+        return {
+          id: searchItem.id,
+          name: searchItem.name,
+          address: searchItem.address || '',
+          category,
+          position: searchItem.position,
+          congestionLevel: 'low',
+          description: searchItem.remark,
+        };
+      }
+
+      if (searchItem.category === 'subway' || searchItem.category === 'bike') {
+        throw new Error('선택한 교통 시설의 위치를 찾을 수 없습니다.');
+      }
+
+      const response = await fetch(`/api/search/data/${encodeURIComponent(searchItem.id)}`, {
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        throw new Error('장소 상세 정보를 불러오지 못했습니다.');
+      }
+
+      const detail = await response.json();
+      const converted = convertSearchResultToFacility(searchItem.category, detail, searchItem);
+      if (!converted) {
+        throw new Error('선택한 장소의 위치를 확인할 수 없습니다.');
+      }
+      return converted;
+    },
+    [facilities]
+  );
   
   // console.log('[MapContainerInner] 렌더링됨');
   // console.log('[MapContainerInner] isSidebarOpen:', isSidebarOpen);
   // console.log('[MapContainerInner] activeCategories:', activeCategories);
   // console.log('[MapContainerInner] toggleCategory 함수 존재:', !!toggleCategory);
   
-  React.useImperativeHandle(forwardedRef, () => ({
-    handleSearchSelect: async (searchItem: SearchItem) => {
-      console.log('Search item selected:', searchItem);
-    },
-    handleSearchClear: () => {
-      console.log('Search cleared');
-    },
-  }), []);
+  React.useImperativeHandle(
+    forwardedRef,
+    () => ({
+      handleSearchSelect: async (searchItem: SearchItem) => {
+        try {
+          const facility = await resolveSearchFacility(searchItem);
+          revealFacility(facility);
+
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set('lat', String(facility.position.lat));
+          nextUrl.searchParams.set('lng', String(facility.position.lng));
+          const publicSlug = SEARCH_TO_PUBLIC_SLUG[searchItem.category];
+          if (publicSlug && searchItem.ref_id !== undefined) {
+            nextUrl.searchParams.set(
+              'place',
+              `${publicSlug}:${searchItem.ref_id}`
+            );
+          }
+          window.history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}`);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : '검색 결과를 지도에 표시하지 못했습니다.';
+          setSelectionMessage(message);
+          throw error;
+        }
+      },
+      handleSearchClear: () => {
+        selectFacility(null);
+        setSelectionMessage('');
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete('place');
+        window.history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}`);
+      },
+    }),
+    [resolveSearchFacility, revealFacility, selectFacility]
+  );
+
+  React.useEffect(() => {
+    const placeParam = searchParams?.get('place');
+    if (!placeParam || !mapStatus.success || deepLinkAppliedRef.current === placeParam) return;
+
+    const separatorIndex = placeParam.lastIndexOf(':');
+    if (separatorIndex <= 0) return;
+    const categorySlug = placeParam.slice(0, separatorIndex);
+    const id = Number(placeParam.slice(separatorIndex + 1));
+    const category = PUBLIC_TO_FACILITY_CATEGORY[categorySlug];
+    if (!category || !Number.isSafeInteger(id) || id <= 0) return;
+
+    deepLinkAppliedRef.current = placeParam;
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch(
+          env.createPublicBackendEndpoint(
+            `/api/public/places/${encodeURIComponent(categorySlug)}/${id}`
+          ),
+          { cache: 'no-store', signal: controller.signal }
+        );
+        if (!response.ok) throw new Error('공개 장소 정보를 불러오지 못했습니다.');
+
+        const place = (await response.json()) as {
+          name: string;
+          address: string | null;
+          description: string | null;
+          phone: string | null;
+          website: string | null;
+          openingHours: string | null;
+          latitude: number | null;
+          longitude: number | null;
+          reservable: boolean | null;
+        };
+        if (
+          place.latitude === null ||
+          place.longitude === null ||
+          !isValidSeoulCoordinate(place.latitude, place.longitude)
+        ) {
+          throw new Error('공개 장소의 위치 정보가 없습니다.');
+        }
+
+        revealFacility(
+          {
+            id: `public:${categorySlug}:${id}`,
+            name: place.name,
+            address: place.address || '',
+            description: place.description || undefined,
+            phone: place.phone || undefined,
+            website: place.website || undefined,
+            operatingHours: place.openingHours || undefined,
+            isReservable: place.reservable || false,
+            category,
+            position: { lat: place.latitude, lng: place.longitude },
+            congestionLevel: 'low',
+          },
+          'public_place'
+        );
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        deepLinkAppliedRef.current = null;
+        setSelectionMessage(
+          error instanceof Error ? error.message : '장소를 지도에 표시하지 못했습니다.'
+        );
+      }
+    })();
+
+    return () => controller.abort();
+  }, [mapStatus.success, revealFacility, searchParams]);
   
   return (
     <>
       <div className={className}>
-        <MapView />
+        <Suspense fallback={<div className='h-full w-full' aria-busy='true' />}>
+          <MapView />
+        </Suspense>
         <ClusterBottomSheetWrapper />
         <FacilityBottomSheetWrapper />
+        <p className='sr-only' role='status' aria-live='polite'>
+          {selectionMessage}
+        </p>
       </div>
       
       {/* 사이드바 - 맵 마커 토글용 (백엔드 업데이트 없음) */}
@@ -143,7 +363,7 @@ const MapContainer = React.forwardRef<MapContainerRef, MapContainerProps>(
     
     // 지도 클릭 핸들러
     const handleMapClick = useCallback((position: Position) => {
-      console.log('Map clicked at:', position);
+      console.log('Map clicked');
       onMapClick?.();
     }, [onMapClick]);
 
@@ -164,18 +384,6 @@ const MapContainer = React.forwardRef<MapContainerRef, MapContainerProps>(
       console.log('Cluster selected:', cluster);
       // 필요시 추가 로직 구현
     }, []);
-
-    // Ref 메서드 구현 (기존 호환성 유지)
-    React.useImperativeHandle(ref, () => ({
-      handleSearchSelect: async (searchItem: SearchItem) => {
-        // TODO: 검색 결과 선택 로직 구현
-        console.log('Search item selected:', searchItem);
-      },
-      handleSearchClear: () => {
-        // TODO: 검색 초기화 로직 구현
-        console.log('Search cleared');
-      },
-    }), []);
 
     return (
       <MapProvider

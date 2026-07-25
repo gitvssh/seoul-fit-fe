@@ -14,7 +14,7 @@ export function useRestaurantFacilities() {
 
   // 위치 기반 음식점 조회
   const fetchRestaurants = useCallback(async (lat: number, lng: number) => {
-    console.log('[useRestaurantFacilities] 음식점 데이터 조회 시작:', { lat, lng });
+    console.log('[useRestaurantFacilities] 음식점 데이터 조회 시작');
     setLoading(true);
     setError(null);
     

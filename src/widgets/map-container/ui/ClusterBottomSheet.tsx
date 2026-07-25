@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ClusteredFacility, Facility, FacilityCategory } from '@/lib/types';
 import { getFacilityIcon } from '@/shared/lib/icons/facility';
 import { X, MapPin, ArrowLeft, Clock, Phone, Info } from 'lucide-react';
+import { trackEvent } from '@/shared/lib/analytics/analytics';
 
 const FACILITY_LABELS = {
   sports: '체육시설',
@@ -36,6 +37,10 @@ const ClusterBottomSheet = React.memo(function ClusterBottomSheet({
   const [modalImageSrc, setModalImageSrc] = useState('');
 
   const handleFacilityClick = useCallback((facility: Facility) => {
+    trackEvent('facility_detail_viewed', {
+      category: facility.category,
+      selection_source: 'cluster',
+    });
     setSelectedFacility(facility);
     setViewMode('detail');
   }, []);
@@ -82,12 +87,12 @@ const ClusterBottomSheet = React.memo(function ClusterBottomSheet({
   }, [isOpen]);
 
   console.log('[ClusterBottomSheet] 렌더링 조건:', { isOpen, hasCluster: !!cluster });
-  
+
   if (!isOpen || !cluster) {
     console.log('[ClusterBottomSheet] 렌더링하지 않음 - isOpen:', isOpen, 'cluster:', !!cluster);
     return null;
   }
-  
+
   console.log('[ClusterBottomSheet] UI 렌더링 시작');
 
   return (
@@ -110,7 +115,9 @@ const ClusterBottomSheet = React.memo(function ClusterBottomSheet({
               )}
               <div>
                 <h2 className='text-lg font-semibold text-gray-900'>
-                  {viewMode === 'detail' && selectedFacility ? selectedFacility.name : `${cluster.count}개 시설 그룹`}
+                  {viewMode === 'detail' && selectedFacility
+                    ? selectedFacility.name
+                    : `${cluster.count}개 시설 그룹`}
                 </h2>
                 <p className='text-sm text-gray-500'>
                   {viewMode === 'detail' && selectedFacility
@@ -199,6 +206,12 @@ const ClusterBottomSheet = React.memo(function ClusterBottomSheet({
                         <Phone className='w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0' />
                         <a
                           href={`tel:${selectedFacility.phone}`}
+                          onClick={() =>
+                            trackEvent('facility_action_clicked', {
+                              action_type: 'phone',
+                              category: selectedFacility.category,
+                            })
+                          }
                           className='text-blue-600 hover:text-blue-800 text-sm transition-colors'
                         >
                           {selectedFacility.phone}

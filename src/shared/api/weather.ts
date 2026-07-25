@@ -91,9 +91,6 @@ export async function getWeatherData(lat: number, lng: number): Promise<WeatherA
   try {
     const response = await axios.get('/api/weather', {
       params: { lat, lng },
-      headers: {
-        'X-API-Key': process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'default-api-key',
-      },
     });
 
     let weatherData: WeatherAPIResponse;
@@ -130,7 +127,7 @@ export async function getNearestWeatherData(lat: number, lng: number): Promise<W
   try {
     // 좌표 유효성 검증
     if (isNaN(lat) || isNaN(lng)) {
-      console.error('올바르지 않은 좌표입니다 : ', { lat, lng });
+      console.error('올바르지 않은 좌표입니다.');
       return null;
     }
 
@@ -181,6 +178,8 @@ export async function getNearestWeatherData(lat: number, lng: number): Promise<W
       UV_MSG: result.data.UV_MSG,
       PM25_INDEX: result.data.PM25_INDEX,
       PM10_INDEX: result.data.PM10_INDEX,
+      timestamp: result.data.timestamp,
+      cached: result.data.cached,
     };
   } catch (error) {
     console.error('날씨 데이터 조회 실패 : ', error);

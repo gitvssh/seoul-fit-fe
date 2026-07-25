@@ -6,6 +6,43 @@
 import { SEOUL_LOCATIONS } from '../model/locations';
 import type { Location } from '../model/types';
 
+export interface NearestAreaMatch {
+  location: Location;
+  distanceKm: number;
+}
+
+function calculateDistanceKm(
+  first: Pick<Location, 'lat' | 'lng'>,
+  second: Pick<Location, 'lat' | 'lng'>
+): number {
+  const earthRadiusKm = 6371;
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const deltaLatitude = radians(second.lat - first.lat);
+  const deltaLongitude = radians(second.lng - first.lng);
+  const firstLatitude = radians(first.lat);
+  const secondLatitude = radians(second.lat);
+  const haversine =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(deltaLongitude / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+export function findNearestAreaMatch(lat: number, lng: number): NearestAreaMatch {
+  const origin = { lat, lng };
+  let nearest = SEOUL_LOCATIONS[0];
+  let minimumDistanceKm = calculateDistanceKm(origin, nearest);
+
+  for (const location of SEOUL_LOCATIONS.slice(1)) {
+    const distanceKm = calculateDistanceKm(origin, location);
+    if (distanceKm < minimumDistanceKm) {
+      minimumDistanceKm = distanceKm;
+      nearest = location;
+    }
+  }
+
+  return { location: nearest, distanceKm: minimumDistanceKm };
+}
+
 /**
  * 현재 위치에서 가장 가까운 장소 코드 찾기
  * @param lat 현재 위치 위도
@@ -13,22 +50,7 @@ import type { Location } from '../model/types';
  * @return 가장 가까운 장소 코드 (POI001~POI128)
  */
 export function findNearestAreaCode(lat: number, lng: number): string {
-  let minDistance = Infinity;
-  let nearestCode = 'POI001'; // 기본값은 강남
-
-  // 유클리드 거리 계산
-  for (const location of SEOUL_LOCATIONS) {
-    const distance = Math.sqrt(
-      Math.pow(lat - location.lat, 2) + Math.pow(lng - location.lng, 2)
-    );
-
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestCode = location.code;
-    }
-  }
-
-  return nearestCode;
+  return findNearestAreaMatch(lat, lng).location.code;
 }
 
 /**

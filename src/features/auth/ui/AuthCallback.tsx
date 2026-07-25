@@ -8,18 +8,22 @@
 import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useOAuthCallback } from '../model/oauth-flow';
-import { SignupForm } from './SignupForm';
 import { LoadingStates } from './LoadingStates';
 
 function AuthContent() {
   const searchParams = useSearchParams();
-  const { status, errorMessage, userInfo, handleCallback, handleSignUp } = useOAuthCallback();
+  const { status, errorMessage, handleCallback } = useOAuthCallback();
 
   useEffect(() => {
     const code = searchParams?.get('code');
     const error = searchParams?.get('error');
+    const state = searchParams?.get('state');
     
-    handleCallback({ code: code || undefined, error: error || undefined });
+    handleCallback({
+      code: code || undefined,
+      error: error || undefined,
+      state: state || undefined,
+    });
   }, [searchParams, handleCallback]);
 
   if (status === 'loading') {
@@ -30,16 +34,8 @@ function AuthContent() {
     return <LoadingStates.Success message="로그인 성공!" />;
   }
 
-  if (status === 'success_signup') {
-    return <LoadingStates.Success message="회원가입 완료!" />;
-  }
-
   if (status === 'error') {
     return <LoadingStates.Error message={errorMessage} />;
-  }
-
-  if (status === 'need_signup' && userInfo) {
-    return <SignupForm userInfo={userInfo} onSignUp={handleSignUp} />;
   }
 
   return null;

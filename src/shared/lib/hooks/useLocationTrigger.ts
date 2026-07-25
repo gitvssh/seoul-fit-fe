@@ -24,7 +24,6 @@ export const useLocationTrigger = () => {
     try {
       await evaluateLocationTriggers(
         {
-          userId: user.id.toString(),
           latitude: coords.lat,
           longitude: coords.lng,
           radius: 1000,

@@ -15,11 +15,31 @@ import {
   Info,
   MessageCircleMore,
   Train,
+  Navigation,
+  Share2,
+  Bookmark,
+  ExternalLink,
+  Database,
+  TicketCheck,
 } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import type { Facility, CongestionData, WeatherData, SubwayArrivalData } from '@/lib/types';
 import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 import { SubwayStationIcon } from './SubwayStationIcon';
+import { trackEvent } from '@/shared/lib/analytics/analytics';
+import { getFacilityOpenState } from '@/features/place-filter/lib/place-filter';
+import { useLocalFacilityFavorite } from '@/features/favorites/lib/useLocalFacilityFavorite';
+import {
+  getFacilityReservationUrl,
+  getFacilityShareUrl,
+  getKakaoDirectionsUrl,
+  getSafeExternalUrl,
+} from '@/entities/facility/lib/actions';
+import { getFacilityProvenance } from '@/entities/facility/lib/provenance';
+import type { FacilityRecommendation } from '@/features/recommendation/model/types';
+import { useI18n } from '@/shared/i18n/I18nProvider';
+import type { MessageKey } from '@/shared/i18n/messages';
+import { useFocusTrap } from '@/shared/lib/hooks/useFocusTrap';
 
 interface FacilityBottomSheetProps {
   facility: Facility | null;
@@ -27,6 +47,9 @@ interface FacilityBottomSheetProps {
   onClose: () => void;
   weatherData?: WeatherData | null;
   congestionData?: CongestionData | null;
+  alternatives?: FacilityRecommendation[];
+  decisionSummary?: FacilityRecommendation;
+  onAlternativeSelect?: (recommendation: FacilityRecommendation) => void;
 }
 
 // 드래그 상태 타입
@@ -43,7 +66,11 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
   onClose,
   weatherData: propWeatherData,
   congestionData: propCongestionData,
+  alternatives = [],
+  decisionSummary,
+  onAlternativeSelect,
 }) => {
+  const { locale, t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -53,9 +80,17 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
   });
   const [subwayArrival, setSubwayArrival] = useState<SubwayArrivalData | null>(null);
   const [isLoadingArrival, setIsLoadingArrival] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
+  const {
+    isFavorite,
+    isSaving: isFavoriteSaving,
+    error: favoriteError,
+    toggleFavorite,
+  } = useLocalFacilityFavorite(facility);
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(sheetRef, isOpen);
 
   // 시설이 변경되면 확장 상태 초기화
   useEffect(() => {
@@ -68,6 +103,7 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
         startTime: 0,
       });
       setSubwayArrival(null);
+      setShareMessage('');
     }
   }, [isOpen, facility]);
 
@@ -233,16 +269,50 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isExpanded, onClose]);
 
-  // 포커스 관리
-  useEffect(() => {
-    if (isOpen && sheetRef.current) {
-      sheetRef.current.focus();
+  const handleShare = useCallback(async () => {
+    if (!facility) return;
+
+    const url = getFacilityShareUrl(facility);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: facility.name,
+          text: `${facility.name} 위치를 확인해 보세요.`,
+          url,
+        });
+        setShareMessage('공유했습니다.');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareMessage('링크를 복사했습니다.');
+      } else {
+        setShareMessage('이 브라우저에서는 링크 복사를 지원하지 않습니다.');
+        return;
+      }
+      trackEvent('facility_action_clicked', {
+        action_type: 'share',
+        category: facility.category,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setShareMessage('공유하지 못했습니다. 잠시 후 다시 시도해 주세요.');
     }
-  }, [isOpen]);
+  }, [facility]);
 
   if (!facility || !isOpen) return null;
 
   const config = FACILITY_CONFIGS[facility.category];
+  const openState = getFacilityOpenState(facility.operatingHours);
+  const openStatus =
+    openState === 'open'
+      ? { label: t('explorer.open'), dotClass: 'bg-green-500' }
+      : openState === 'closed'
+        ? { label: t('explorer.closed'), dotClass: 'bg-red-500' }
+        : { label: t('explorer.hoursUnknown'), dotClass: 'bg-gray-500' };
+  const provenance = getFacilityProvenance(facility);
+  const sourceUrl = getSafeExternalUrl(provenance.sourceUrl);
+  const websiteUrl = getSafeExternalUrl(facility.website);
+  const reservationUrl = getFacilityReservationUrl(facility);
+  const directionsUrl = getKakaoDirectionsUrl(facility);
 
   // 드래그 중 변환 계산 (부드러운 애니메이션)
   const translateY = dragState.isDragging ? Math.max(0, dragState.currentY - dragState.startY) : 0;
@@ -279,17 +349,18 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
         tabIndex={-1}
       >
         {/* 드래그 핸들 */}
-        <div
+        <button
+          type='button'
           className='flex justify-center py-4 cursor-grab active:cursor-grabbing select-none'
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onMouseDown={handleMouseDown}
-          role='button'
-          aria-label='드래그하여 크기 조절'
+          onClick={() => setIsExpanded(current => !current)}
+          aria-label={t('facility.drag')}
         >
           <div className='w-14 h-1.5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full transition-all hover:scale-x-125' />
-        </div>
+        </button>
 
         {/* 헤더 */}
         <div className='flex items-center justify-between px-6 pb-4'>
@@ -312,8 +383,10 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                 {facility.name}
               </h3>
               <p className='text-sm text-gray-500 truncate flex items-center gap-1 mt-1'>
-                <span className='inline-block w-1.5 h-1.5 bg-green-500 rounded-full'></span>
-                {config.label} • 운영중
+                <span
+                  className={`inline-block h-1.5 w-1.5 rounded-full ${openStatus.dotClass}`}
+                />
+                {t(`category.${facility.category}` as MessageKey)} · {openStatus.label}
               </p>
             </div>
           </div>
@@ -324,16 +397,20 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
               size='sm'
               onClick={() => setIsExpanded(!isExpanded)}
               className='p-2.5 hover:bg-gray-100 rounded-xl transition-all hover:scale-110'
-              aria-label={isExpanded ? '축소' : '확대'}
+              aria-label={isExpanded ? t('facility.collapse') : t('facility.expand')}
             >
-              {isExpanded ? <ChevronDown className='w-5 h-5 text-gray-600' /> : <ChevronUp className='w-5 h-5 text-gray-600' />}
+              {isExpanded ? (
+                <ChevronDown className='w-5 h-5 text-gray-600' />
+              ) : (
+                <ChevronUp className='w-5 h-5 text-gray-600' />
+              )}
             </Button>
             <Button
               variant='ghost'
               size='sm'
               onClick={onClose}
               className='p-2.5 hover:bg-red-50 rounded-xl transition-all hover:scale-110 group'
-              aria-label='닫기'
+              aria-label={t('facility.close')}
             >
               <X className='w-5 h-5 text-gray-600 group-hover:text-red-500' />
             </Button>
@@ -351,6 +428,137 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
             scrollbarWidth: 'thin',
           }}
         >
+          {decisionSummary && (
+            <section className='mb-4 rounded-2xl border border-violet-100 bg-violet-50 p-4'>
+              <div className='flex items-center justify-between gap-3'>
+                <div>
+                  <p className='text-xs font-medium text-violet-700'>
+                    {t('facility.decision')}
+                  </p>
+                  <p className='mt-1 text-sm font-semibold text-gray-900'>
+                    {decisionSummary.reasonCodes[0]
+                      ? t(`reason.${decisionSummary.reasonCodes[0]}` as MessageKey)
+                      : t('facility.genericDecision')}
+                  </p>
+                </div>
+                <span className='rounded-full bg-white px-3 py-1 text-sm font-bold text-violet-700'>
+                  {decisionSummary.score}점
+                </span>
+              </div>
+              {decisionSummary.reasons.length > 1 && (
+                <p className='mt-2 text-xs text-violet-800'>
+                  {decisionSummary.reasonCodes
+                    .slice(1)
+                    .map(code => t(`reason.${code}` as MessageKey))
+                    .join(' · ')}
+                </p>
+              )}
+              {decisionSummary.warnings.length > 0 && (
+                <p className='mt-2 text-xs font-medium text-amber-700'>
+                  {t('explorer.check', {
+                    warning: decisionSummary.warningCodes
+                      .map(code => t(`warning.${code}` as MessageKey))
+                      .join(' · '),
+                  })}
+                </p>
+              )}
+              <p className='mt-2 text-[11px] text-gray-500'>
+                {t('facility.referenceScore')}
+              </p>
+            </section>
+          )}
+
+          <div className='mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4'>
+            <Button asChild variant='default' className='h-10'>
+              <a
+                href={directionsUrl}
+                target='_blank'
+                rel='noopener noreferrer'
+                onClick={() =>
+                  trackEvent('facility_action_clicked', {
+                    action_type: 'navigation',
+                    category: facility.category,
+                  })
+                }
+              >
+                <Navigation className='h-4 w-4' aria-hidden='true' />
+                {t('facility.directions')}
+              </a>
+            </Button>
+            <Button type='button' variant='outline' className='h-10' onClick={handleShare}>
+              <Share2 className='h-4 w-4' aria-hidden='true' />
+              {t('facility.share')}
+            </Button>
+            <Button
+              type='button'
+              variant={isFavorite ? 'secondary' : 'outline'}
+              className='h-10'
+              aria-pressed={isFavorite}
+              disabled={isFavoriteSaving}
+              onClick={async () => {
+                const nextFavorite = await toggleFavorite();
+                trackEvent('favorite_changed', {
+                  action_type: 'save',
+                  category: facility.category,
+                  favorite_state: nextFavorite ? 'saved' : 'removed',
+                });
+              }}
+            >
+              <Bookmark
+                className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`}
+                aria-hidden='true'
+              />
+              {isFavorite ? t('facility.saved') : t('facility.save')}
+            </Button>
+            {reservationUrl ? (
+              <Button asChild variant='outline' className='h-10'>
+                <a
+                  href={reservationUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  onClick={() =>
+                    trackEvent('facility_action_clicked', {
+                      action_type: 'reservation',
+                      category: facility.category,
+                    })
+                  }
+                >
+                  <TicketCheck className='h-4 w-4' aria-hidden='true' />
+                  {t('facility.reservation')}
+                </a>
+              </Button>
+            ) : websiteUrl ? (
+              <Button asChild variant='outline' className='h-10'>
+                <a
+                  href={websiteUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  onClick={() =>
+                    trackEvent('facility_action_clicked', {
+                      action_type: 'website',
+                      category: facility.category,
+                    })
+                  }
+                >
+                  <ExternalLink className='h-4 w-4' aria-hidden='true' />
+                  {t('facility.website')}
+                </a>
+              </Button>
+            ) : (
+              <Button type='button' variant='outline' className='h-10' disabled>
+                {t('facility.noLink')}
+              </Button>
+            )}
+          </div>
+          {favoriteError && (
+            <p className='mt-2 text-xs text-amber-700' role='status'>
+              {favoriteError}
+            </p>
+          )}
+          <p className='sr-only' role='status' aria-live='polite'>
+            {shareMessage}
+          </p>
+
           {/* 따릉이 설명 (우선 표시) */}
           {facility.category === 'bike' && facility.description && (
             <div className='mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/50 rounded-2xl'>
@@ -369,8 +577,10 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                   <MapPin className='w-5 h-5 text-blue-500' />
                 </div>
                 <div className='flex-1'>
-                  <p className='text-xs text-gray-500 mb-1'>주소</p>
-                  <p className='text-gray-900 text-sm font-medium leading-relaxed'>{facility.address}</p>
+                  <p className='mb-1 text-xs text-gray-600'>{t('facility.address')}</p>
+                  <p className='text-gray-900 text-sm font-medium leading-relaxed'>
+                    {facility.address}
+                  </p>
                 </div>
               </div>
             )}
@@ -381,8 +591,10 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                   <Clock className='w-5 h-5 text-green-500' />
                 </div>
                 <div className='flex-1'>
-                  <p className='text-xs text-gray-500 mb-1'>운영시간</p>
-                  <p className='text-gray-900 text-sm font-medium leading-relaxed'>{facility.operatingHours}</p>
+                  <p className='mb-1 text-xs text-gray-600'>{t('facility.hours')}</p>
+                  <p className='text-gray-900 text-sm font-medium leading-relaxed'>
+                    {facility.operatingHours}
+                  </p>
                 </div>
               </div>
             )}
@@ -393,9 +605,15 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                   <Phone className='w-5 h-5 text-purple-500' />
                 </div>
                 <div className='flex-1'>
-                  <p className='text-xs text-gray-500 mb-1'>연락처</p>
+                  <p className='mb-1 text-xs text-gray-600'>{t('facility.contact')}</p>
                   <a
                     href={`tel:${facility.phone}`}
+                    onClick={() =>
+                      trackEvent('facility_action_clicked', {
+                        action_type: 'phone',
+                        category: facility.category,
+                      })
+                    }
                     className='text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors underline decoration-dotted'
                   >
                     {facility.phone}
@@ -403,7 +621,88 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                 </div>
               </div>
             )}
+
+            <div className='flex items-start space-x-3 rounded-xl bg-gray-50 p-3'>
+              <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm'>
+                <Database className='h-5 w-5 text-slate-600' aria-hidden='true' />
+              </div>
+              <div className='min-w-0 flex-1'>
+                <p className='text-xs text-gray-600'>{t('facility.source')}</p>
+                {sourceUrl ? (
+                  <a
+                    href={sourceUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-sm font-medium text-blue-700 underline decoration-dotted'
+                  >
+                    {provenance.sourceLabel}
+                  </a>
+                ) : (
+                  <p className='text-sm font-medium text-gray-900'>{provenance.sourceLabel}</p>
+                )}
+                <p className='mt-1 text-xs text-gray-600'>
+                  {t('facility.lastUpdated', {
+                    freshness: t(`freshness.${provenance.freshness}` as MessageKey),
+                    time:
+                      facility.sourceUpdatedAt &&
+                      Number.isFinite(Date.parse(facility.sourceUpdatedAt))
+                        ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ko-KR', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          }).format(new Date(facility.sourceUpdatedAt))
+                        : t('facility.unknown'),
+                  })}
+                </p>
+                {provenance.freshness === 'stale' && (
+                  <p className='mt-1 text-xs font-medium text-amber-700'>
+                    {t('facility.staleWarning')}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
+
+          {alternatives.length > 0 && (
+            <section className='mb-6' aria-labelledby='nearby-alternatives-title'>
+              <div className='mb-2 flex items-center justify-between'>
+                <h4 id='nearby-alternatives-title' className='text-sm font-semibold text-gray-900'>
+                  {t('facility.alternatives')}
+                </h4>
+                <span className='text-xs text-gray-600'>{t('facility.within5km')}</span>
+              </div>
+              <div className='grid gap-2 sm:grid-cols-3'>
+                {alternatives.map(alternative => (
+                  <button
+                    key={`${alternative.facility.category}:${alternative.facility.id}`}
+                    type='button'
+                    onClick={() => {
+                      trackEvent('alternative_selected', {
+                        category: alternative.facility.category,
+                        reason_code: alternative.reasonCodes[0],
+                      });
+                      onAlternativeSelect?.(alternative);
+                    }}
+                    className='rounded-xl border border-gray-200 bg-white p-3 text-left hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  >
+                    <div className='flex items-center justify-between gap-2'>
+                      <p className='truncate text-sm font-semibold text-gray-900'>
+                        {alternative.facility.name}
+                      </p>
+                      <span className='shrink-0 text-xs font-bold text-blue-700'>
+                        {t('explorer.score', { score: alternative.score })}
+                      </span>
+                    </div>
+                    <p className='mt-1 text-xs text-gray-500'>
+                      {alternative.facility.distance?.toFixed(1)}km ·{' '}
+                      {alternative.reasonCodes[0]
+                        ? t(`reason.${alternative.reasonCodes[0]}` as MessageKey)
+                        : t('explorer.nearbyInfo')}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* 지하철 실시간 도착 정보 */}
           {facility.category === 'subway' && (
@@ -412,13 +711,15 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                 <div className='w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3'>
                   <Train className='w-4 h-4 text-indigo-600' />
                 </div>
-                실시간 도착 정보
+                {t('facility.realtimeArrival')}
               </h4>
               {isLoadingArrival ? (
                 <div className='flex items-center justify-center py-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl'>
                   <div className='flex flex-col items-center'>
                     <div className='animate-spin rounded-full h-8 w-8 border-3 border-indigo-200 border-t-indigo-600' />
-                    <span className='mt-3 text-sm text-gray-600'>도착 정보를 불러오는 중...</span>
+                    <span className='mt-3 text-sm text-gray-600'>
+                      {t('facility.loadingArrival')}
+                    </span>
                   </div>
                 </div>
               ) : subwayArrival ? (
@@ -483,7 +784,9 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                   </div>
                 ) : (
                   <div className='bg-gray-50 rounded-xl p-4'>
-                    <p className='text-sm text-gray-500 text-center'>혼잡도 정보를 불러올 수 없습니다</p>
+                    <p className='text-sm text-gray-500 text-center'>
+                      혼잡도 정보를 불러올 수 없습니다
+                    </p>
                   </div>
                 )}
               </div>
@@ -501,21 +804,31 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                     <div className='bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl p-3'>
                       <div className='flex items-center justify-between mb-1'>
                         <span className='text-xs text-gray-600'>기온</span>
-                        <span className='text-2xl font-bold text-blue-600'>{propWeatherData.TEMP}°</span>
+                        <span className='text-2xl font-bold text-blue-600'>
+                          {propWeatherData.TEMP}°
+                        </span>
                       </div>
-                      <div className='text-xs text-gray-500'>체감 {propWeatherData.SENSIBLE_TEMP}°</div>
+                      <div className='text-xs text-gray-500'>
+                        체감 {propWeatherData.SENSIBLE_TEMP}°
+                      </div>
                     </div>
                     <div className='bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3'>
                       <div className='flex items-center justify-between mb-1'>
                         <span className='text-xs text-gray-600'>습도</span>
-                        <span className='text-2xl font-bold text-purple-600'>{propWeatherData.HUMIDITY}%</span>
+                        <span className='text-2xl font-bold text-purple-600'>
+                          {propWeatherData.HUMIDITY}%
+                        </span>
                       </div>
-                      <div className='text-xs text-gray-500'>미세먼지 {propWeatherData.PM10_INDEX}</div>
+                      <div className='text-xs text-gray-500'>
+                        미세먼지 {propWeatherData.PM10_INDEX}
+                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className='bg-gray-50 rounded-xl p-4'>
-                    <p className='text-sm text-gray-500 text-center'>날씨 정보를 불러올 수 없습니다</p>
+                    <p className='text-sm text-gray-500 text-center'>
+                      날씨 정보를 불러올 수 없습니다
+                    </p>
                   </div>
                 )}
               </div>

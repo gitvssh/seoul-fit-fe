@@ -12,11 +12,11 @@ export interface UseUserReturn {
 
   // Actions
   getUser: (userId: number) => Promise<UserResult>;
-  getMyInfo: (oauthUserId: string, oauthProvider: string) => Promise<UserResult>;
+  getMyInfo: () => Promise<UserResult>;
   updateUser: (userId: number, updateData: userService.UpdateUserRequest) => Promise<UserResult>;
   deleteUser: (userId: number) => Promise<void>;
-  getUserInterests: (userId: number) => Promise<any>;
-  updateUserInterests: (userId: number, interests: UserInterests[]) => Promise<any>;
+  getUserInterests: () => Promise<unknown>;
+  updateUserInterests: (interests: UserInterests[]) => Promise<unknown>;
 
   // Clear functions
   clearUser: () => void;
@@ -62,7 +62,7 @@ export function useUser(): UseUserReturn {
   );
 
   const getMyInfo = useCallback(
-    async (oauthUserId: string, oauthProvider: string): Promise<UserResult> => {
+    async (): Promise<UserResult> => {
       if (!accessToken) {
         throw new Error('인증 토큰이 없습니다.');
       }
@@ -71,7 +71,7 @@ export function useUser(): UseUserReturn {
       setError(null);
 
       try {
-        const userData = await userService.getMyInfo(oauthUserId, oauthProvider, accessToken);
+        const userData = await userService.getMyInfo(accessToken);
         setUser(userData);
         return userData;
       } catch (err) {
@@ -134,7 +134,7 @@ export function useUser(): UseUserReturn {
   );
 
   const getUserInterests = useCallback(
-    async (userId: number) => {
+    async () => {
       if (!accessToken) {
         throw new Error('인증 토큰이 없습니다.');
       }
@@ -143,7 +143,7 @@ export function useUser(): UseUserReturn {
       setError(null);
 
       try {
-        const interests = await userService.getUserInterests(userId, accessToken);
+        const interests = await userService.getUserInterests(accessToken);
         return interests;
       } catch (err) {
         const errorMessage =
@@ -158,7 +158,7 @@ export function useUser(): UseUserReturn {
   );
 
   const updateUserInterests = useCallback(
-    async (userId: number, interests: UserInterests[]) => {
+    async (interests: UserInterests[]) => {
       if (!accessToken) {
         throw new Error('인증 토큰이 없습니다.');
       }
@@ -167,7 +167,7 @@ export function useUser(): UseUserReturn {
       setError(null);
 
       try {
-        const result = await userService.updateUserInterests({ userId, interests }, accessToken);
+        const result = await userService.updateUserInterests({ interests }, accessToken);
         return result;
       } catch (err) {
         const errorMessage =

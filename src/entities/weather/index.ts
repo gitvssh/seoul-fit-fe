@@ -15,6 +15,7 @@ export {
 // Location utilities
 export {
   findNearestAreaCode,
+  findNearestAreaMatch,
   getLocationByCode,
 } from './lib/location-finder';
 

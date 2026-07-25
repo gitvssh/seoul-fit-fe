@@ -11,8 +11,6 @@ export { LoadingStates } from './ui/LoadingStates';
 // Hooks
 export { useOAuthCallback } from './model/oauth-flow';
 
-// Legacy exports for compatibility
-export { useAuth } from '@/shared/lib/hooks/useAuth';
 export { default as LogoutModal } from '@/shared/ui/auth/LogoutModal';
 
 // Types

@@ -113,11 +113,9 @@ export const useKakaoMap = ({ containerId, center, level = 3 }: UseKakaoMapOptio
 
       // 스크립트 로드
       console.log('[useKakaoMap] 카카오맵 스크립트 로드 시작');
-      console.log('[useKakaoMap] API 키:', KAKAO_MAP_API_KEY);
       const script = document.createElement('script');
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false`;
       script.async = true;
-      console.log('[useKakaoMap] 스크립트 URL:', script.src);
 
       script.onload = () => {
         console.log('[useKakaoMap] 스크립트 로드 성공');

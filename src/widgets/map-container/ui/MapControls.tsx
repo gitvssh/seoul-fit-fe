@@ -11,10 +11,9 @@ import {
   Sun,
   Navigation,
   Thermometer,
-  Play,
-  Pause,
 } from 'lucide-react';
 import type { CongestionData, WeatherData } from '@/lib/types';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface MapControlsProps {
   // 혼잡도 관련
@@ -44,6 +43,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   onToggleWeather,
   onMoveToCurrentLocation,
 }) => {
+  const { t } = useI18n();
   // 혼잡도 상태에 따른 아이콘 선택
   const getCongestionIcon = () => {
     if (congestionLoading) return <RefreshCw className='h-4 w-4 animate-spin' />;
@@ -124,7 +124,8 @@ export const MapControls: React.FC<MapControlsProps> = ({
               hover:scale-105 transition-all duration-200 relative group
               ${getCongestionButtonClass(congestionData?.AREA_CONGEST_LVL)}
             `}
-            title={showCongestion ? '혼잡도 숨기기' : '혼잡도 보기'}
+            title={showCongestion ? t('map.hideCongestion') : t('map.showCongestion')}
+            aria-label={showCongestion ? t('map.hideCongestion') : t('map.showCongestion')}
           >
             {getCongestionIcon()}
           </Button>
@@ -162,7 +163,8 @@ export const MapControls: React.FC<MapControlsProps> = ({
                   : 'bg-white/90 hover:bg-white text-gray-700'
               }
             `}
-            title={showWeather ? '날씨 정보 숨기기' : '날씨 정보 보기'}
+            title={showWeather ? t('map.hideWeather') : t('map.showWeather')}
+            aria-label={showWeather ? t('map.hideWeather') : t('map.showWeather')}
           >
             {getWeatherIcon()}
           </Button>
@@ -187,7 +189,8 @@ export const MapControls: React.FC<MapControlsProps> = ({
             bg-white/90 hover:bg-white hover:scale-105 transition-all duration-200
             text-gray-700
           `}
-          title='현재 위치로 이동'
+          title={t('map.currentLocation')}
+          aria-label={t('map.currentLocation')}
         >
           <Navigation className='h-4 w-4' />
         </Button>

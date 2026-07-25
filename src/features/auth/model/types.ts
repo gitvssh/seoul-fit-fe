@@ -30,12 +30,14 @@ export type AuthStatus =
 export interface OAuthCallbackParams {
   code?: string;
   error?: string;
+  state?: string;
 }
 
 // 인증 API 응답
 export interface AuthResponse {
   user: UserInfo;
   accessToken: string;
+  refreshToken?: string;
 }
 
 // 관심사 옵션

@@ -1,4 +1,5 @@
 import { env } from '@/config/environment';
+import { useAuthStore } from '@/shared/model/authStore';
 
 export interface InterestCategory {
   id: number;
@@ -20,14 +21,19 @@ export interface UserInterestResponse {
   isCompleted: boolean;
 }
 
-export const getUserInterests = async (userId: number): Promise<UserInterestResponse> => {
+export const getUserInterests = async (): Promise<UserInterestResponse> => {
+  const userId = useAuthStore.getState().user?.id ?? 0;
   try {
+    const accessToken = useAuthStore.getState().accessToken;
+    if (!accessToken) {
+      throw new Error('인증 토큰이 없습니다.');
+    }
     const response = await fetch(`${env.publicBackendUrl}/api/users/interests`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(userId),
     });
 
     if (!response.ok) {
@@ -56,14 +62,18 @@ export const getUserInterests = async (userId: number): Promise<UserInterestResp
   }
 };
 
-export const updateUserInterests = async (userId: number, interests: string[]): Promise<void> => {
+export const updateUserInterests = async (interests: string[]): Promise<void> => {
+  const accessToken = useAuthStore.getState().accessToken;
+  if (!accessToken) {
+    throw new Error('인증 토큰이 없습니다.');
+  }
   const response = await fetch(`${env.publicBackendUrl}/api/users/interests`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      userId,
       interests,
     }),
   });

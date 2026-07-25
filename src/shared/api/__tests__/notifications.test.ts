@@ -86,7 +86,7 @@ describe('Notifications API', () => {
       const result = await getUnreadNotificationCount(mockUserId, mockAccessToken)
       
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/api/notifications/unread-count?userId=${mockUserId}`,
+        `${mockBaseUrl}/api/notifications/unread-count`,
         {
           method: 'GET',
           headers: {
@@ -136,7 +136,7 @@ describe('Notifications API', () => {
       const result = await getNotificationHistory(mockUserId, mockAccessToken, 0, 10)
       
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/api/notifications?userId=${mockUserId}&page=0&size=10`,
+        `${mockBaseUrl}/api/notifications?page=0&size=10`,
         {
           method: 'GET',
           headers: {
@@ -211,7 +211,7 @@ describe('Notifications API', () => {
       await markNotificationAsRead(mockNotificationId, mockUserId, mockAccessToken)
       
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/api/notifications/${mockNotificationId}/read?userId=${mockUserId}`,
+        `${mockBaseUrl}/api/notifications/${mockNotificationId}/read`,
         {
           method: 'PATCH',
           headers: {
@@ -242,7 +242,7 @@ describe('Notifications API', () => {
       await markAllNotificationsAsRead(mockUserId, mockAccessToken)
       
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/api/notifications/read-all?userId=${mockUserId}`,
+        `${mockBaseUrl}/api/notifications/read-all`,
         {
           method: 'PATCH',
           headers: {

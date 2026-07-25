@@ -14,7 +14,7 @@ export function useSportsFacilities() {
 
   // 위치 기반 체육시설 조회
   const fetchSportsFacilities = useCallback(async (lat: number, lng: number, radius: number = 2) => {
-    console.log('[useSportsFacilities] 체육시설 데이터 조회 시작:', { lat, lng, radius });
+    console.log('[useSportsFacilities] 체육시설 데이터 조회 시작:', { radius });
     setLoading(true);
     setError(null);
     

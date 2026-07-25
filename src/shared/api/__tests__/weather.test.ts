@@ -42,7 +42,7 @@ describe('Weather API', () => {
       expect(result).toEqual(mockWeatherData)
     })
 
-    it('includes API key in request', async () => {
+    it('keeps server API keys out of the browser request', async () => {
       mockedAxios.get.mockResolvedValue({ data: mockWeatherData })
       
       await getWeatherData(37.5665, 126.9780)
@@ -50,11 +50,10 @@ describe('Weather API', () => {
       expect(mockedAxios.get).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-API-Key': expect.any(String)
-          })
+          params: { lat: 37.5665, lng: 126.978 }
         })
       )
+      expect(mockedAxios.get.mock.calls[0]?.[1]).not.toHaveProperty('headers.X-API-Key')
     })
 
     it('handles network errors', async () => {

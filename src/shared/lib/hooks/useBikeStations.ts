@@ -21,7 +21,7 @@ export const useBikeStations = (): UseBikeStationsReturn => {
     setError(null);
     
     try {
-      console.log(`[useBikeStations] 따릉이 데이터 조회 시작: (${lat}, ${lng}), 반경: ${radius}km`);
+      console.log(`[useBikeStations] 따릉이 데이터 조회 시작: 반경=${radius}km`);
       const stations = await getNearbyBikeStations(lat, lng, radius);
       
       if (stations && stations.length > 0) {

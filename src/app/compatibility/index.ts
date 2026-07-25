@@ -12,7 +12,6 @@ export { SideBar } from '@/widgets/sidebar';
 
 // Features re-exports
 export { useMapMarkers } from '@/features/map-markers';
-export { useAuth } from '@/features/auth';
 
-// Shared UI re-exports  
+// Shared UI re-exports
 export * from '@/shared/ui';

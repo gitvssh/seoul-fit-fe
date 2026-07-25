@@ -1,10 +1,33 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/shared/ui/auth/AuthProvider';
+import { AnalyticsProvider } from '@/shared/ui/analytics/AnalyticsProvider';
+import { I18nProvider } from '@/shared/i18n/I18nProvider';
+import { SITE_DESCRIPTION, SITE_NAME, getSiteUrl } from '@/shared/lib/seo/site';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Seoul Fit Map',
-  description: 'AI 기반 공공시설 통합 네비게이터',
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: `${SITE_NAME} | 서울 공공시설 지도`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | 서울 공공시설 지도`,
+    description: SITE_DESCRIPTION,
+    url: '/',
+  },
+  twitter: {
+    card: 'summary',
+    title: `${SITE_NAME} | 서울 공공시설 지도`,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({
@@ -15,7 +38,11 @@ export default function RootLayout({
   return (
     <html lang='ko'>
       <body className='antialiased'>
-        <AuthProvider>{children}</AuthProvider>
+        <AnalyticsProvider>
+          <I18nProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </I18nProvider>
+        </AnalyticsProvider>
       </body>
     </html>
   );

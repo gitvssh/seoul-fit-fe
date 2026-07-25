@@ -4,6 +4,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import type { CongestionData, WeatherData } from '@/lib/types';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface MapStatusIndicatorProps {
   showCongestion: boolean;
@@ -20,6 +21,7 @@ export const MapStatusIndicator: React.FC<MapStatusIndicatorProps> = ({
   weatherData,
   markersCount,
 }) => {
+  const { t } = useI18n();
   // 혼잡도 레벨에 따른 색상 클래스
   const getCongestionColorClass = (level?: string) => {
     if (!level) return 'bg-gray-500';
@@ -57,7 +59,7 @@ export const MapStatusIndicator: React.FC<MapStatusIndicatorProps> = ({
       <div className='absolute bottom-4 right-4 z-30'>
         <div className='bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm text-xs text-gray-600 border border-white/20 flex items-center gap-2'>
           <MapPin className='h-3 w-3 text-blue-500' />
-          <span className='font-medium'>{markersCount}개 시설</span>
+          <span className='font-medium'>{t('map.facilityCount', { count: markersCount })}</span>
         </div>
       </div>
 

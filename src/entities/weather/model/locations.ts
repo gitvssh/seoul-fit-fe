@@ -1,6 +1,6 @@
 /**
- * @fileoverview Seoul 120 Locations Data
- * @description 서울 열린 데이터 광장에서 제공한 서울시 주요 120 장소 목록
+ * @fileoverview Seoul Major Locations Data
+ * @description 서울 열린데이터광장에서 제공한 서울시 주요 장소 목록
  */
 
 import type { Location } from './types';
