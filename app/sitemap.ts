@@ -32,5 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
-  return [...staticPages, ...entries.flat()];
+  const entriesByUrl = new Map(entries.flat().map(entry => [entry.url, entry]));
+
+  return [...staticPages, ...entriesByUrl.values()];
 }
