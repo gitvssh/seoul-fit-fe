@@ -10,7 +10,7 @@ resources:
 images:
   - name: registry.damecasol.com/seoul-fit/frontend
     newName: registry.damecasol.com/seoul-fit/frontend
-    digest: sha256:e67cc86dfc43e831a401cfd7ba24ec672e7255f2a766712e9c0d686add83d67b
+    digest: sha256:7cd8e2d630dcd367af5cac1930789e01be9c2bcf401c2ba4c2cb9513eb108c96
 patches:
   - target:
       kind: Deployment
