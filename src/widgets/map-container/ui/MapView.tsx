@@ -29,9 +29,7 @@ import {
   type PlaceFilterKey,
   type PlaceFilterState,
 } from '@/features/place-filter/model/types';
-import {
-  recommendFacilities,
-} from '@/features/recommendation/lib/recommendation-engine';
+import { recommendFacilities } from '@/features/recommendation/lib/recommendation-engine';
 import type {
   FacilityRecommendation,
   RecommendationPreset,
@@ -39,6 +37,7 @@ import type {
 import { EngagementPanel } from '@/features/engagement/ui/EngagementPanel';
 import { useNaturalLanguageRuleStore } from '@/features/natural-language-search/model/rule-store';
 import { useI18n } from '@/shared/i18n/I18nProvider';
+import { findSeoulRegion } from '@/shared/lib/data/seoul-districts';
 
 import type {
   CongestionData,
@@ -98,15 +97,13 @@ export const MapView: React.FC<MapViewProps> = ({
     updateLocation,
     currentLocation,
   } = useFacilityContext();
-  const [placeFilters, setPlaceFilters] =
-    useState<PlaceFilterState>(DEFAULT_PLACE_FILTERS);
+  const [placeFilters, setPlaceFilters] = useState<PlaceFilterState>(DEFAULT_PLACE_FILTERS);
   const [isPlaceListOpen, setIsPlaceListOpen] = useState(false);
   const [isEngagementOpen, setIsEngagementOpen] = useState(false);
+  const [selectedRegionCode, setSelectedRegionCode] = useState('');
   const [activeRecommendationPreset, setActiveRecommendationPreset] =
     useState<RecommendationPreset>('available_now');
-  const appliedNaturalLanguageRule = useNaturalLanguageRuleStore(
-    state => state.appliedRule
-  );
+  const appliedNaturalLanguageRule = useNaturalLanguageRuleStore(state => state.appliedRule);
   const naturalLanguageRuleRevision = useNaturalLanguageRuleStore(state => state.revision);
   const clearNaturalLanguageRule = useNaturalLanguageRuleStore(state => state.clearRule);
   const appliedNaturalLanguageRevisionRef = React.useRef(0);
@@ -181,7 +178,8 @@ export const MapView: React.FC<MapViewProps> = ({
   }, [effectiveMapStatus?.success]);
 
   React.useEffect(() => {
-    if (!effectiveMapInstance || !effectiveMapStatus?.success || hasAppliedDeepLinkRef.current) return;
+    if (!effectiveMapInstance || !effectiveMapStatus?.success || hasAppliedDeepLinkRef.current)
+      return;
 
     const latitude = Number(searchParams?.get('lat'));
     const longitude = Number(searchParams?.get('lng'));
@@ -402,11 +400,7 @@ export const MapView: React.FC<MapViewProps> = ({
   );
 
   const handlePlaceFilterChange = useCallback(
-    (
-      nextFilters: PlaceFilterState,
-      changedFilter: PlaceFilterKey,
-      value: string
-    ) => {
+    (nextFilters: PlaceFilterState, changedFilter: PlaceFilterKey, value: string) => {
       setPlaceFilters(nextFilters);
       trackEvent('filter_applied', {
         filter_type: changedFilter,
@@ -448,6 +442,28 @@ export const MapView: React.FC<MapViewProps> = ({
     [activeRecommendationPreset, effectiveMapInstance, selectFacility]
   );
 
+  const handleRegionSelect = useCallback(
+    (regionCode: string) => {
+      const region = findSeoulRegion(regionCode);
+      if (!region || !effectiveMapInstance) return;
+
+      const windowWithKakao = window as WindowWithKakao;
+      if (!windowWithKakao.kakao?.maps) return;
+
+      setSelectedRegionCode(regionCode);
+      effectiveMapInstance.setLevel(region.zoomLevel);
+      effectiveMapInstance.panTo(
+        new windowWithKakao.kakao.maps.LatLng(region.position.lat, region.position.lng)
+      );
+      currentZoomRef.current = region.zoomLevel;
+      trackEvent('discovery_started', {
+        selection_source: 'region_shortcut',
+        page_type: 'home_map',
+      });
+    },
+    [effectiveMapInstance]
+  );
+
   const handleClusterSelect = useCallback(
     (cluster: ClusteredFacility) => {
       // Provider를 통해 클러스터 선택 상태 관리
@@ -458,6 +474,9 @@ export const MapView: React.FC<MapViewProps> = ({
   );
 
   // 지도 이벤트 처리 (클릭 및 이동)
+  const effectiveFacilitiesRef = React.useRef(effectiveFacilities);
+  effectiveFacilitiesRef.current = effectiveFacilities;
+
   React.useEffect(() => {
     if (!effectiveMapInstance || !effectiveMapStatus?.success) return;
 
@@ -472,7 +491,7 @@ export const MapView: React.FC<MapViewProps> = ({
       const lng = clickPosition.getLng();
 
       // 클릭 위치 주변의 지하철역 찾기 (반경 100m)
-      const nearbySubway = effectiveFacilities.find(facility => {
+      const nearbySubway = effectiveFacilitiesRef.current.find(facility => {
         if (facility.category !== 'subway') return false;
 
         const distance =
@@ -494,64 +513,27 @@ export const MapView: React.FC<MapViewProps> = ({
     // 지도 이동 시에는 데이터를 업데이트하지 않음
     // 사용자가 명시적으로 위치를 변경할 때만 업데이트
 
-    // 줌 변경 핸들러 - 마커 업데이트 트리거
-    const handleZoomChanged = () => {
-      const newZoom = effectiveMapInstance.getLevel();
-      const oldZoom = currentZoomRef.current;
-
-      if (oldZoom !== newZoom) {
-        currentZoomRef.current = newZoom;
-        // 줌이 변경되면 항상 업데이트 (화면 영역이 바뀌므로)
-        setZoomUpdateTrigger(prev => prev + 1);
-      }
+    const handleMapIdle = () => {
+      currentZoomRef.current = effectiveMapInstance.getLevel();
+      setZoomUpdateTrigger(previous => previous + 1);
     };
 
-    // 지도 이동 완료 핸들러
-    const handleDragEnd = () => {
-      // 지도 이동이 완료되면 화면 영역 내 마커 업데이트
-      console.log('[MapView] 지도 이동 완료');
-      setZoomUpdateTrigger(prev => prev + 1);
-    };
-
-    const clickListener = windowWithKakao.kakao.maps.event.addListener(
-      effectiveMapInstance,
-      'click',
-      handleMapClick
-    );
-
-    const zoomChangedListener = windowWithKakao.kakao.maps.event.addListener(
-      effectiveMapInstance,
-      'zoom_changed',
-      handleZoomChanged
-    );
-
-    // 지도 이동 완료 시 마커 업데이트
-    const dragEndListener = windowWithKakao.kakao.maps.event.addListener(
-      effectiveMapInstance,
-      'dragend',
-      handleDragEnd
-    );
+    windowWithKakao.kakao.maps.event.addListener(effectiveMapInstance, 'click', handleMapClick);
+    windowWithKakao.kakao.maps.event.addListener(effectiveMapInstance, 'idle', handleMapIdle);
 
     return () => {
-      try {
-        const cleanupWindow = window as WindowWithKakao;
-        if (cleanupWindow.kakao?.maps?.event) {
-          // 이벤트 리스너 제거는 카카오맵이 자동으로 처리
-        }
-      } catch {
-        // 조용히 처리
-      }
+      windowWithKakao.kakao?.maps?.event.removeListener(
+        effectiveMapInstance,
+        'click',
+        handleMapClick
+      );
+      windowWithKakao.kakao?.maps?.event.removeListener(
+        effectiveMapInstance,
+        'idle',
+        handleMapIdle
+      );
     };
-  }, [
-    effectiveMapInstance,
-    effectiveMapStatus?.success,
-    effectiveFacilities,
-    handleFacilitySelect,
-    onMapClick,
-    updateLocation,
-    fetchCongestionData,
-    fetchWeatherData,
-  ]);
+  }, [effectiveMapInstance, effectiveMapStatus?.success, handleFacilitySelect, onMapClick]);
 
   // 초기 데이터 로딩은 위치 확인 후에 수행됨 (삭제)
 
@@ -774,10 +756,10 @@ export const MapView: React.FC<MapViewProps> = ({
         naturalLanguageSummaryEn={appliedNaturalLanguageRule?.summaryEn || null}
         origin={currentLocation}
         preferredCategories={
-          activeCategories.length > 0 && activeCategories.length <= 5
-            ? activeCategories
-            : undefined
+          activeCategories.length > 0 && activeCategories.length <= 5 ? activeCategories : undefined
         }
+        selectedRegionCode={selectedRegionCode}
+        onRegionSelect={handleRegionSelect}
         onListOpenChange={handlePlaceListOpenChange}
         onFilterChange={handlePlaceFilterChange}
         onReset={() => {

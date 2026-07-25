@@ -20,9 +20,7 @@ import type {
 import { Button } from '@/shared/ui/button';
 import { getFacilityOpenState, isFacilityReservable } from '../lib/place-filter';
 import type { PlaceFilterKey, PlaceFilterState } from '../model/types';
-import {
-  RECOMMENDATION_PRESETS,
-} from '@/features/recommendation/lib/recommendation-engine';
+import { RECOMMENDATION_PRESETS } from '@/features/recommendation/lib/recommendation-engine';
 import { getCombinedLiveDataStatus } from '@/features/recommendation/lib/live-data';
 import type {
   FacilityRecommendation,
@@ -31,6 +29,7 @@ import type {
 import { ActivityPlanner } from '@/features/activity-plan/ui/ActivityPlanner';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { MessageKey } from '@/shared/i18n/messages';
+import { SEOUL_REGIONS } from '@/shared/lib/data/seoul-districts';
 
 interface PlaceExplorerPanelProps {
   filters: PlaceFilterState;
@@ -46,12 +45,10 @@ interface PlaceExplorerPanelProps {
   naturalLanguageSummaryEn: string | null;
   origin: Position;
   preferredCategories?: FacilityCategory[];
+  selectedRegionCode: string;
+  onRegionSelect: (regionCode: string) => void;
   onListOpenChange: (isOpen: boolean) => void;
-  onFilterChange: (
-    filters: PlaceFilterState,
-    changedFilter: PlaceFilterKey,
-    value: string
-  ) => void;
+  onFilterChange: (filters: PlaceFilterState, changedFilter: PlaceFilterKey, value: string) => void;
   onReset: () => void;
   onFacilitySelect: (facility: Facility) => void;
   onPresetChange: (preset: RecommendationPreset) => void;
@@ -91,6 +88,8 @@ export function PlaceExplorerPanel({
   naturalLanguageSummaryEn,
   origin,
   preferredCategories,
+  selectedRegionCode,
+  onRegionSelect,
   onListOpenChange,
   onFilterChange,
   onReset,
@@ -107,6 +106,7 @@ export function PlaceExplorerPanel({
   const liveDataStatus = getCombinedLiveDataStatus(weatherData, congestionData);
   const naturalLanguageSummary =
     locale === 'en' ? naturalLanguageSummaryEn : naturalLanguageSummaryKo;
+  const selectedRegion = SEOUL_REGIONS.find(region => region.code === selectedRegionCode);
   const formatDistance = (distance: number | undefined): string => {
     if (distance === undefined) return t('explorer.distanceUnknown');
     return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`;
@@ -187,6 +187,35 @@ export function PlaceExplorerPanel({
         </p>
       )}
 
+      <div className='mt-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2'>
+        <MapPin className='h-4 w-4 shrink-0 text-blue-600' aria-hidden='true' />
+        <label className='min-w-0 flex-1'>
+          <span className='sr-only'>{t('explorer.regionShortcut')}</span>
+          <select
+            value={selectedRegionCode}
+            onChange={event => onRegionSelect(event.target.value)}
+            className='h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500'
+            aria-label={t('explorer.regionShortcut')}
+          >
+            <option value='' disabled>
+              {t('explorer.selectRegion')}
+            </option>
+            {SEOUL_REGIONS.map(region => (
+              <option key={region.code} value={region.code}>
+                {locale === 'en' ? region.nameEn : region.nameKo}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {selectedRegionCode && (
+        <p className='sr-only' role='status'>
+          {t('explorer.regionMoved', {
+            region: (locale === 'en' ? selectedRegion?.nameEn : selectedRegion?.nameKo) || '',
+          })}
+        </p>
+      )}
+
       <div className='mt-3 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-3'>
         <div className='flex items-start justify-between gap-3'>
           <div className='min-w-0'>
@@ -198,9 +227,7 @@ export function PlaceExplorerPanel({
               <p className='mt-1 text-xs text-gray-600'>{t('explorer.loadingLive')}</p>
             ) : weatherData || congestionData ? (
               <p className='mt-1 truncate text-xs text-gray-600'>
-                {weatherData?.AREA_NM ||
-                  congestionData?.AREA_NM ||
-                  t('explorer.nearestArea')}
+                {weatherData?.AREA_NM || congestionData?.AREA_NM || t('explorer.nearestArea')}
                 {weatherData?.TEMP ? ` · ${Math.round(Number(weatherData.TEMP))}°C` : ''}
                 {weatherData?.PM10_INDEX
                   ? ` · ${t('explorer.airQuality', { value: weatherData.PM10_INDEX })}`
@@ -388,7 +415,9 @@ export function PlaceExplorerPanel({
                 >
                   <div className='flex items-start justify-between gap-3'>
                     <div className='min-w-0'>
-                      <p className='truncate text-sm font-semibold text-gray-900'>{facility.name}</p>
+                      <p className='truncate text-sm font-semibold text-gray-900'>
+                        {facility.name}
+                      </p>
                       <p className='mt-0.5 truncate text-xs text-gray-500'>
                         {t(`category.${facility.category}` as MessageKey)} ·{' '}
                         {facility.address || t('explorer.addressUnknown')}
@@ -400,9 +429,7 @@ export function PlaceExplorerPanel({
                   </div>
                   <div className='mt-2 flex flex-wrap gap-1.5 text-[11px] text-gray-600'>
                     <span>{getOpenLabel(facility)}</span>
-                    {isFacilityReservable(facility) && (
-                      <span>· {t('explorer.reservable')}</span>
-                    )}
+                    {isFacilityReservable(facility) && <span>· {t('explorer.reservable')}</span>}
                     <span>
                       ·{' '}
                       {facility.congestionLevel === 'low'
@@ -417,9 +444,7 @@ export function PlaceExplorerPanel({
             })
           )}
           {facilities.length > 100 && (
-            <p className='py-2 text-center text-xs text-gray-500'>
-              {t('explorer.limitNotice')}
-            </p>
+            <p className='py-2 text-center text-xs text-gray-500'>{t('explorer.limitNotice')}</p>
           )}
         </div>
       )}

@@ -44,6 +44,9 @@ export const koMessages = {
   'explorer.openList': '목록 보기',
   'explorer.closeList': '목록 닫기',
   'explorer.ruleApplied': '검색 조건 적용: {summary}',
+  'explorer.regionShortcut': '지역 바로가기',
+  'explorer.selectRegion': '지역을 선택해 지도로 이동',
+  'explorer.regionMoved': '{region}(으)로 지도를 이동했습니다.',
   'explorer.seoulNow': '서울 지금',
   'explorer.loadingLive': '현재 위치의 도시데이터를 확인 중입니다.',
   'explorer.unsupportedLive':
@@ -94,8 +97,7 @@ export const koMessages = {
   'activity.stop': '이동 {travel}분 · 체류 {stay}분',
   'activity.empty':
     '이 시간 안에 연결할 가까운 장소가 부족합니다. 지도를 이동하거나 시간을 늘려 보세요.',
-  'activity.warning':
-    '이동 시간은 직선거리 기반 보행 추정치이며 실제 길찾기와 다를 수 있습니다.',
+  'activity.warning': '이동 시간은 직선거리 기반 보행 추정치이며 실제 길찾기와 다를 수 있습니다.',
   'facility.collapse': '축소',
   'facility.expand': '확대',
   'facility.close': '닫기',
@@ -208,6 +210,9 @@ export const enMessages: Record<MessageKey, string> = {
   'explorer.openList': 'Show list',
   'explorer.closeList': 'Close list',
   'explorer.ruleApplied': 'Applied search conditions: {summary}',
+  'explorer.regionShortcut': 'Region shortcut',
+  'explorer.selectRegion': 'Choose a region to move the map',
+  'explorer.regionMoved': 'Moved the map to {region}.',
   'explorer.seoulNow': 'Seoul now',
   'explorer.loadingLive': 'Checking city data near your location.',
   'explorer.unsupportedLive':
@@ -266,7 +271,8 @@ export const enMessages: Record<MessageKey, string> = {
   'facility.drag': 'Drag to resize',
   'facility.decision': 'Available now',
   'facility.genericDecision': 'Based on general place information.',
-  'facility.referenceScore': 'Reference score based on distance, hours, booking, and data freshness.',
+  'facility.referenceScore':
+    'Reference score based on distance, hours, booking, and data freshness.',
   'facility.directions': 'Directions',
   'facility.share': 'Share',
   'facility.saved': 'Saved',
