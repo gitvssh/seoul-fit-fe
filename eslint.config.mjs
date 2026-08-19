@@ -5,16 +5,8 @@
  * @version 2.0.0
  */
 
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
 /**
  * ESLint Configuration for Seoul Fit Frontend
@@ -27,8 +19,9 @@ const compat = new FlatCompat({
  * - Code style consistency
  */
 const eslintConfig = [
-  // Base Next.js configurations (includes TypeScript support)
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  // Base Next.js flat configurations (includes TypeScript support)
+  ...nextVitals,
+  ...nextTypescript,
 
   // Enhanced rules for open-source quality
   {
@@ -48,6 +41,13 @@ const eslintConfig = [
       'react/jsx-key': 'error',
       'react/self-closing-comp': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      // Keep the React 19 compiler-oriented rules visible while the existing
+      // state/effect patterns are migrated incrementally.
+      'react-hooks/immutability': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/use-memo': 'warn',
 
       // General JavaScript rules
       'no-console': ['warn', { allow: ['warn', 'error'] }],

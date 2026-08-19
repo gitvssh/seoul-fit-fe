@@ -15,57 +15,65 @@ interface HomePageProps {
   initialPreferences?: UserPreferences;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({
-  initialPreferences
-}) => {
+export const HomePage: React.FC<HomePageProps> = ({ initialPreferences }) => {
   const [showSidebar, setShowSidebar] = useState(false);
-  
+
   // 사용자 선호도 상태 관리
   const [preferences, setPreferences] = useState<UserPreferences>(
     initialPreferences || {
       language: 'ko',
       theme: 'light',
-      preferredCategories: ['sports', 'culture', 'restaurant', 'library', 'park'] as FacilityCategory[]
+      preferredCategories: [
+        'sports',
+        'culture',
+        'restaurant',
+        'library',
+        'park',
+      ] as FacilityCategory[],
     }
   );
-  
+
   // 카테고리 토글 핸들러
   const handlePreferenceToggle = useCallback((category: FacilityCategory) => {
     setPreferences(prev => {
       const currentCategories = prev.preferredCategories || [];
       const isSelected = currentCategories.includes(category);
-      
+
       const newCategories = isSelected
         ? currentCategories.filter(c => c !== category)
         : [...currentCategories, category];
-      
+
       console.log('카테고리 토글:', category, '새로운 카테고리:', newCategories);
-      
+
       return {
         ...prev,
-        preferredCategories: newCategories
+        preferredCategories: newCategories,
       };
     });
   }, []);
 
   return (
-    <div className="h-screen flex flex-col">
-      <Header 
-        searchQuery="" 
-        onSearchChange={() => {}} 
-        onMenuClick={() => setShowSidebar(!showSidebar)} 
+    <div className='h-screen flex flex-col'>
+      <Header
+        searchQuery=''
+        onSearchChange={() => {}}
+        onMenuClick={() => setShowSidebar(!showSidebar)}
       />
-      <div className="flex-1 relative">
+      <div className='flex-1 relative'>
         <MapContainer
           preferences={preferences}
           onPreferenceToggle={handlePreferenceToggle}
           initialCenter={{ lat: 37.5665, lng: 126.978 }}
           initialZoom={3}
         />
-        <SideBar 
+        <SideBar
           isOpen={showSidebar}
           onClose={() => setShowSidebar(false)}
-          activeCategories={Object.keys(preferences).filter(key => preferences[key as keyof typeof preferences]) as FacilityCategory[]}
+          activeCategories={
+            Object.keys(preferences).filter(
+              key => preferences[key as keyof typeof preferences]
+            ) as FacilityCategory[]
+          }
           onCategoryToggle={handlePreferenceToggle}
         />
       </div>
