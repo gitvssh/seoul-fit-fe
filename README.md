@@ -98,7 +98,8 @@ npm run build
 - `overlays/dev`, `overlays/prod`: backend 연결, HTTPRoute, 환경별 이미지 digest
 - `output: 'standalone'` 산출물을 멀티스테이지 Dockerfile로 패키징합니다.
 - `NEXT_PUBLIC_*`는 환경별 이미지 빌드 때 주입하므로 dev/prod 이미지가
-  분리됩니다.
+  분리됩니다. 빌드 도구가 release-agent Vault Proxy에서 환경에 맞는 전용 문서를
+  선택하며 파일·임의 경로로 우회할 수 없습니다.
 - 컨테이너 이미지는 tag가 아니라 `sha256` digest로 고정합니다.
 - Argo CD Application `seoul-fit-fe-dev`와 `seoul-fit-fe-prod`는 각각 `master`의
   overlay를 추적하며 manual sync입니다.
@@ -106,6 +107,10 @@ npm run build
   공급합니다.
 
 Vault KV v2 경로는 다음과 같습니다. 경로만 공개하며 값은 저장소에 두지 않습니다.
+빌드 문서는 브라우저 공개 값만 담고, 런타임 문서는 `SEOUL_API_KEY`만 공급합니다.
+
+- `kv/data/projects/seoul-fit/frontend-build-dev`
+- `kv/data/projects/seoul-fit/frontend-build-prod`
 
 - `kv/data/projects/seoul-fit/fe-dev`
 - `kv/data/projects/seoul-fit/fe-prod`

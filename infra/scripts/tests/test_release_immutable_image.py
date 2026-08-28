@@ -40,20 +40,10 @@ class ImmutableReleaseContractTest(unittest.TestCase):
             with self.assertRaises(release.ReleaseError):
                 release.exact_digest(invalid)
 
-    def write_inputs(
-        self, root: Path, values: dict[str, str], mode: int = 0o600
-    ) -> Path:
-        path = root / "public-inputs.json"
-        path.write_text(json.dumps(values), encoding="utf-8")
-        path.chmod(mode)
-        return path
-
     def test_public_inputs_are_exact_bounded_and_fingerprinted_without_values(
         self,
     ) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            path = self.write_inputs(Path(directory), VALID_INPUTS)
-            values, fingerprint = release.read_public_inputs(path)
+        values, fingerprint = release.validate_public_inputs(VALID_INPUTS)
         self.assertEqual(values, VALID_INPUTS)
         self.assertRegex(fingerprint, r"^sha256:[0-9a-f]{64}$")
         plan = json.dumps(release.safe_plan("dev", SOURCE_SHA))
@@ -61,30 +51,71 @@ class ImmutableReleaseContractTest(unittest.TestCase):
             if value:
                 self.assertNotIn(value, plan)
 
-    def test_public_inputs_reject_missing_extra_insecure_and_ga_id(self) -> None:
+    def test_public_inputs_reject_missing_extra_and_ga_id(self) -> None:
         cases = []
         missing = dict(VALID_INPUTS)
         missing.pop("NEXT_PUBLIC_KAKAO_CLIENT_ID")
-        cases.append((missing, 0o600))
+        cases.append(missing)
         extra = dict(VALID_INPUTS, PRIVATE_TOKEN="never-allowed")
-        cases.append((extra, 0o600))
+        cases.append(extra)
         ga = dict(VALID_INPUTS, NEXT_PUBLIC_GA_MEASUREMENT_ID="G-NOT-IN-APP")
-        cases.append((ga, 0o600))
-        cases.append((VALID_INPUTS, 0o644))
-        for values, mode in cases:
-            with self.subTest(keys=sorted(values), mode=oct(mode)):
-                with tempfile.TemporaryDirectory() as directory:
-                    path = self.write_inputs(Path(directory), values, mode)
-                    with self.assertRaises(release.ReleaseError):
-                        release.read_public_inputs(path)
-
-    def test_public_input_file_inside_worktree_is_refused(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            path = self.write_inputs(root, VALID_INPUTS)
-            with mock.patch.object(release, "REPO_ROOT", root):
+        cases.append(ga)
+        for values in cases:
+            with self.subTest(keys=sorted(values)):
                 with self.assertRaises(release.ReleaseError):
-                    release.read_public_inputs(path)
+                    release.validate_public_inputs(values)
+
+    def test_public_inputs_reject_invalid_shapes_and_urls(self) -> None:
+        cases = []
+        empty_required = dict(VALID_INPUTS, NEXT_PUBLIC_APP_URL="")
+        cases.append(empty_required)
+        newline = dict(VALID_INPUTS, NEXT_PUBLIC_KAKAO_CLIENT_ID="invalid\nvalue")
+        cases.append(newline)
+        too_long = dict(VALID_INPUTS, NEXT_PUBLIC_KAKAO_MAP_API_KEY="x" * 4097)
+        cases.append(too_long)
+        insecure_url = dict(VALID_INPUTS, NEXT_PUBLIC_BACKEND_URL="http://example.test")
+        cases.append(insecure_url)
+        credential_url = dict(
+            VALID_INPUTS, NEXT_PUBLIC_APP_URL="https://user@example.test"
+        )
+        cases.append(credential_url)
+        invalid_redirect = dict(
+            VALID_INPUTS, NEXT_PUBLIC_KAKAO_REDIRECT_URI="relative/callback"
+        )
+        cases.append(invalid_redirect)
+        for values in cases:
+            with self.subTest(keys=sorted(values)):
+                with self.assertRaises(release.ReleaseError):
+                    release.validate_public_inputs(values)
+
+    def test_environment_selects_only_the_exact_build_document(self) -> None:
+        expected = {
+            "dev": "/v1/kv/data/projects/seoul-fit/frontend-build-dev",
+            "prod": "/v1/kv/data/projects/seoul-fit/frontend-build-prod",
+        }
+        self.assertEqual(release.BUILD_DOCUMENTS, expected)
+        for environment, path in expected.items():
+            with self.subTest(environment=environment):
+                with mock.patch.object(
+                    release, "read_vault_document", return_value=VALID_INPUTS
+                ) as read:
+                    values, fingerprint = release.read_public_inputs(environment)
+                read.assert_called_once_with(path, "public build-input")
+                self.assertEqual(values, VALID_INPUTS)
+                self.assertRegex(fingerprint, r"^sha256:[0-9a-f]{64}$")
+        with self.assertRaises(release.ReleaseError):
+            release.read_public_inputs("staging")
+
+    def test_build_input_reader_has_no_runtime_secret_or_file_override(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+        runtime_documents = (
+            "/v1/kv/data/projects/seoul-fit/fe-dev",
+            "/v1/kv/data/projects/seoul-fit/fe-prod",
+        )
+        for path in runtime_documents:
+            self.assertNotIn(path, source)
+        self.assertNotIn("SEOUL_API_KEY", source)
+        self.assertNotIn("public-input-file", source)
 
     def test_build_inputs_use_memfd_paths_not_values(self) -> None:
         with release.build_input_descriptors(VALID_INPUTS) as (arguments, descriptors):
@@ -184,6 +215,13 @@ patches:
         self.assertEqual(
             release.HARBOR_SOCKET,
             Path("/run/vault-proxy/seoul-fit-release-agent.sock"),
+        )
+        self.assertEqual(
+            set(release.BUILD_DOCUMENTS.values()),
+            {
+                "/v1/kv/data/projects/seoul-fit/frontend-build-dev",
+                "/v1/kv/data/projects/seoul-fit/frontend-build-prod",
+            },
         )
 
 

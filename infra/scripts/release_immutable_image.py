@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Build, publish, verify, and pin one immutable Seoul Fit frontend image.
 
-The command is local-only. Harbor credentials come from the project-scoped
-Vault Proxy socket. Browser-public build inputs come from an owner-only JSON
-file and reach BuildKit through anonymous memory file descriptors, never argv,
-stdout, an image layer, or a persistent Docker configuration.
+The command is local-only. Harbor credentials and browser-public build inputs
+come from separate documents exposed through the project-scoped release-agent
+Vault Proxy socket. Build inputs reach BuildKit through anonymous memory file
+descriptors, never argv, stdout, an image layer, or a persistent Docker
+configuration.
 """
 
 from __future__ import annotations
@@ -36,6 +37,10 @@ REGISTRY_REPOSITORY = "seoul-fit/frontend"
 PLATFORM = "linux/amd64"
 HARBOR_SOCKET = Path("/run/vault-proxy/seoul-fit-release-agent.sock")
 HARBOR_DOCUMENT = "/v1/kv/data/projects/seoul-fit/harbor-ci"
+BUILD_DOCUMENTS = {
+    "dev": "/v1/kv/data/projects/seoul-fit/frontend-build-dev",
+    "prod": "/v1/kv/data/projects/seoul-fit/frontend-build-prod",
+}
 OVERLAY_ROOT = REPO_ROOT / "infra/k8s/seoul-fit-fe/overlays"
 RECEIPT_ROOT = REPO_ROOT / "infra/releases"
 SOURCE_PATTERN = re.compile(r"[0-9a-f]{40}")
@@ -146,7 +151,7 @@ def verify_git_checkout(source_sha: str, *, publish: bool) -> None:
         raise ReleaseError("pin source SHA must be an ancestor of canonical HEAD")
 
 
-def read_harbor_credentials() -> tuple[str, str]:
+def read_vault_document(document_path: str, purpose: str) -> dict[str, object]:
     try:
         metadata = HARBOR_SOCKET.lstat()
     except FileNotFoundError as error:
@@ -158,23 +163,30 @@ def read_harbor_credentials() -> tuple[str, str]:
     connection = UnixSocketHTTPConnection(HARBOR_SOCKET)
     try:
         connection.request(
-            "GET", HARBOR_DOCUMENT, headers={"Accept": "application/json"}
+            "GET", document_path, headers={"Accept": "application/json"}
         )
         response = connection.getresponse()
         body = response.read(65537)
     except (OSError, http.client.HTTPException) as error:
-        raise ReleaseError("the release-agent credential request failed") from error
+        raise ReleaseError("the release-agent document request failed") from error
     finally:
         connection.close()
     if response.status != 200 or len(body) > 65536:
-        raise ReleaseError("the release-agent credential document is unavailable")
+        raise ReleaseError(f"the release-agent {purpose} document is unavailable")
     try:
         document = json.loads(body)
         values = document["data"]["data"]
     except (KeyError, TypeError, ValueError, RecursionError) as error:
         raise ReleaseError(
-            "the release-agent credential document is malformed"
+            f"the release-agent {purpose} document is malformed"
         ) from error
+    if not isinstance(values, dict):
+        raise ReleaseError(f"the release-agent {purpose} document is malformed")
+    return values
+
+
+def read_harbor_credentials() -> tuple[str, str]:
+    values = read_vault_document(HARBOR_DOCUMENT, "Harbor credential")
     if not isinstance(values, dict) or set(values) != {"username", "password"}:
         raise ReleaseError(
             "the Harbor credential document must contain exactly username and password"
@@ -277,29 +289,7 @@ def registry_digest(tag: str, bearer: str) -> str | None:
     return exact_digest(response.getheader("Docker-Content-Digest", ""))
 
 
-def read_public_inputs(path: Path) -> tuple[dict[str, str], str]:
-    try:
-        metadata = path.lstat()
-        raw = path.read_bytes()
-    except OSError as error:
-        raise ReleaseError("the public build-input file is unavailable") from error
-    if (
-        not stat.S_ISREG(metadata.st_mode)
-        or metadata.st_uid != os.geteuid()
-        or stat.S_IMODE(metadata.st_mode) & 0o077
-        or len(raw) > 65536
-    ):
-        raise ReleaseError(
-            "the public build-input file must be owner-only, regular, and bounded"
-        )
-    if path.resolve().is_relative_to(REPO_ROOT.resolve()):
-        raise ReleaseError(
-            "the public build-input file must be outside the Git worktree"
-        )
-    try:
-        values = json.loads(raw)
-    except (UnicodeDecodeError, ValueError, RecursionError) as error:
-        raise ReleaseError("the public build-input file is malformed") from error
+def validate_public_inputs(values: object) -> tuple[dict[str, str], str]:
     if not isinstance(values, dict) or set(values) != set(PUBLIC_INPUTS):
         raise ReleaseError(
             "the public build-input document must contain exactly the six named keys"
@@ -345,6 +335,20 @@ def read_public_inputs(path: Path) -> tuple[dict[str, str], str]:
     ).encode()
     fingerprint = "sha256:" + hashlib.sha256(canonical).hexdigest()
     return values, fingerprint
+
+
+def build_document(environment_name: str) -> str:
+    try:
+        return BUILD_DOCUMENTS[environment_name]
+    except KeyError as error:
+        raise ReleaseError("the build environment is not allowlisted") from error
+
+
+def read_public_inputs(environment_name: str) -> tuple[dict[str, str], str]:
+    values = read_vault_document(
+        build_document(environment_name), "public build-input"
+    )
+    return validate_public_inputs(values)
 
 
 @contextmanager
@@ -429,13 +433,11 @@ def inspect_labels(image: str, environment: Mapping[str, str]) -> tuple[str, str
     return exact_source_sha(output[0]), output[1], exact_digest(output[2])
 
 
-def publish(
-    environment_name: str, source_sha: str, input_path: Path
-) -> dict[str, object]:
+def publish(environment_name: str, source_sha: str) -> dict[str, object]:
     verify_git_checkout(source_sha, publish=True)
     if shutil.which("docker") is None:
         raise ReleaseError("docker is required")
-    values, input_fingerprint = read_public_inputs(input_path)
+    values, input_fingerprint = read_public_inputs(environment_name)
     tag = f"{environment_name}-{source_sha}"
     image = f"{IMAGE_REPOSITORY}:{tag}"
     username, password = read_harbor_credentials()
@@ -648,7 +650,12 @@ def safe_plan(environment_name: str, source_sha: str) -> dict[str, object]:
         "public_input_keys": sorted(PUBLIC_INPUTS),
         "public_input_values_printed": False,
         "source_sha": source_sha,
-        "vault_document": HARBOR_DOCUMENT.removeprefix("/v1/"),
+        "vault_documents": {
+            "harbor": HARBOR_DOCUMENT.removeprefix("/v1/"),
+            "public_build_inputs": build_document(environment_name).removeprefix(
+                "/v1/"
+            ),
+        },
         "vault_socket": str(HARBOR_SOCKET),
     }
 
@@ -666,7 +673,6 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     publish_parser.add_argument("--environment", choices=("dev", "prod"), required=True)
     publish_parser.add_argument("--source-sha", required=True)
-    publish_parser.add_argument("--public-input-file", required=True, type=Path)
     publish_parser.add_argument("--execute", action="store_true", required=True)
     pin_parser = subparsers.add_parser("pin", help="pin exactly one environment")
     pin_parser.add_argument("--environment", choices=("dev", "prod"), required=True)
@@ -683,9 +689,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if arguments.command == "plan":
             result = safe_plan(arguments.environment, source_sha)
         elif arguments.command == "publish":
-            result = publish(
-                arguments.environment, source_sha, arguments.public_input_file
-            )
+            result = publish(arguments.environment, source_sha)
         else:
             result = pin(
                 arguments.environment, source_sha, exact_digest(arguments.digest)

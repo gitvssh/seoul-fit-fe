@@ -13,19 +13,21 @@ call `sudo`, or persist credentials.
 - Docker with BuildKit is installed and the daemon is reachable
 - `XDG_RUNTIME_DIR=/run/user/$(id -u)` is owner-only
 - `/run/vault-proxy/seoul-fit-release-agent.sock` is healthy and returns HTTP
-  200 only for `kv/data/projects/seoul-fit/harbor-ci`; that document contains
-  exactly `username` and `password`
+  200 for the exact release documents: `kv/data/projects/seoul-fit/harbor-ci`
+  plus the environment-selected `frontend-build-dev` or `frontend-build-prod`;
+  the Harbor document contains exactly `username` and `password`
 - the Harbor robot can pull and push only `seoul-fit/frontend`
-- an owner-only (`0600`) JSON input file exists outside Git with exactly these
-  keys: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BACKEND_URL`,
+- the selected frontend build document exists with exactly these keys:
+  `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BACKEND_URL`,
   `NEXT_PUBLIC_KAKAO_CLIENT_ID`, `NEXT_PUBLIC_KAKAO_MAP_API_KEY`,
   `NEXT_PUBLIC_KAKAO_REDIRECT_URI`, and `NEXT_PUBLIC_GA_MEASUREMENT_ID`
 
 The first four values must be non-empty; URLs must be absolute HTTPS URLs.
 Redirect may be empty. The GA measurement ID key must be present but empty
-because public GA4 injection is owned by Cloudflare Zaraz. No canonical custody
-path for this six-key build document currently exists, so creating it is an
-explicit prerequisite and is not performed by this repository or release tool.
+because public GA4 injection is owned by Cloudflare Zaraz. The build documents
+are separate from `fe-dev` and `fe-prod`, which remain Kubernetes runtime-only
+documents containing `SEOUL_API_KEY`. Neither runtime document nor that key is
+read by this release command.
 
 The tool creates `DOCKER_CONFIG` below `XDG_RUNTIME_DIR` with mode `0700`, sends
 the Harbor password only to `docker login --password-stdin`, and removes the
@@ -43,12 +45,12 @@ python3 infra/scripts/release_immutable_image.py plan \
 ```
 
 Dev and prod builds are deliberately separate because Next.js embeds their
-public inputs. After reviewing the exact source and the private input file:
+public inputs. The environment selects its Vault document without a path or file
+override:
 
 ```bash
 python3 infra/scripts/release_immutable_image.py publish \
-  --environment dev --source-sha <40-lowercase-hex> \
-  --public-input-file /run/user/$(id -u)/seoul-fit-public-dev.json --execute
+  --environment dev --source-sha <40-lowercase-hex> --execute
 ```
 
 The publisher uses tag `dev-<full-SHA>` (or `prod-<full-SHA>`), checks it before
@@ -66,13 +68,12 @@ python3 infra/scripts/release_immutable_image.py pin \
 ```
 
 After development CI, manual sync, and runtime verification, build prod with its
-own input file and run a separate prod pin. A prod pin is refused unless a
+own Vault document and run a separate prod pin. A prod pin is refused unless a
 committed dev receipt for the exact same source already exists:
 
 ```bash
 python3 infra/scripts/release_immutable_image.py publish \
-  --environment prod --source-sha <40-lowercase-hex> \
-  --public-input-file /run/user/$(id -u)/seoul-fit-public-prod.json --execute
+  --environment prod --source-sha <40-lowercase-hex> --execute
 python3 infra/scripts/release_immutable_image.py pin \
   --environment prod --source-sha <40-lowercase-hex> \
   --digest sha256:<64-lowercase-hex> --execute
