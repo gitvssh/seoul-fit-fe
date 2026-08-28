@@ -249,8 +249,12 @@ describe('runtime lifecycle log contract', () => {
   it('keeps the process environment and stdout defaults observable', () => {
     const localLines: string[] = [];
     const stdoutWrite = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const kubernetesServiceHost = process.env.KUBERNETES_SERVICE_HOST;
+    const deploymentEnvironment = process.env.DEPLOYMENT_ENVIRONMENT_NAME;
 
     try {
+      delete process.env.KUBERNETES_SERVICE_HOST;
+      process.env.DEPLOYMENT_ENVIRONMENT_NAME = 'local';
       writeRuntimeEvent({
         eventName: 'service.cache.operation',
         eventAction: 'stop',
@@ -270,10 +274,20 @@ describe('runtime lifecycle log contract', () => {
       });
       expect(stdoutWrite).toHaveBeenCalledWith(expect.stringContaining('"event_action":"stop"'));
     } finally {
+      restoreEnvironment('KUBERNETES_SERVICE_HOST', kubernetesServiceHost);
+      restoreEnvironment('DEPLOYMENT_ENVIRONMENT_NAME', deploymentEnvironment);
       stdoutWrite.mockRestore();
     }
   });
 });
+
+function restoreEnvironment(key: string, value: string | undefined): void {
+  if (value === undefined) {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = value;
+}
 
 interface RequestOptions {
   path: string;
