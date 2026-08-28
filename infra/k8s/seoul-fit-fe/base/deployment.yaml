@@ -15,10 +15,14 @@ spec:
       app.kubernetes.io/name: seoul-fit-fe
   template:
     metadata:
+      annotations:
+        observability.damecasol.com/log-schema: http_access_json_v1
+        observability.damecasol.com/service-version: PLACEHOLDER
       labels:
         app.kubernetes.io/name: seoul-fit-fe
         app.kubernetes.io/component: frontend
         app.kubernetes.io/part-of: seoul-fit
+        app.kubernetes.io/environment: PLACEHOLDER
     spec:
       imagePullSecrets:
         - name: seoul-fit-fe-harbor-pull
@@ -39,6 +43,25 @@ spec:
           envFrom:
             - secretRef:
                 name: seoul-fit-fe-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: seoul-fit-frontend
+            - name: OTEL_SERVICE_NAMESPACE
+              value: seoul-fit
+            - name: OTEL_SERVICE_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['observability.damecasol.com/service-version']
+            - name: OTEL_SERVICE_INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: DEPLOYMENT_ENVIRONMENT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['app.kubernetes.io/environment']
+            - name: K8S_WORKLOAD_NAME
+              value: seoul-fit-fe
           readinessProbe:
             httpGet:
               path: /

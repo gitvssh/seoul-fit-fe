@@ -4,7 +4,12 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { registerHttpAccessLogging } = await import(
+      './src/shared/lib/observability/http-access-log'
+    );
     const { dataScheduler } = await import('./src/shared/lib/scheduler');
+
+    registerHttpAccessLogging();
 
     console.log('[서버시작] 데이터 캐시 초기화 시작...');
     try {

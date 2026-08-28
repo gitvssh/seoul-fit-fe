@@ -78,16 +78,16 @@ npm run build
 
 ## 환경 변수 역할
 
-| 구분           | 변수                              | 용도                                    |
-| -------------- | --------------------------------- | --------------------------------------- |
-| build/public   | `NEXT_PUBLIC_APP_URL`             | 브라우저가 보는 앱 origin               |
-| build/public   | `NEXT_PUBLIC_BACKEND_URL`         | 브라우저의 backend 요청 주소            |
-| build/public   | `NEXT_PUBLIC_KAKAO_CLIENT_ID`     | 카카오 OAuth 공개 client id             |
-| build/public   | `NEXT_PUBLIC_KAKAO_MAP_API_KEY`   | 카카오 지도 JavaScript key              |
-| build/public   | `NEXT_PUBLIC_KAKAO_REDIRECT_URI`  | OAuth callback override                 |
-| build/public   | `NEXT_PUBLIC_GA_MEASUREMENT_ID`   | 동의 뒤에만 로드되는 GA4 Measurement ID |
-| runtime/server | `BACKEND_INTERNAL_URL`            | Route Handler·SSR의 backend 주소        |
-| runtime/server | `SEOUL_API_KEY`                   | 서울 열린데이터 요청 key                |
+| 구분           | 변수                             | 용도                                    |
+| -------------- | -------------------------------- | --------------------------------------- |
+| build/public   | `NEXT_PUBLIC_APP_URL`            | 브라우저가 보는 앱 origin               |
+| build/public   | `NEXT_PUBLIC_BACKEND_URL`        | 브라우저의 backend 요청 주소            |
+| build/public   | `NEXT_PUBLIC_KAKAO_CLIENT_ID`    | 카카오 OAuth 공개 client id             |
+| build/public   | `NEXT_PUBLIC_KAKAO_MAP_API_KEY`  | 카카오 지도 JavaScript key              |
+| build/public   | `NEXT_PUBLIC_KAKAO_REDIRECT_URI` | OAuth callback override                 |
+| build/public   | `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | 동의 뒤에만 로드되는 GA4 Measurement ID |
+| runtime/server | `BACKEND_INTERNAL_URL`           | Route Handler·SSR의 backend 주소        |
+| runtime/server | `SEOUL_API_KEY`                  | 서울 열린데이터 요청 key                |
 
 ## 배포
 
@@ -110,6 +110,9 @@ Vault KV v2 경로는 다음과 같습니다. 경로만 공개하며 값은 저�
 - `kv/data/projects/seoul-fit/fe-dev`
 - `kv/data/projects/seoul-fit/fe-prod`
 - `kv/data/projects/seoul-fit/harbor-pull`
+
+stdout 접근 로그의 JSON 스키마, 서비스 식별자, 민감정보 비수집 원칙과 배포
+검증은 [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md)에 정리되어 있습니다.
 
 ## 저장소 구조
 

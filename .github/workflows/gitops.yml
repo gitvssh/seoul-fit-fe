@@ -8,6 +8,9 @@ on:
       - "infra/argocd/**"
       - "infra/k8s/**"
       - "infra/scripts/validate_argocd_registration.py"
+      - "infra/scripts/validate_observability_contract.py"
+      - "instrumentation.ts"
+      - "src/shared/lib/observability/**"
   pull_request:
     branches: [master]
     paths:
@@ -15,6 +18,9 @@ on:
       - "infra/argocd/**"
       - "infra/k8s/**"
       - "infra/scripts/validate_argocd_registration.py"
+      - "infra/scripts/validate_observability_contract.py"
+      - "instrumentation.ts"
+      - "src/shared/lib/observability/**"
   workflow_dispatch:
 
 permissions:
@@ -31,8 +37,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with: {persist-credentials: false, fetch-depth: 1}
+        with: { persist-credentials: false, fetch-depth: 1 }
       - uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
       - run: python3 infra/scripts/validate_argocd_registration.py
+      - run: python3 infra/scripts/validate_observability_contract.py
       - run: kubectl kustomize infra/k8s/seoul-fit-fe/overlays/dev >/dev/null
       - run: kubectl kustomize infra/k8s/seoul-fit-fe/overlays/prod >/dev/null
