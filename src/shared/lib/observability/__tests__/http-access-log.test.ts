@@ -213,6 +213,38 @@ describe('runtime lifecycle log contract', () => {
     expect(lines[0]).not.toContain('runtime-message-secret');
     expect(lines[0]).not.toContain('runtime-stack-secret');
   });
+
+  it('covers the bounded start, operation, and non-Error variants', () => {
+    const lines: string[] = [];
+
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'start',
+      eventOutcome: 'success',
+      operation: 'bike',
+      env: DEPLOYED_ENV,
+      write: line => lines.push(line),
+    });
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'complete',
+      eventOutcome: 'failure',
+      error: 'non-error-secret',
+      env: DEPLOYED_ENV,
+      write: line => lines.push(line),
+    });
+
+    expect(JSON.parse(lines[0])).toMatchObject({
+      message: 'Runtime cache initialization started',
+      event_action: 'start',
+      operation: 'bike',
+    });
+    expect(JSON.parse(lines[1])).toMatchObject({
+      message: 'Runtime cache initialization failed',
+      error_type: 'NonErrorThrow',
+    });
+    expect(lines.join('')).not.toContain('non-error-secret');
+  });
 });
 
 interface RequestOptions {

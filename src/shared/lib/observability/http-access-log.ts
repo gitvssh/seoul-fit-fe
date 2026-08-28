@@ -81,13 +81,15 @@ export function writeRuntimeEvent(options: RuntimeEventOptions): void {
   const identity = resolveIdentity(options.env ?? process.env);
   const write = options.write ?? (line => process.stdout.write(line));
   const failed = options.eventOutcome === 'failure';
+  let message = 'Runtime cache initialization completed';
+  if (failed) {
+    message = 'Runtime cache initialization failed';
+  } else if (options.eventAction === 'start') {
+    message = 'Runtime cache initialization started';
+  }
   const event: Record<string, string> = {
     '@timestamp': (options.now ?? (() => new Date()))().toISOString(),
-    message: failed
-      ? 'Runtime cache initialization failed'
-      : options.eventAction === 'start'
-        ? 'Runtime cache initialization started'
-        : 'Runtime cache initialization completed',
+    message,
     severity_text: failed ? 'ERROR' : 'INFO',
     log_schema: LOG_SCHEMA,
     log_category: 'application',
