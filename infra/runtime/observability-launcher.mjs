@@ -23,6 +23,8 @@ const BASE_KEYS = [
   'log_schema',
   'message',
   'severity_text',
+  'span_id',
+  'trace_id',
   ...IDENTITY_KEYS,
 ];
 const ACCESS_KEYS = new Set([
@@ -160,6 +162,8 @@ function hasSafeBase(document, identity) {
   return (
     hasExactIdentity(document, identity) &&
     document.log_schema === 'http_access_json_v1' &&
+    document.trace_id === '' &&
+    document.span_id === '' &&
     isRfc3339Timestamp(document['@timestamp'])
   );
 }
@@ -360,6 +364,8 @@ export function createSuppressionCoalescer({
       severity_text: failed ? 'ERROR' : 'WARN',
       log_schema: 'http_access_json_v1',
       log_category: 'application',
+      trace_id: '',
+      span_id: '',
       ...identity,
       event_name: 'runtime.unstructured.output',
       event_action: 'suppress',

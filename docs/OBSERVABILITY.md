@@ -19,6 +19,10 @@ route·상태·수명주기 전이만 허용하고, 통과한 JSON도 다시 직
 값까지 제거합니다. stdout이 밀리면 child의 두 출력 stream을 함께 멈췄다가
 `drain` 뒤 재개합니다. 계약 밖 출력은 1초 구간당 한 JSON으로 합치며
 stdout/stderr별 개수는 각각 1,024에서 포화시켜 메모리와 출력 증폭을 제한합니다.
+브라우저와 Node trace export는 현재 `not_expected`이므로 access, application,
+suppression 모든 envelope는 `trace_id`와 `span_id`를 정확히 한 번씩 포함하고 두
+값을 항상 빈 문자열로 둡니다. launcher는 누락, 비어 있지 않은 값, 한쪽만 있는
+pair를 모두 거부합니다.
 
 캐시 초기화 수명주기 역시 `http_access_json_v1` envelope와
 `log_category=application`을 사용합니다. 초기화 오류는 오류 객체·메시지·스택을
@@ -31,6 +35,7 @@ stdout/stderr별 개수는 각각 1,024에서 포화시켜 메모리와 출력 �
 
 - `@timestamp`, `message`, `severity_text`
 - `log_schema`, `log_category`
+- `trace_id`, `span_id` (현재는 둘 다 빈 문자열)
 - `service_name`, `service_namespace`, `service_version`, `service_instance_id`,
   `deployment_environment_name`
 - `event_name`, `event_action`, `event_outcome`

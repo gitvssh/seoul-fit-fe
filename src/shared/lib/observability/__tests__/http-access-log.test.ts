@@ -52,6 +52,8 @@ describe('HTTP access log contract', () => {
         severity_text: 'INFO',
         log_schema: 'http_access_json_v1',
         log_category: 'access',
+        trace_id: '',
+        span_id: '',
         service_name: 'seoul-fit-frontend',
         service_namespace: 'seoul-fit',
         service_version: 'sha256:0123456789abcdef',
@@ -65,7 +67,7 @@ describe('HTTP access log contract', () => {
         http_route: '/api/search/data/:indexId',
         http_status_code: 201,
       });
-      expect(event['@timestamp']).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(event['@timestamp']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
       expect(event.duration_ms).toEqual(expect.any(Number));
 
       const exported = lines.join('');
@@ -178,6 +180,8 @@ describe('runtime lifecycle log contract', () => {
       severity_text: 'INFO',
       log_schema: 'http_access_json_v1',
       log_category: 'application',
+      trace_id: '',
+      span_id: '',
       service_name: 'seoul-fit-frontend',
       service_namespace: 'seoul-fit',
       service_version: 'sha256:0123456789abcdef',

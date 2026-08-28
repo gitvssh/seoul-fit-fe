@@ -27,6 +27,8 @@ function accessDocument(overrides = {}) {
     severity_text: 'INFO',
     log_schema: 'http_access_json_v1',
     log_category: 'access',
+    trace_id: '',
+    span_id: '',
     ...IDENTITY,
     event_name: 'http.server.request',
     event_action: 'serve',
@@ -46,6 +48,8 @@ function applicationDocument(overrides = {}) {
     severity_text: 'INFO',
     log_schema: 'http_access_json_v1',
     log_category: 'application',
+    trace_id: '',
+    span_id: '',
     ...IDENTITY,
     event_name: 'service.cache.initialize',
     event_action: 'complete',
@@ -61,6 +65,8 @@ function suppressionDocument(overrides = {}) {
     severity_text: 'WARN',
     log_schema: 'http_access_json_v1',
     log_category: 'application',
+    trace_id: '',
+    span_id: '',
     ...IDENTITY,
     event_name: 'runtime.unstructured.output',
     event_action: 'suppress',
@@ -93,7 +99,15 @@ test('rejects category-inapplicable fields, unsafe routes, and inconsistent valu
     accessDocument({ severity_text: 'WARNING', http_status_code: 404, event_outcome: 'failure' }),
     accessDocument({ event_outcome: 'failure' }),
     applicationDocument({ error_type: 'sentinel-sensitive-value' }),
+    accessDocument({ trace_id: 'a'.repeat(32), span_id: 'b'.repeat(16) }),
+    accessDocument({ trace_id: '', span_id: 'b'.repeat(16) }),
   ];
+
+  const missingTracePair = accessDocument();
+  delete missingTracePair.trace_id;
+  const missingSpanPair = accessDocument();
+  delete missingSpanPair.span_id;
+  cases.push(missingTracePair, missingSpanPair);
 
   for (const document of cases) {
     assert.equal(isSafeStructuredLine(JSON.stringify(document), IDENTITY), false);
@@ -255,6 +269,12 @@ test('coalesces invalid lines into one capped, content-free event per window', (
   assert.equal(document.suppressed_stdout_line_count, 3);
   assert.equal(document.suppressed_stderr_line_count, 2);
   assert.equal(document.suppression_count_capped, true);
+  assert.equal(document.log_schema, 'http_access_json_v1');
+  assert.equal(document.log_category, 'application');
+  assert.equal(document['@timestamp'], '2026-08-29T00:00:00.000Z');
+  assert.equal(document.trace_id, '');
+  assert.equal(document.span_id, '');
+  for (const [key, value] of Object.entries(IDENTITY)) assert.equal(document[key], value);
   assert.equal(line.includes('sentinel-sensitive-value'), false);
   assert.equal(isSafeNormalizedOutputLine(line, IDENTITY), true);
 });

@@ -52,6 +52,8 @@ def validate_access_log_source() -> None:
         f"const LOG_SCHEMA = '{LOG_SCHEMA}'",
         "log_schema: LOG_SCHEMA",
         "log_category: 'access'",
+        "trace_id: ''",
+        "span_id: ''",
         "event_name: 'http.server.request'",
         "event_action: 'serve'",
         "event_outcome:",
@@ -63,6 +65,11 @@ def validate_access_log_source() -> None:
     missing = [fragment for fragment in required_fragments if fragment not in source]
     if missing:
         raise ContractError(f"access logger is missing contract fields: {', '.join(missing)}")
+    for trace_field in ("trace_id", "span_id"):
+        if source.count(f"{trace_field}: ''") != 2:
+            raise ContractError(
+                f"access and application producers must each emit one empty {trace_field}"
+            )
 
 
 def validate_runtime_start_source() -> None:
@@ -95,6 +102,8 @@ def validate_runtime_start_source() -> None:
         "isRfc3339Timestamp",
         "ACCESS_KEYS",
         "APPLICATION_REQUIRED_KEYS",
+        "document.trace_id === ''",
+        "document.span_id === ''",
         "MAX_SUPPRESSED_LINES_PER_WINDOW",
         "SUPPRESSION_WINDOW_MS",
         "stdio: ['inherit', 'pipe', 'pipe']",
@@ -105,6 +114,9 @@ def validate_runtime_start_source() -> None:
     missing = [fragment for fragment in required_launcher if fragment not in launcher]
     if missing:
         raise ContractError(f"runtime JSON normalizer is missing: {', '.join(missing)}")
+    for trace_field in ("trace_id", "span_id"):
+        if launcher.count(f"{trace_field}: ''") != 1:
+            raise ContractError(f"suppression producer must emit one empty {trace_field}")
     required_launcher_tests = (
         "accepts the standard WARN severity",
         "rejects category-inapplicable fields",
@@ -113,6 +125,8 @@ def validate_runtime_start_source() -> None:
         "requires a real bounded RFC3339 timestamp",
         "pauses every child stream on stdout backpressure",
         "coalesces invalid lines into one capped, content-free event per window",
+        "missingTracePair",
+        "missingSpanPair",
     )
     missing = [fragment for fragment in required_launcher_tests if fragment not in launcher_test]
     if missing:
