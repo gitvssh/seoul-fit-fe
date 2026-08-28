@@ -245,6 +245,34 @@ describe('runtime lifecycle log contract', () => {
     });
     expect(lines.join('')).not.toContain('non-error-secret');
   });
+
+  it('keeps the process environment and stdout defaults observable', () => {
+    const localLines: string[] = [];
+    const stdoutWrite = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    try {
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'stop',
+        eventOutcome: 'success',
+        write: line => localLines.push(line),
+      });
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'stop',
+        eventOutcome: 'success',
+        env: DEPLOYED_ENV,
+      });
+
+      expect(JSON.parse(localLines[0])).toMatchObject({
+        service_name: 'seoul-fit-frontend',
+        deployment_environment_name: 'local',
+      });
+      expect(stdoutWrite).toHaveBeenCalledWith(expect.stringContaining('"event_action":"stop"'));
+    } finally {
+      stdoutWrite.mockRestore();
+    }
+  });
 });
 
 interface RequestOptions {
