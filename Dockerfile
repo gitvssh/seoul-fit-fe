@@ -13,12 +13,12 @@ COPY . .
 # Public browser configuration is embedded by Next.js at build time. BuildKit
 # secrets keep its source values out of shell arguments and image layers; the
 # resulting public values remain available only where the browser requires them.
-RUN --mount=type=secret,id=next_public_app_url,required=false \
-    --mount=type=secret,id=next_public_backend_url,required=false \
-    --mount=type=secret,id=next_public_kakao_client_id,required=false \
-    --mount=type=secret,id=next_public_kakao_map_api_key,required=false \
-    --mount=type=secret,id=next_public_kakao_redirect_uri,required=false \
-    --mount=type=secret,id=next_public_ga_measurement_id,required=false \
+RUN --mount=type=secret,id=next_public_app_url,required=true \
+    --mount=type=secret,id=next_public_backend_url,required=true \
+    --mount=type=secret,id=next_public_kakao_client_id,required=true \
+    --mount=type=secret,id=next_public_kakao_map_api_key,required=true \
+    --mount=type=secret,id=next_public_kakao_redirect_uri,required=true \
+    --mount=type=secret,id=next_public_ga_measurement_id,required=true \
     set -eu; \
     read_secret() { if [ -f "$1" ]; then tr -d '\\r\\n' < "$1"; fi; }; \
     export NEXT_PUBLIC_APP_URL="$(read_secret /run/secrets/next_public_app_url)"; \
