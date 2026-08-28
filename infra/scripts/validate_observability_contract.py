@@ -12,6 +12,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ACCESS_LOG_SOURCE = REPO_ROOT / "src/shared/lib/observability/http-access-log.ts"
+INSTRUMENTATION_SOURCE = REPO_ROOT / "instrumentation.ts"
+RUNTIME_ENTRYPOINT = REPO_ROOT / "docker-entrypoint.sh"
+RUNTIME_LAUNCHER = REPO_ROOT / "infra/runtime/observability-launcher.mjs"
+RUNTIME_LAUNCHER_TEST = REPO_ROOT / "infra/runtime/observability-launcher.node-test.mjs"
+DOCKERFILE = REPO_ROOT / "Dockerfile"
 BASE_DEPLOYMENT = REPO_ROOT / "infra/k8s/seoul-fit-fe/base/deployment.yaml"
 OVERLAY_ROOT = REPO_ROOT / "infra/k8s/seoul-fit-fe/overlays"
 LOG_SCHEMA = "http_access_json_v1"
@@ -58,6 +63,75 @@ def validate_access_log_source() -> None:
     missing = [fragment for fragment in required_fragments if fragment not in source]
     if missing:
         raise ContractError(f"access logger is missing contract fields: {', '.join(missing)}")
+
+
+def validate_runtime_start_source() -> None:
+    instrumentation = INSTRUMENTATION_SOURCE.read_text(encoding="utf-8")
+    entrypoint = RUNTIME_ENTRYPOINT.read_text(encoding="utf-8")
+    launcher = RUNTIME_LAUNCHER.read_text(encoding="utf-8")
+    launcher_test = RUNTIME_LAUNCHER_TEST.read_text(encoding="utf-8")
+    dockerfile = DOCKERFILE.read_text(encoding="utf-8")
+    required_entrypoint = (
+        "test \"${OTEL_SERVICE_NAME:-}\" = seoul-fit-frontend",
+        "test \"${OTEL_SERVICE_NAMESPACE:-}\" = seoul-fit",
+        "test \"${K8S_WORKLOAD_NAME:-}\" = seoul-fit-fe",
+        "printf '%s\\n' 'homelab-runtime-start-v1'",
+        "exec node /usr/local/bin/seoul-fit-observability-launcher.mjs",
+    )
+    missing = [fragment for fragment in required_entrypoint if fragment not in entrypoint]
+    if missing:
+        raise ContractError(f"runtime entrypoint contract is missing: {', '.join(missing)}")
+    if entrypoint.count("homelab-runtime-start-v1") != 1:
+        raise ContractError("runtime entrypoint must emit exactly one startup marker")
+    if "service.runtime.start" in instrumentation:
+        raise ContractError("late instrumentation cannot claim the first-record startup anchor")
+    if "console.log" in instrumentation or "console.error" in instrumentation:
+        raise ContractError("instrumentation must not bypass the structured lifecycle logger")
+    required_launcher = (
+        "Unstructured runtime output suppressed",
+        "isSafeStructuredLine",
+        "isSafeNormalizedOutputLine",
+        "normalizeStructuredLine",
+        "isRfc3339Timestamp",
+        "ACCESS_KEYS",
+        "APPLICATION_REQUIRED_KEYS",
+        "MAX_SUPPRESSED_LINES_PER_WINDOW",
+        "SUPPRESSION_WINDOW_MS",
+        "stdio: ['inherit', 'pipe', 'pipe']",
+        "input.pause()",
+        "output.once('drain', handleDrain)",
+        "input.resume()",
+    )
+    missing = [fragment for fragment in required_launcher if fragment not in launcher]
+    if missing:
+        raise ContractError(f"runtime JSON normalizer is missing: {', '.join(missing)}")
+    required_launcher_tests = (
+        "accepts the standard WARN severity",
+        "rejects category-inapplicable fields",
+        "enforces exact per-category types and numeric bounds",
+        "canonicalizes accepted JSON",
+        "requires a real bounded RFC3339 timestamp",
+        "pauses every child stream on stdout backpressure",
+        "coalesces invalid lines into one capped, content-free event per window",
+    )
+    missing = [fragment for fragment in required_launcher_tests if fragment not in launcher_test]
+    if missing:
+        raise ContractError(f"runtime launcher regressions are missing: {', '.join(missing)}")
+    required_dockerfile = (
+        "COPY --chown=root:root docker-entrypoint.sh",
+        "COPY --chown=root:root infra/runtime/observability-launcher.mjs",
+        'ENTRYPOINT ["/usr/local/bin/seoul-fit-entrypoint"]',
+        "FROM runner AS runtime-contract",
+        '>"${contract_log}" 2>&1',
+        "isSafeNormalizedOutputLine",
+        'document.event_name==="http.server.request"',
+        'document.event_name==="runtime.unstructured.output"',
+        'test "${runtime_status}" -eq 143',
+        "FROM runtime-contract AS release",
+    )
+    missing = [fragment for fragment in required_dockerfile if fragment not in dockerfile]
+    if missing:
+        raise ContractError(f"runtime image contract is missing: {', '.join(missing)}")
 
 
 def validate_base() -> None:
@@ -151,6 +225,7 @@ def validate_overlay(environment: str) -> None:
 def main() -> int:
     try:
         validate_access_log_source()
+        validate_runtime_start_source()
         validate_base()
         for environment in ("dev", "prod"):
             validate_overlay(environment)

@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/ci.yml"
       - ".github/scripts/wait_for_sonar_quality_gate.py"
+      - "Dockerfile"
       - "app/**"
       - "pages/**"
       - "config/**"
@@ -14,6 +15,9 @@ on:
       - "src/**"
       - "styles/**"
       - "instrumentation.ts"
+      - "docker-entrypoint.sh"
+      - "infra/runtime/**"
+      - "infra/scripts/validate_observability_contract.py"
       - "next.config.*"
       - "package.json"
       - "package-lock.json"
@@ -27,6 +31,7 @@ on:
     paths:
       - ".github/workflows/ci.yml"
       - ".github/scripts/wait_for_sonar_quality_gate.py"
+      - "Dockerfile"
       - "app/**"
       - "pages/**"
       - "config/**"
@@ -35,6 +40,9 @@ on:
       - "src/**"
       - "styles/**"
       - "instrumentation.ts"
+      - "docker-entrypoint.sh"
+      - "infra/runtime/**"
+      - "infra/scripts/validate_observability_contract.py"
       - "next.config.*"
       - "package.json"
       - "package-lock.json"
@@ -63,7 +71,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with: {persist-credentials: false, fetch-depth: 1}
+        with: { persist-credentials: false, fetch-depth: 1 }
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
@@ -71,6 +79,7 @@ jobs:
       - run: npm run type-check
       - run: npm run lint
       - run: npm run test:coverage -- --runInBand
+      - run: npm run test:runtime
       - run: npm run build
 
   sonar:
@@ -81,7 +90,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with: {persist-credentials: false, fetch-depth: 0}
+        with: { persist-credentials: false, fetch-depth: 0 }
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"

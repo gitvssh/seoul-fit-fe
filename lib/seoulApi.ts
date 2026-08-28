@@ -2,6 +2,7 @@
 
 const API_KEY = process.env.SEOUL_API_KEY || '';
 import { env } from '@/config/environment';
+import { writeRuntimeEvent } from '@/src/shared/lib/observability/http-access-log';
 
 const BASE_URL = env.seoulApiBaseUrl;
 
@@ -50,7 +51,12 @@ interface BikeApiResponse {
 // 지하철 전체 데이터 로드 (서버 시작시 1회)
 export async function loadAllSubwayStations(): Promise<SubwayStationRow[]> {
   try {
-    console.log('[서울API] 지하철 전체 데이터 로드 시작...');
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'start',
+      eventOutcome: 'success',
+      operation: 'subway',
+    });
 
     const apiUrl = `${BASE_URL}/${API_KEY}/json/subwayStationMaster/1/800/`;
     const response = await fetch(apiUrl, {
@@ -71,11 +77,22 @@ export async function loadAllSubwayStations(): Promise<SubwayStationRow[]> {
     }
 
     const stations = data.subwayStationMaster.row;
-    console.log(`[서울API] 지하철 데이터 로드 완료: ${stations.length}개 역`);
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'complete',
+      eventOutcome: 'success',
+      operation: 'subway',
+    });
 
     return stations;
   } catch (error) {
-    console.error('[서울API] 지하철 데이터 로드 실패:', error);
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'complete',
+      eventOutcome: 'failure',
+      operation: 'subway',
+      error,
+    });
     throw error;
   }
 }
@@ -113,9 +130,12 @@ async function fetchBikeBatch(startIndex: number, endIndex: number): Promise<Bik
 
   // XML 응답 체크 및 처리
   if (responseText.trim().startsWith('<')) {
-    console.warn(
-      `[서울API] XML/HTML 응답 받음 (${startIndex}-${endIndex}), JSON으로 재시도...`
-    );
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'retry',
+      eventOutcome: 'failure',
+      operation: 'bike',
+    });
     // XML 응답일 경우 URL을 json으로 변경하여 재시도
     const jsonUrl = apiUrl.replace('/xml/', '/json/');
     const retryResponse = await fetch(jsonUrl, {
@@ -126,14 +146,24 @@ async function fetchBikeBatch(startIndex: number, endIndex: number): Promise<Bik
     });
     
     if (!retryResponse.ok) {
-      console.error(`따릉이 API 재시도 실패: ${retryResponse.status}`);
+      writeRuntimeEvent({
+        eventName: 'external.api.request',
+        eventAction: 'retry',
+        eventOutcome: 'failure',
+        operation: 'bike',
+      });
       // API가 일시적으로 다운되었을 수 있으므로 빈 배열 반환
       return [];
     }
     
     const retryText = await retryResponse.text();
     if (retryText.trim().startsWith('<')) {
-      console.error(`따릉이 API가 계속 XML을 반환합니다. API 상태를 확인해주세요.`);
+      writeRuntimeEvent({
+        eventName: 'external.api.request',
+        eventAction: 'retry',
+        eventOutcome: 'failure',
+        operation: 'bike',
+      });
       // API가 일시적으로 다운되었을 수 있으므로 빈 배열 반환
       return [];
     }
@@ -141,7 +171,13 @@ async function fetchBikeBatch(startIndex: number, endIndex: number): Promise<Bik
     try {
       data = JSON.parse(retryText);
     } catch (parseError) {
-      console.error('[서울API] JSON 파싱 실패:', parseError);
+      writeRuntimeEvent({
+        eventName: 'external.api.request',
+        eventAction: 'complete',
+        eventOutcome: 'failure',
+        operation: 'bike',
+        error: parseError,
+      });
       // API가 일시적으로 다운되었을 수 있으므로 빈 배열 반환
       return [];
     }
@@ -149,7 +185,13 @@ async function fetchBikeBatch(startIndex: number, endIndex: number): Promise<Bik
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error('[서울API] JSON 파싱 실패:', parseError);
+      writeRuntimeEvent({
+        eventName: 'external.api.request',
+        eventAction: 'complete',
+        eventOutcome: 'failure',
+        operation: 'bike',
+        error: parseError,
+      });
       // API가 일시적으로 다운되었을 수 있으므로 빈 배열 반환
       return [];
     }
@@ -178,7 +220,12 @@ async function fetchBikeBatch(startIndex: number, endIndex: number): Promise<Bik
 
 export async function loadAllBikeStations(): Promise<BikeStationRow[]> {
   try {
-    console.log('[서울API] 따릉이 전체 데이터 로드 시작...');
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'start',
+      eventOutcome: 'success',
+      operation: 'bike',
+    });
 
     // 1000개씩 두 번 호출
     const [batch1, batch2] = await Promise.all([
@@ -187,13 +234,22 @@ export async function loadAllBikeStations(): Promise<BikeStationRow[]> {
     ]);
 
     const allStations = [...batch1, ...batch2];
-    console.log(
-      `[서울API] 따릉이 데이터 로드 완료: ${allStations.length}개 대여소 (batch1: ${batch1.length}, batch2: ${batch2.length})`
-    );
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'complete',
+      eventOutcome: 'success',
+      operation: 'bike',
+    });
 
     return allStations;
   } catch (error) {
-    console.error('[서울API] 따릉이 데이터 로드 실패:', error);
+    writeRuntimeEvent({
+      eventName: 'external.api.request',
+      eventAction: 'complete',
+      eventOutcome: 'failure',
+      operation: 'bike',
+      error,
+    });
     throw error;
   }
 }

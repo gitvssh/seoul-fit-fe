@@ -3,7 +3,7 @@
 import { createServer, request } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { registerHttpAccessLogging } from '../http-access-log';
+import { registerHttpAccessLogging, writeRuntimeEvent } from '../http-access-log';
 
 const DEPLOYED_ENV: NodeJS.ProcessEnv = {
   NODE_ENV: 'production',
@@ -155,6 +155,63 @@ describe('HTTP access log contract', () => {
         cleanup();
       }).not.toThrow();
     }
+  });
+});
+
+describe('runtime lifecycle log contract', () => {
+  it('emits a bounded cache lifecycle event with deployed identity', () => {
+    const lines: string[] = [];
+
+    writeRuntimeEvent({
+      eventName: 'service.cache.initialize',
+      eventAction: 'complete',
+      eventOutcome: 'success',
+      env: DEPLOYED_ENV,
+      now: () => new Date('2026-08-29T00:00:00.000Z'),
+      write: line => lines.push(line),
+    });
+
+    expect(lines).toHaveLength(1);
+    expect(JSON.parse(lines[0])).toEqual({
+      '@timestamp': '2026-08-29T00:00:00.000Z',
+      message: 'Runtime cache initialization completed',
+      severity_text: 'INFO',
+      log_schema: 'http_access_json_v1',
+      log_category: 'application',
+      service_name: 'seoul-fit-frontend',
+      service_namespace: 'seoul-fit',
+      service_version: 'sha256:0123456789abcdef',
+      service_instance_id: 'pod-uid-0123456789',
+      deployment_environment_name: 'dev',
+      workload_name: 'seoul-fit-fe',
+      event_name: 'service.cache.initialize',
+      event_action: 'complete',
+      event_outcome: 'success',
+    });
+  });
+
+  it('never serializes a thrown value, message, or stack', () => {
+    const lines: string[] = [];
+    const error = new Error('runtime-message-secret');
+    error.stack = 'runtime-stack-secret';
+
+    writeRuntimeEvent({
+      eventName: 'service.cache.initialize',
+      eventAction: 'complete',
+      eventOutcome: 'failure',
+      error,
+      env: DEPLOYED_ENV,
+      write: line => lines.push(line),
+    });
+
+    expect(JSON.parse(lines[0])).toMatchObject({
+      severity_text: 'ERROR',
+      event_name: 'service.cache.initialize',
+      event_outcome: 'failure',
+      error_type: 'Error',
+    });
+    expect(lines[0]).not.toContain('runtime-message-secret');
+    expect(lines[0]).not.toContain('runtime-stack-secret');
   });
 });
 

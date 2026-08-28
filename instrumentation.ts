@@ -4,19 +4,32 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { registerHttpAccessLogging } = await import(
+    const { registerHttpAccessLogging, writeRuntimeEvent } = await import(
       './src/shared/lib/observability/http-access-log'
     );
     const { dataScheduler } = await import('./src/shared/lib/scheduler');
 
     registerHttpAccessLogging();
 
-    console.log('[서버시작] 데이터 캐시 초기화 시작...');
+    writeRuntimeEvent({
+      eventName: 'service.cache.initialize',
+      eventAction: 'start',
+      eventOutcome: 'success',
+    });
     try {
       await dataScheduler.initialize();
-      console.log('[서버시작] 데이터 캐시 초기화 완료');
+      writeRuntimeEvent({
+        eventName: 'service.cache.initialize',
+        eventAction: 'complete',
+        eventOutcome: 'success',
+      });
     } catch (error) {
-      console.error('[서버시작] 데이터 캐시 초기화 실패:', error);
+      writeRuntimeEvent({
+        eventName: 'service.cache.initialize',
+        eventAction: 'complete',
+        eventOutcome: 'failure',
+        error,
+      });
     }
   }
 }

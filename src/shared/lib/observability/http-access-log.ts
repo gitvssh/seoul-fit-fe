@@ -59,7 +59,56 @@ interface RegisterOptions {
   write?: (line: string) => void;
 }
 
+interface RuntimeWriteOptions {
+  env?: NodeJS.ProcessEnv;
+  now?: () => Date;
+  write?: (line: string) => void;
+}
+
+type RuntimeOperation = 'bike' | 'cache' | 'scheduler' | 'subway';
+
+type RuntimeEventOptions = RuntimeWriteOptions & {
+  eventName: 'external.api.request' | 'service.cache.initialize' | 'service.cache.operation';
+  eventAction: 'complete' | 'refresh' | 'retry' | 'schedule' | 'start' | 'stop';
+  eventOutcome: 'failure' | 'success';
+  operation?: RuntimeOperation;
+  error?: unknown;
+};
+
 let registered = false;
+
+export function writeRuntimeEvent(options: RuntimeEventOptions): void {
+  const identity = resolveIdentity(options.env ?? process.env);
+  const write = options.write ?? (line => process.stdout.write(line));
+  const failed = options.eventOutcome === 'failure';
+  const event: Record<string, string> = {
+    '@timestamp': (options.now ?? (() => new Date()))().toISOString(),
+    message: failed
+      ? 'Runtime cache initialization failed'
+      : options.eventAction === 'start'
+        ? 'Runtime cache initialization started'
+        : 'Runtime cache initialization completed',
+    severity_text: failed ? 'ERROR' : 'INFO',
+    log_schema: LOG_SCHEMA,
+    log_category: 'application',
+    service_name: identity.serviceName,
+    service_namespace: identity.serviceNamespace,
+    service_version: identity.serviceVersion,
+    service_instance_id: identity.serviceInstanceId,
+    deployment_environment_name: identity.deploymentEnvironmentName,
+    workload_name: identity.workloadName,
+    event_name: options.eventName,
+    event_action: options.eventAction,
+    event_outcome: options.eventOutcome,
+  };
+  if (options.error !== undefined) {
+    event.error_type = options.error instanceof Error ? 'Error' : 'NonErrorThrow';
+  }
+  if (options.operation !== undefined) {
+    event.operation = options.operation;
+  }
+  write(`${JSON.stringify(event)}\n`);
+}
 
 export function registerHttpAccessLogging(options: RegisterOptions = {}): () => void {
   const env = options.env ?? process.env;

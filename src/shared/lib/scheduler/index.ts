@@ -2,6 +2,7 @@
 
 import { serverCache } from '@/lib/serverCache';
 import { loadAllSubwayStations, loadAllBikeStations } from '@/lib/seoulApi';
+import { writeRuntimeEvent } from '@/src/shared/lib/observability/http-access-log';
 
 class DataScheduler {
   private static instance: DataScheduler;
@@ -18,14 +19,17 @@ class DataScheduler {
   // 초기화 (서버 시작시 1회 실행)
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      console.log('[스케줄러] 이미 초기화됨 - 스킵');
+      writeRuntimeEvent({
+        eventName: 'service.cache.initialize',
+        eventAction: 'complete',
+        eventOutcome: 'success',
+        operation: 'scheduler',
+      });
       return;
     }
 
     // 중복 초기화 방지
     this.isInitialized = true;
-    console.log('[스케줄러] 초기화 시작...');
-
     try {
       // 1. 지하철 데이터 로드 (1회만)
       await this.loadSubwayData();
@@ -36,9 +40,7 @@ class DataScheduler {
       // 3. 따릉이 스케줄러 시작 (1분마다)
       this.startBikeScheduler();
 
-      console.log('[스케줄러] 초기화 완료');
     } catch (error) {
-      console.error('[스케줄러] 초기화 실패:', error);
       this.isInitialized = false; // 실패 시 다시 초기화 가능하도록
       throw error;
     }
@@ -49,16 +51,22 @@ class DataScheduler {
     try {
       const stations = await loadAllSubwayStations();
       serverCache.setStatic('subway_stations', stations);
-      const cacheStatus = serverCache.getStatus();
-      const actualCount = cacheStatus['subway_stations']?.dataSize || 0;
-      console.log(`[스케줄러] 지하철 데이터 캐싱 완료: ${actualCount}개 역`);
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'refresh',
+        eventOutcome: 'success',
+        operation: 'subway',
+      });
     } catch (error) {
-      console.error('[스케줄러] 지하철 데이터 로드 실패:', error);
       // 지하철 데이터는 필수이므로 에러 발생시 빈 배열로 설정
       serverCache.setStatic('subway_stations', []);
-      const cacheStatus = serverCache.getStatus();
-      const actualCount = cacheStatus['subway_stations']?.dataSize || 0;
-      console.log(`[스케줄러] 지하철 데이터 캐싱 완료: ${actualCount}개 역 (에러로 인한 빈 배열)`);
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'refresh',
+        eventOutcome: 'failure',
+        operation: 'subway',
+        error,
+      });
     }
   }
 
@@ -67,15 +75,21 @@ class DataScheduler {
     try {
       const stations = await loadAllBikeStations();
       serverCache.setDynamic('bike_stations', stations);
-      const cacheStatus = serverCache.getStatus();
-      const actualCount = cacheStatus['bike_stations']?.dataSize || 0;
-      console.log(`[스케줄러] 따릉이 데이터 캐싱 완료: ${actualCount}개 대여소`);
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'refresh',
+        eventOutcome: 'success',
+        operation: 'bike',
+      });
     } catch (error) {
-      console.error('[스케줄러] 따릉이 데이터 로드 실패:', error);
       // 실패 시 기존 캐시 유지
-      const cacheStatus = serverCache.getStatus();
-      const actualCount = cacheStatus['bike_stations']?.dataSize || 0;
-      console.log(`[스케줄러] 따릉이 데이터 캐싱 유지: ${actualCount}개 대여소 (기존 캐시 유지)`);
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'refresh',
+        eventOutcome: 'failure',
+        operation: 'bike',
+        error,
+      });
     }
   }
 
@@ -85,7 +99,12 @@ class DataScheduler {
       clearInterval(this.bikeInterval);
     }
 
-    console.log('[스케줄러] 따릉이 1분 주기 갱신 시작');
+    writeRuntimeEvent({
+      eventName: 'service.cache.operation',
+      eventAction: 'schedule',
+      eventOutcome: 'success',
+      operation: 'bike',
+    });
 
     this.bikeInterval = setInterval(async () => {
       await this.loadBikeData();
@@ -97,7 +116,12 @@ class DataScheduler {
     if (this.bikeInterval) {
       clearInterval(this.bikeInterval);
       this.bikeInterval = null;
-      console.log('[스케줄러] 중지됨');
+      writeRuntimeEvent({
+        eventName: 'service.cache.operation',
+        eventAction: 'stop',
+        eventOutcome: 'success',
+        operation: 'scheduler',
+      });
     }
   }
 

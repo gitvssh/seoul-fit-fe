@@ -5,8 +5,11 @@ on:
     branches: [master]
     paths:
       - ".github/workflows/gitops.yml"
+      - "Dockerfile"
+      - "docker-entrypoint.sh"
       - "infra/argocd/**"
       - "infra/k8s/**"
+      - "infra/runtime/**"
       - "infra/scripts/validate_argocd_registration.py"
       - "infra/scripts/validate_observability_contract.py"
       - "instrumentation.ts"
@@ -15,8 +18,11 @@ on:
     branches: [master]
     paths:
       - ".github/workflows/gitops.yml"
+      - "Dockerfile"
+      - "docker-entrypoint.sh"
       - "infra/argocd/**"
       - "infra/k8s/**"
+      - "infra/runtime/**"
       - "infra/scripts/validate_argocd_registration.py"
       - "infra/scripts/validate_observability_contract.py"
       - "instrumentation.ts"
