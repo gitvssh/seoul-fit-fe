@@ -144,14 +144,16 @@ describe('HTTP access log contract', () => {
 
   it('keeps local and test processes usable without Kubernetes metadata', () => {
     for (const deploymentEnvironment of ['local', 'test'] as const) {
-      const cleanup = registerHttpAccessLogging({
-        env: {
-          NODE_ENV: 'test',
-          DEPLOYMENT_ENVIRONMENT_NAME: deploymentEnvironment,
-        },
-        write: () => undefined,
-      });
-      cleanup();
+      expect(() => {
+        const cleanup = registerHttpAccessLogging({
+          env: {
+            NODE_ENV: 'test',
+            DEPLOYMENT_ENVIRONMENT_NAME: deploymentEnvironment,
+          },
+          write: () => undefined,
+        });
+        cleanup();
+      }).not.toThrow();
     }
   });
 });

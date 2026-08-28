@@ -1,4 +1,4 @@
-import { channel, type ChannelListener } from 'node:diagnostics_channel';
+import { subscribe, unsubscribe, type ChannelListener } from 'node:diagnostics_channel';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const LOG_SCHEMA = 'http_access_json_v1';
@@ -73,8 +73,8 @@ export function registerHttpAccessLogging(options: RegisterOptions = {}): () => 
   const write = options.write ?? (line => process.stdout.write(line));
   const requests = new WeakMap<ServerResponse, IncomingMessage>();
   const startedAt = new WeakMap<ServerResponse, bigint>();
-  const requestStart = channel('http.server.request.start');
-  const responseFinish = channel('http.server.response.finish');
+  const requestStart = 'http.server.request.start';
+  const responseFinish = 'http.server.response.finish';
 
   const onRequestStart: ChannelListener = message => {
     if (!isHttpServerEvent(message)) {
@@ -121,13 +121,13 @@ export function registerHttpAccessLogging(options: RegisterOptions = {}): () => 
     write(`${JSON.stringify(accessEvent)}\n`);
   };
 
-  requestStart.subscribe(onRequestStart);
-  responseFinish.subscribe(onResponseFinish);
+  subscribe(requestStart, onRequestStart);
+  subscribe(responseFinish, onResponseFinish);
   registered = true;
 
   return () => {
-    requestStart.unsubscribe(onRequestStart);
-    responseFinish.unsubscribe(onResponseFinish);
+    unsubscribe(requestStart, onRequestStart);
+    unsubscribe(responseFinish, onResponseFinish);
     registered = false;
   };
 }
