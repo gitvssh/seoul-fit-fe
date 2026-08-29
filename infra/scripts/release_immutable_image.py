@@ -351,8 +351,9 @@ def read_public_inputs(environment_name: str) -> tuple[dict[str, str], str]:
     return validate_public_inputs(values)
 
 
-@contextmanager
-def isolated_docker_environment() -> Iterator[dict[str, str]]:
+def canonical_private_runtime_directory() -> Path:
+    """Return the only runtime directory accepted by the release CLI."""
+
     expected_runtime = Path(f"/run/user/{os.geteuid()}")
     configured_runtime = Path(os.environ.get("XDG_RUNTIME_DIR", ""))
     try:
@@ -368,6 +369,12 @@ def isolated_docker_environment() -> Iterator[dict[str, str]]:
         raise ReleaseError(
             "XDG_RUNTIME_DIR is not the private canonical user runtime directory"
         )
+    return configured_runtime
+
+
+@contextmanager
+def isolated_docker_environment() -> Iterator[dict[str, str]]:
+    configured_runtime = canonical_private_runtime_directory()
     with tempfile.TemporaryDirectory(
         prefix="seoul-fit-frontend-release-", dir=configured_runtime
     ) as name:
