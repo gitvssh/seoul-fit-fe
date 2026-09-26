@@ -1,0 +1,9 @@
+{
+  "digest": "sha256:e1797ae9ac62a2309ad6cb681c470adfcf62933ed440ba93804a82426838dab6",
+  "environment": "prod",
+  "image": "registry.damecasol.com/seoul-fit/frontend:prod-fb0c650ac3a6ad8c2ef85bb91504a1a03a845756",
+  "public_input_sha256": "sha256:a13a5d2afc2a6a4f675dfb5ef8233e87e14c07917abdd0e8a290b8f67f4051f3",
+  "schema_version": 1,
+  "service_version": "sha256:e1797ae9ac62a2309ad6cb681c470adfcf62933ed440ba93804a82426838dab6",
+  "source_sha": "fb0c650ac3a6ad8c2ef85bb91504a1a03a845756"
+}
