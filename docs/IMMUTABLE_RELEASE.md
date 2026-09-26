@@ -9,7 +9,11 @@ call `sudo`, or persist credentials.
 ## Runtime prerequisites
 
 - canonical `master` is clean and exactly equals `origin/master` after an
-  explicit `git fetch`; the publish SHA must be `HEAD`
+  explicit `git fetch`; the source SHA is `HEAD`, or an ancestor of `HEAD`
+  from which only release pin files differ (the overlay digest pins and
+  `infra/releases/*.json`). Those paths are excluded from the Docker build
+  context, so the prod build of a source already pinned for dev is
+  byte-identical to a build at that source
 - Docker with BuildKit is installed and the daemon is reachable; the build
   runs as `docker buildx build`, so the buildx CLI plugin must resolve from a
   system plugin directory (the isolated `DOCKER_CONFIG` has no plugins)

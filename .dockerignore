@@ -8,3 +8,8 @@ coverage
 npm-debug.log*
 Dockerfile*
 docs
+# Release pin files never change the image; keeping them out of the build
+# context makes a source SHA and its pin commits build byte-identical images.
+infra/argocd
+infra/k8s
+infra/releases

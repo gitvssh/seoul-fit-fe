@@ -215,6 +215,60 @@ patches:
                     marker, workflow, f"{path}: forbidden Actions storage marker"
                 )
 
+    def test_release_pin_paths_are_exact_and_outside_the_build_context(self) -> None:
+        self.assertTrue(
+            release.is_release_pin_only_change(
+                [
+                    "infra/k8s/seoul-fit-fe/overlays/dev/kustomization.yaml",
+                    "infra/releases/dev.json",
+                ]
+            )
+        )
+        self.assertTrue(release.is_release_pin_only_change([]))
+        for changed in (
+            ["Dockerfile"],
+            ["infra/k8s/seoul-fit-fe/base/deployment.yaml"],
+            ["infra/releases/dev.json", "src/app/page.tsx"],
+            ["infra/releases-other/dev.json"],
+            ["infra/scripts/release_immutable_image.py"],
+        ):
+            with self.subTest(changed=changed):
+                self.assertFalse(release.is_release_pin_only_change(changed))
+        dockerignore = (SCRIPT.parents[2] / ".dockerignore").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        for path in release.RELEASE_PIN_PATHS:
+            top = "/".join(path.split("/")[:2])
+            self.assertIn(top, dockerignore, f"{path} must stay out of the context")
+
+    def test_divergent_head_accepts_only_release_pin_commits(self) -> None:
+        outputs = {
+            ("status", "--porcelain=v1"): "",
+            ("symbolic-ref", "--quiet", "--short", "HEAD"): release.DEFAULT_BRANCH,
+            ("rev-parse", "HEAD"): "2" * 40,
+            ("rev-parse", f"origin/{release.DEFAULT_BRANCH}"): "2" * 40,
+            ("diff", "--name-only", f"{SOURCE_SHA}..HEAD"): "infra/releases/dev.json",
+        }
+        ancestor = mock.Mock(returncode=0)
+        with mock.patch.object(
+            release, "git_output", side_effect=lambda *a: outputs[a]
+        ), mock.patch.object(release.subprocess, "run", return_value=ancestor):
+            release.verify_git_checkout(SOURCE_SHA, publish=True)
+            release.verify_git_checkout(SOURCE_SHA, publish=False)
+            outputs[("diff", "--name-only", f"{SOURCE_SHA}..HEAD")] = (
+                "infra/releases/dev.json\nDockerfile"
+            )
+            for publish in (True, False):
+                with self.assertRaises(release.ReleaseError):
+                    release.verify_git_checkout(SOURCE_SHA, publish=publish)
+        with mock.patch.object(
+            release, "git_output", side_effect=lambda *a: outputs[a]
+        ), mock.patch.object(
+            release.subprocess, "run", return_value=mock.Mock(returncode=1)
+        ):
+            with self.assertRaises(release.ReleaseError):
+                release.verify_git_checkout(SOURCE_SHA, publish=True)
+
     def test_harbor_contract_is_exactly_project_scoped(self) -> None:
         self.assertEqual(
             release.HARBOR_DOCUMENT, "/v1/kv/data/projects/seoul-fit/harbor-ci"

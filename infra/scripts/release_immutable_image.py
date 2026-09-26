@@ -43,6 +43,14 @@ BUILD_DOCUMENTS = {
 }
 OVERLAY_ROOT = REPO_ROOT / "infra/k8s/seoul-fit-fe/overlays"
 RECEIPT_ROOT = REPO_ROOT / "infra/releases"
+# Files a pin commit may change. They are excluded from the Docker build
+# context (.dockerignore), so a source tree that differs from the reviewed
+# source SHA only in these paths still builds the identical image.
+RELEASE_PIN_PATHS = (
+    "infra/k8s/seoul-fit-fe/overlays/dev/kustomization.yaml",
+    "infra/k8s/seoul-fit-fe/overlays/prod/kustomization.yaml",
+    "infra/releases/",
+)
 SOURCE_PATTERN = re.compile(r"[0-9a-f]{40}")
 DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}")
 PUBLIC_INPUTS = {
@@ -122,6 +130,18 @@ def git_output(*arguments: str) -> str:
     return run_checked(("git", *arguments))
 
 
+def is_release_pin_only_change(changed_paths: Sequence[str]) -> bool:
+    """Return whether every changed path is a release pin file."""
+
+    return all(
+        any(
+            path == allowed or (allowed.endswith("/") and path.startswith(allowed))
+            for allowed in RELEASE_PIN_PATHS
+        )
+        for path in changed_paths
+    )
+
+
 def verify_git_checkout(source_sha: str, *, publish: bool) -> None:
     if git_output("status", "--porcelain=v1"):
         raise ReleaseError("the repository must be clean")
@@ -135,10 +155,10 @@ def verify_git_checkout(source_sha: str, *, publish: bool) -> None:
         raise ReleaseError(
             "the canonical branch must exactly match its origin tracking ref"
         )
-    if publish:
-        if head != source_sha:
-            raise ReleaseError("publish source SHA must exactly equal HEAD")
-    elif (
+    if head == source_sha:
+        return
+    command = "publish" if publish else "pin"
+    if (
         subprocess.run(
             ["git", "merge-base", "--is-ancestor", source_sha, "HEAD"],
             cwd=REPO_ROOT,
@@ -148,7 +168,16 @@ def verify_git_checkout(source_sha: str, *, publish: bool) -> None:
         ).returncode
         != 0
     ):
-        raise ReleaseError("pin source SHA must be an ancestor of canonical HEAD")
+        raise ReleaseError(f"{command} source SHA must be an ancestor of canonical HEAD")
+    # The dev pin commit necessarily moves HEAD past the reviewed source, and the
+    # prod pin requires the dev receipt of that exact source. Commits between
+    # the source and HEAD may therefore change only release pin files, which
+    # never enter the build context.
+    changed = git_output("diff", "--name-only", f"{source_sha}..HEAD").splitlines()
+    if not is_release_pin_only_change(changed):
+        raise ReleaseError(
+            f"{command} source SHA may differ from HEAD only by release pin files"
+        )
 
 
 def read_vault_document(document_path: str, purpose: str) -> dict[str, object]:
