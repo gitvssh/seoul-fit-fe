@@ -457,7 +457,13 @@ def publish(environment_name: str, source_sha: str) -> dict[str, object]:
             with build_input_descriptors(values) as (secret_arguments, descriptors):
                 run_checked(
                     (
+                        # `docker build` resolves the buildx plugin through the
+                        # first system plugin directory only, so a stale Docker
+                        # Desktop symlink there breaks it. The explicit buildx
+                        # subcommand is the same BuildKit builder and honours
+                        # `--secret` mounts under the isolated DOCKER_CONFIG.
                         "docker",
+                        "buildx",
                         "build",
                         "--pull",
                         "--platform",

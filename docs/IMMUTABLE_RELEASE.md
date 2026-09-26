@@ -10,7 +10,9 @@ call `sudo`, or persist credentials.
 
 - canonical `master` is clean and exactly equals `origin/master` after an
   explicit `git fetch`; the publish SHA must be `HEAD`
-- Docker with BuildKit is installed and the daemon is reachable
+- Docker with BuildKit is installed and the daemon is reachable; the build
+  runs as `docker buildx build`, so the buildx CLI plugin must resolve from a
+  system plugin directory (the isolated `DOCKER_CONFIG` has no plugins)
 - `XDG_RUNTIME_DIR=/run/user/$(id -u)` is owner-only
 - `/run/vault-proxy/seoul-fit-release-agent.sock` is healthy and returns HTTP
   200 for the exact release documents: `kv/data/projects/seoul-fit/harbor-ci`
