@@ -13,6 +13,15 @@ COPY . .
 # Public browser configuration is embedded by Next.js at build time. BuildKit
 # secrets keep its source values out of shell arguments and image layers; the
 # resulting public values remain available only where the browser requires them.
+#
+# Secret mounts are NOT part of BuildKit's layer cache key. Without a
+# per-environment input in the instruction itself, a prod build that follows a
+# dev build of the same source silently reuses the dev-built `.next` layer and
+# ships dev URLs to production. The public-input fingerprint (already an OCI
+# label, never a secret) is therefore consumed by this RUN so each distinct set
+# of build inputs gets its own cache entry, and the build asserts afterwards
+# that the emitted bundle really embeds the requested public origin.
+ARG PUBLIC_INPUT_SHA256
 RUN --mount=type=secret,id=next_public_app_url,required=true \
     --mount=type=secret,id=next_public_backend_url,required=true \
     --mount=type=secret,id=next_public_kakao_client_id,required=true \
@@ -20,6 +29,11 @@ RUN --mount=type=secret,id=next_public_app_url,required=true \
     --mount=type=secret,id=next_public_kakao_redirect_uri,required=true \
     --mount=type=secret,id=next_public_ga_measurement_id,required=true \
     set -eu; \
+    case "${PUBLIC_INPUT_SHA256:-}" in \
+      sha256:????????????????????????????????????????????????????????????????) ;; \
+      *) echo 'PUBLIC_INPUT_SHA256 build argument must be the public-input fingerprint' >&2; exit 1 ;; \
+    esac; \
+    echo "public build inputs: ${PUBLIC_INPUT_SHA256}"; \
     read_secret() { if [ -f "$1" ]; then tr -d '\\r\\n' < "$1"; fi; }; \
     export NEXT_PUBLIC_APP_URL="$(read_secret /run/secrets/next_public_app_url)"; \
     export NEXT_PUBLIC_BACKEND_URL="$(read_secret /run/secrets/next_public_backend_url)"; \
@@ -27,7 +41,9 @@ RUN --mount=type=secret,id=next_public_app_url,required=true \
     export NEXT_PUBLIC_KAKAO_MAP_API_KEY="$(read_secret /run/secrets/next_public_kakao_map_api_key)"; \
     export NEXT_PUBLIC_KAKAO_REDIRECT_URI="$(read_secret /run/secrets/next_public_kakao_redirect_uri)"; \
     export NEXT_PUBLIC_GA_MEASUREMENT_ID="$(read_secret /run/secrets/next_public_ga_measurement_id)"; \
-    npm run build
+    npm run build; \
+    grep -rqF -- "${NEXT_PUBLIC_APP_URL}" .next/static .next/server \
+      || { echo 'built bundle does not embed NEXT_PUBLIC_APP_URL; refusing a stale build output' >&2; exit 1; }
 
 FROM node:20-alpine AS runner
 WORKDIR /app

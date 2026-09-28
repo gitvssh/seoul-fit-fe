@@ -1,73 +1,81 @@
-describe('GA4 privacy boundary', () => {
-  beforeEach(() => {
-    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = 'G-TEST123';
-    jest.resetModules();
-    window.localStorage.clear();
-    delete window.dataLayer;
-    delete window.gtag;
-  });
+import {
+  cleanParams,
+  dispatchAnalyticsEvent,
+  isAnalyticsAvailable,
+  trackEvent,
+} from '../analytics';
 
+describe('Zaraz analytics transport', () => {
   afterEach(() => {
-    delete process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+    delete window.zaraz;
   });
 
-  it('does not initialise or send events before explicit consent', () => {
-    const analytics = require('../analytics') as typeof import('../analytics');
-
-    analytics.initializeAnalytics();
-    analytics.trackEvent('facility_detail_viewed', { category: 'park' });
-
-    expect(window.dataLayer).toBeUndefined();
+  it('is a no-op when the consent-controlled Zaraz client is absent', () => {
+    expect(isAnalyticsAvailable()).toBe(false);
+    expect(() => trackEvent('map_ready', { page_type: 'home_map' })).not.toThrow();
   });
 
-  it('sends only the allowlisted, non-identifying event fields after consent', () => {
-    const analytics = require('../analytics') as typeof import('../analytics');
-    analytics.setAnalyticsConsent('granted');
+  it('sends only the allowlisted, non-identifying event fields', () => {
+    const track = jest.fn();
+    window.zaraz = { track };
 
-    analytics.initializeAnalytics();
-    analytics.trackEvent('facility_action_clicked', {
+    trackEvent('facility_action_clicked', {
       action_type: 'phone',
       category: 'park',
       entry_point: 'sidebar?search=private',
+      // @ts-expect-error unknown keys are dropped at runtime as well as by the type
+      email: 'someone@example.com',
     });
 
-    expect(window.dataLayer).toHaveLength(4);
-    expect(window.dataLayer?.[0]).toEqual(['consent', 'update', { analytics_storage: 'granted' }]);
-    expect(window.dataLayer?.[2]).toEqual(['config', 'G-TEST123', { send_page_view: false }]);
-    expect(window.dataLayer?.[3]).toEqual([
-      'event',
-      'facility_action_clicked',
-      {
-        event_version: '1',
-        action_type: 'phone',
-        category: 'park',
-      },
-    ]);
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('facility_action_clicked', {
+      event_version: '1',
+      action_type: 'phone',
+      category: 'park',
+    });
   });
 
-  it('removes query strings from page-view paths', () => {
-    const analytics = require('../analytics') as typeof import('../analytics');
-    analytics.setAnalyticsConsent('granted');
-
-    analytics.trackPageView('/places/park/42?search=private', 'place_detail');
-
-    expect(window.dataLayer?.[1]).toEqual([
-      'event',
-      'page_view',
-      { page_path: '/places/park/42', page_type: 'place_detail' },
-    ]);
+  it('rejects free text, URLs and over-long values', () => {
+    expect(
+      cleanParams({
+        filter_value: 'https://example.com/private',
+        preset: 'x'.repeat(81),
+        reason_code: 'ok_value-1',
+        category: '공원',
+      })
+    ).toEqual({ reason_code: 'ok_value-1' });
   });
 
-  it('notifies Google consent mode when consent is cleared', () => {
-    const analytics = require('../analytics') as typeof import('../analytics');
-    analytics.setAnalyticsConsent('granted');
+  it('does not let a throwing tracker interrupt the caller', () => {
+    window.zaraz = {
+      track: jest.fn(() => {
+        throw new Error('tracker unavailable');
+      }),
+    };
 
-    analytics.clearAnalyticsConsent();
+    expect(() => dispatchAnalyticsEvent('map_ready', { page_type: 'home_map' })).not.toThrow();
+  });
 
-    expect(window.dataLayer?.at(-1)).toEqual([
-      'consent',
-      'update',
-      { analytics_storage: 'denied' },
-    ]);
+  it('absorbs an asynchronous tracker rejection', async () => {
+    const track = jest.fn(() => Promise.reject(new Error('tracker unavailable')));
+    window.zaraz = { track };
+
+    dispatchAnalyticsEvent('map_ready', { page_type: 'home_map' });
+    await Promise.resolve();
+
+    expect(track).toHaveBeenCalledTimes(1);
+  });
+
+  it('never references a measurement ID or vendor script', () => {
+    expect(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID).toBeUndefined();
+    expect(window.dataLayer).toBeUndefined();
+    expect(window.gtag).toBeUndefined();
   });
 });
+
+declare global {
+  interface Window {
+    dataLayer?: unknown;
+    gtag?: unknown;
+  }
+}

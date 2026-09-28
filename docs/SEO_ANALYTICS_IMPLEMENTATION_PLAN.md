@@ -9,11 +9,14 @@ Console(GSC)·GA4·Cloudflare를 연결해 유입부터 장소 행동까지의 �
 
 | 범위                                   | 상태 | 구현 위치 또는 최종 작업                        |
 | -------------------------------------- | ---- | ----------------------------------------------- |
-| 기본 메타데이터, canonical, Open Graph | 구현 | `app/layout.tsx`, 각 장소 페이지                |
-| 크롤러 제어와 sitemap                  | 구현 | `app/robots.ts`, `app/sitemap.ts`               |
+| 사이트 상수(원본·이름·설명) 단일 파일   | 구현 | `src/shared/lib/seo/site.ts` (`SITE_ORIGIN` 등)  |
+| 기본 메타데이터, canonical, OG 이미지, Twitter | 구현 | `app/layout.tsx`, `app/opengraph-image.tsx`, 각 장소 페이지 |
+| 홈 JSON-LD(`WebSite`+`WebApplication`)·서버 렌더 h1 | 구현 | `app/page.tsx`, `src/widgets/home-landing`      |
+| 크롤러 제어와 sitemap(요청 호스트 기준) | 구현 | `app/robots.ts`, `app/sitemap.ts`               |
+| 비정규 호스트 `X-Robots-Tag` noindex    | 구현 | `proxy.ts`                                      |
 | 검색 노출용 장소 목록·상세 URL         | 구현 | `/places/*`, backend `/api/public/places/*`     |
-| 동의 기반 GA4 이벤트                   | 구현 | `src/shared/lib/analytics`, `AnalyticsProvider` |
-| GA4 property·GSC·Cloudflare 대시보드   | 보류 | 마지막 외부 연결 게이트                         |
+| Zaraz 경유 GA4 이벤트 전송 계층        | 구현 | `src/shared/lib/analytics/analytics.ts`         |
+| Zaraz GA4 도구·Consent, GSC 등록      | 보류 | 콘솔 작업(아래 최종 연결 체크리스트)            |
 
 ## 공개 URL 및 색인 정책
 
@@ -28,6 +31,14 @@ Console(GSC)·GA4·Cloudflare를 연결해 유입부터 장소 행동까지의 �
 상세 URL의 ID는 매일 재구성될 수 있는 POI 검색 인덱스 ID가 아니라 원본 데이터의
 `refId`다. 따라서 검색 인덱스 배치가 재실행돼도 공개 URL, canonical, sitemap
 주소가 유지된다.
+
+색인 허용 여부는 **요청된 호스트**로 판단한다(`isIndexableRequest`). 정확히
+`seoulfit.damecasol.com`으로 들어온 요청만 크롤 허용 `robots.txt`와 sitemap을 받고,
+`seoulfit.dev.damecasol.com`·클러스터 Service 이름·프로브 등 그 외 호스트는
+`Disallow: /`, 빈 sitemap, 그리고 `proxy.ts`가 붙이는
+`X-Robots-Tag: noindex, nofollow, noarchive`를 받는다. canonical·OG·JSON-LD URL은
+빌드 입력이 아니라 상수 `SITE_ORIGIN`에서 나오므로 어떤 이미지가 어느 호스트에서
+돌아도 항상 운영 원본을 가리킨다.
 
 `sitemap.xml`은 프로덕션 canonical host(`https://seoulfit.damecasol.com`)에서만
 생성하고 상시 데이터만 수집한다. backend를 일시적으로 읽지 못해도 기본 정적
@@ -54,19 +65,23 @@ flowchart LR
 
 ### 공통 규칙
 
-- `NEXT_PUBLIC_GA_MEASUREMENT_ID`가 비어 있으면 GA4 스크립트, 배너, 이벤트가
-  모두 비활성이다.
-- 사용자가 명시적으로 동의한 뒤에만 GA4를 로드한다. 거부 후에도 `분석 설정`에서
-  선택을 다시 할 수 있다.
-- 이벤트에는 검색어, 정확한 좌표, 시설 ID·이름·주소·전화번호, 사용자 ID·이메일,
-  OAuth code/token을 보내지 않는다. Google Analytics에는 식별 가능한 개인 정보를
-  전송하면 안 된다.
+- GA4는 **Cloudflare Zaraz 경유**가 표준이다. 앱 코드에는 측정 ID가 없고 벤더
+  스크립트를 로드하지 않는다. 앱은 `window.zaraz.track(event, properties)`만 호출하는
+  얇은 전송 계층(`src/shared/lib/analytics/analytics.ts`)을 둔다.
+- 동의는 Zaraz Consent가 소유한다. 분석 목적은 기본 거부이고, 동의 전에는 GA4
+  도구가 실행되지 않으므로 `zaraz.track` 호출도 전송되지 않는다. Zaraz가 없거나
+  전송이 실패하면 앱은 조용히 no-op 처리하고 지도·로그인 흐름을 막지 않는다.
+- 이벤트명과 허용 속성은 코드에서 타입으로 강제하고, 값은 80자 이하의
+  `[a-z0-9_-]` enum 문자열만 통과시킨다. 검색어, 정확한 좌표, 시설 ID·이름·주소·
+  전화번호, URL, 사용자 ID·이메일, OAuth code/token은 보내지 않는다.
   [GA 개인정보 보호 정책](https://support.google.com/analytics/answer/6366371)
-- 페이지뷰는 query string을 제거한 path만 사용한다.
+- 페이지뷰는 Zaraz GA4 도구의 기본 Pageview(SPA 지원 포함)로 수집하고 앱에서 따로
+  보내지 않는다. 모든 이벤트에는 `event_version=1`이 붙는다.
+- 빌드 계약의 `NEXT_PUBLIC_GA_MEASUREMENT_ID` 키는 예약 키로 남아 있으며 항상 빈 값이다.
 
 | 이벤트                              | 발생 시점                         | 허용 파라미터                  | 퍼널 단계      |
 | ----------------------------------- | --------------------------------- | ------------------------------ | -------------- |
-| `page_view`                         | 동의 후 화면 이동                 | `page_path`, `page_type`       | 방문           |
+| (Zaraz 기본 Pageview)               | 화면 이동                         | Zaraz 기본 속성                | 방문           |
 | `map_ready`                         | 지도 SDK 준비 완료                | `page_type=home_map`           | 지도 사용 가능 |
 | `geolocation_result`                | 위치 권한 결과                    | `location_permission`          | 개인화 진입    |
 | `discovery_started`                 | 카테고리·검색 결과·검색 기록 선택 | `selection_source`, `category` | 탐색 시작      |
@@ -80,7 +95,7 @@ GA4 Explore에서 아래 순서로 **닫힌 퍼널**을 만든다. 첫 단계의
 월간으로 시작하고, `facility_action_clicked`은 전화·외부 공식 링크·지도 CTA를
 함께 보되 `action_type`으로 분해한다.
 
-1. `page_view` where `page_type = home_map`
+1. `page_view` (Zaraz 기본 Pageview) where `page_location` 경로 = `/`
 2. `map_ready`
 3. `discovery_started`
 4. `facility_detail_viewed`
@@ -122,10 +137,12 @@ exploration은 event 조건과 순서를 기준으로 이탈을 분석할 수 �
    200·canonical·noindex 정책과 일치하는지 curl과 URL Inspection으로 확인한다.
 3. GSC에 sitemap URL을 제출하고, `Sitemaps` 보고서의 읽기 성공 및 excluded
    사유를 48시간 이상 관찰한다.
-4. GA4 Web data stream을 만들고 Measurement ID를 `NEXT_PUBLIC_GA_MEASUREMENT_ID`
-   build argument로 주입해 frontend 이미지를 다시 빌드·배포한다. 브라우저 동의
-   뒤 DebugView에서 `map_ready`와 `facility_action_clicked`을 확인한다. GA4
-   이벤트는 `gtag()`로 전송한다.
+4. GA4 Web data stream을 만들고 Measurement ID는 **Cloudflare Zaraz 콘솔**의
+   GA4 도구에만 입력한다(앱 재빌드 없음). Zaraz Consent에서 분석 목적을 기본
+   거부로 두고 GA4 도구를 그 목적에 할당한다. `zaraz.track`의 custom event name과
+   flat properties가 GA4 event name·parameters로 전달되도록 설정하고, 브라우저
+   동의 뒤 Zaraz Debug와 GA4 DebugView에서 `map_ready`와 `facility_action_clicked`을
+   확인한다. `facility_action_clicked`을 GA4 key event로 지정한다.
    [GA4 이벤트 수집 가이드](https://developers.google.com/analytics/devguides/collection/ga4/events)
 5. GA4 Editor와 GSC verified owner 권한으로 GA4↔Search Console link를 만든다.
    그러면 organic search 관련 보고서를 함께 볼 수 있다.
@@ -144,9 +161,11 @@ GSC 도메인 소유권 확인에는 DNS 레코드가 가장 범위가 넓으며
   목록·상세가 200이고 auth/profile은 noindex다.
 - HTML source에서 canonical·Open Graph·JSON-LD가 하나씩 있고, sitemap에
   canonical HTTPS URL만 포함된다.
-- Measurement ID가 없을 때 `googletagmanager.com` 요청과 GA 이벤트가 0건이다.
-- Measurement ID가 있을 때에도 동의 전 0건, 동의 후 DebugView 이벤트와 선택한
-  CTA만 관찰된다.
+- 앱 번들에 측정 ID·`googletagmanager.com` 참조가 없다. Zaraz가 없는 환경(dev,
+  로컬)에서는 분석 요청이 0건이고 제품 흐름은 정상이다.
+- 운영에서도 Zaraz 동의 전 0건, 동의 후 DebugView 이벤트와 선택한 CTA만 관찰된다.
+- `seoulfit.dev.damecasol.com`은 `robots.txt`가 `Disallow: /`이고 모든 응답에
+  `X-Robots-Tag: noindex, nofollow, noarchive`가 있다.
 - 임시·계절성 카테고리와 2페이지 이후 목록은 `noindex, follow`이며, sitemap에는
   상시 콘텐츠 URL만 있다.
 - JSON-LD는 외부 데이터의 script 탈출 문자를 이스케이프하고, 공용 응답은 기본

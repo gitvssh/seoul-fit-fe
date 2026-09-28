@@ -1,8 +1,14 @@
 import type { MetadataRoute } from 'next';
-import { getSiteUrl, isSearchIndexingEnabled } from '@/shared/lib/seo/site';
+import { headers } from 'next/headers';
+import { SITE_ORIGIN, absoluteSiteUrl, isIndexableRequest } from '@/shared/lib/seo/site';
 
-export default function robots(): MetadataRoute.Robots {
-  if (!isSearchIndexingEnabled()) {
+/**
+ * Reading request headers makes this route dynamic on purpose: the crawl
+ * policy follows the host that was actually requested, not a build-time value.
+ * Only the canonical production host allows crawling.
+ */
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  if (!isIndexableRequest(await headers())) {
     return {
       rules: { userAgent: '*', disallow: '/' },
     };
@@ -12,8 +18,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/auth/'],
+      disallow: ['/api/', '/auth/', '/health', '/profile'],
     },
-    sitemap: getSiteUrl('/sitemap.xml'),
+    sitemap: absoluteSiteUrl('/sitemap.xml'),
+    host: SITE_ORIGIN,
   };
 }

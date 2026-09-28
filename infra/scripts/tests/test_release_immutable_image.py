@@ -196,6 +196,15 @@ patches:
         self.assertNotIn("ARG NEXT_PUBLIC_", dockerfile)
         self.assertNotIn("ENV NEXT_PUBLIC_", dockerfile)
 
+    def test_build_cache_key_includes_public_input_fingerprint(self) -> None:
+        dockerfile = (SCRIPT.parents[2] / "Dockerfile").read_text(encoding="utf-8")
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertEqual(dockerfile.count("ARG PUBLIC_INPUT_SHA256"), 1)
+        self.assertIn('echo "public build inputs: ${PUBLIC_INPUT_SHA256}"', dockerfile)
+        self.assertIn('grep -rqF -- "${NEXT_PUBLIC_APP_URL}" .next/static .next/server', dockerfile)
+        self.assertIn('f"PUBLIC_INPUT_SHA256={input_fingerprint}"', source)
+        self.assertIn('"--build-arg",', source)
+
     def test_no_git_publish_force_or_actions_storage(self) -> None:
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn('("git", "push"', source)

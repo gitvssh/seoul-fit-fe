@@ -35,6 +35,14 @@ are separate from `fe-dev` and `fe-prod`, which remain Kubernetes runtime-only
 documents containing `SEOUL_API_KEY`. Neither runtime document nor that key is
 read by this release command.
 
+BuildKit secret mounts are not part of the layer cache key. The publisher
+therefore also passes the public-input fingerprint as
+`--build-arg PUBLIC_INPUT_SHA256=<fingerprint>`, which the `next build`
+instruction consumes, so a prod build never reuses the dev-built `.next` layer
+of the same source (this exact reuse shipped dev URLs to production on
+2026-09-26). The Dockerfile additionally refuses an output that does not embed
+`NEXT_PUBLIC_APP_URL`.
+
 The tool creates `DOCKER_CONFIG` below `XDG_RUNTIME_DIR` with mode `0700`, sends
 the Harbor password only to `docker login --password-stdin`, and removes the
 directory on exit. Each public input reaches BuildKit through an anonymous

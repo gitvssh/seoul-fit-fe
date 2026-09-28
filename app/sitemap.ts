@@ -1,24 +1,32 @@
 import type { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
 import {
   PUBLIC_PLACE_CATEGORIES,
   getPublicPlacePath,
   getPublicPlaceSitemapEntries,
 } from '@/shared/lib/seo/public-places';
-import { getSiteUrl, isSearchIndexingEnabled } from '@/shared/lib/seo/site';
+import { absoluteSiteUrl, isIndexableRequest } from '@/shared/lib/seo/site';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * The sitemap is served only to the canonical production host and lists only
+ * canonical production URLs. Static pages are always present so a temporarily
+ * unreachable backend still yields a valid sitemap.
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (!isSearchIndexingEnabled()) {
+  if (!isIndexableRequest(await headers())) {
     return [];
   }
 
   const indexedCategories = PUBLIC_PLACE_CATEGORIES.filter(category => category.indexable);
   const staticPages: MetadataRoute.Sitemap = [
-    { url: getSiteUrl('/') },
-    { url: getSiteUrl('/places') },
+    { url: absoluteSiteUrl('/'), changeFrequency: 'weekly', priority: 1 },
+    { url: absoluteSiteUrl('/places'), changeFrequency: 'weekly', priority: 0.8 },
     ...indexedCategories.map(category => ({
-      url: getSiteUrl(`/places/${category.slug}`),
+      url: absoluteSiteUrl(`/places/${category.slug}`),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
     })),
   ];
 
@@ -26,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     indexedCategories.map(async category => {
       const places = await getPublicPlaceSitemapEntries(category.slug);
       return places.map(place => ({
-        url: getSiteUrl(getPublicPlacePath(category.slug, place.id)),
+        url: absoluteSiteUrl(getPublicPlacePath(category.slug, place.id)),
         lastModified: place.lastModified ? new Date(place.lastModified) : undefined,
       }));
     })

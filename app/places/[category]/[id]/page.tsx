@@ -11,20 +11,12 @@ import {
   getPublicPlacePath,
   isPublicPlaceCategory,
 } from '@/shared/lib/seo/public-places';
+import { serializeJsonLd } from '@/shared/lib/seo/structured-data';
 
 export const dynamic = 'force-dynamic';
 
 interface PlaceDetailPageProps {
   params: Promise<{ category: string; id: string }>;
-}
-
-function serializeJsonLd(value: object): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
 }
 
 function toId(value: string): number | null {

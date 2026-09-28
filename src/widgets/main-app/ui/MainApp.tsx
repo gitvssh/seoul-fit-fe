@@ -111,6 +111,9 @@ export const MainApp: React.FC<MainAppProps> = ({ className }) => {
         aria-label={locale === 'en' ? 'Map and place results' : '지도와 장소 결과'}
         className='relative flex-1'
       >
+        <h1 className='sr-only'>
+          {locale === 'en' ? 'Seoul public facility map' : '서울 공공시설 지도'}
+        </h1>
         <MapContainer
           ref={mapContainerRef}
           preferences={preferences}

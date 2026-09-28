@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { HomeLanding } from '@/src/widgets/home-landing';
 import { MainApp } from '@/src/widgets/main-app';
+import { HOME_STRUCTURED_DATA, serializeJsonLd } from '@/src/shared/lib/seo/structured-data';
 
 export const metadata: Metadata = {
   title: '서울 공공시설 지도',
@@ -10,17 +12,14 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className='flex min-h-screen items-center justify-center bg-slate-50 text-slate-700'
-          aria-busy='true'
-        >
-          서울 공공시설 지도를 준비하고 있습니다.
-        </main>
-      }
-    >
-      <MainApp />
-    </Suspense>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(HOME_STRUCTURED_DATA) }}
+      />
+      <Suspense fallback={<HomeLanding />}>
+        <MainApp />
+      </Suspense>
+    </>
   );
 }

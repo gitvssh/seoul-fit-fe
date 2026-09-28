@@ -85,7 +85,7 @@ npm run build
 | build/public   | `NEXT_PUBLIC_KAKAO_CLIENT_ID`    | 카카오 OAuth 공개 client id                         |
 | build/public   | `NEXT_PUBLIC_KAKAO_MAP_API_KEY`  | 카카오 지도 JavaScript key                          |
 | build/public   | `NEXT_PUBLIC_KAKAO_REDIRECT_URI` | OAuth callback override                             |
-| build/public   | `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | 로컬 호환용 GA4 ID; 홈랩 릴리스는 빈 값(Zaraz 소유) |
+| build/public   | `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | 빌드 계약의 예약 키, 항상 빈 값. 앱은 읽지 않으며 GA4는 Zaraz 소유 |
 | runtime/server | `BACKEND_INTERNAL_URL`           | Route Handler·SSR의 backend 주소                    |
 | runtime/server | `SEOUL_API_KEY`                  | 서울 열린데이터 요청 key                            |
 

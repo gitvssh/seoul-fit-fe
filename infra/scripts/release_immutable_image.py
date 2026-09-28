@@ -507,6 +507,11 @@ def publish(environment_name: str, source_sha: str) -> dict[str, object]:
                         f"io.damecasol.release.environment={environment_name}",
                         "--label",
                         f"io.damecasol.release.public-input-sha256={input_fingerprint}",
+                        # Secret mounts do not enter BuildKit's cache key; the
+                        # fingerprint does, so dev and prod inputs of the same
+                        # source can never share the `next build` layer.
+                        "--build-arg",
+                        f"PUBLIC_INPUT_SHA256={input_fingerprint}",
                         *secret_arguments,
                         "--tag",
                         image,
