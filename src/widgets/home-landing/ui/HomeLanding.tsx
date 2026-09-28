@@ -21,9 +21,9 @@ export function HomeLanding() {
         <p className='text-sm font-semibold text-blue-700'>Seoul Fit</p>
         <h1 className='mt-2 text-3xl font-bold tracking-tight sm:text-4xl'>서울 공공시설 지도</h1>
         <p className='mt-4 max-w-2xl text-base leading-7 text-slate-600'>{SITE_DESCRIPTION}</p>
-        <p className='mt-2 text-sm text-slate-500' role='status'>
+        <output className='mt-2 block text-sm text-slate-500'>
           지도를 준비하고 있습니다. 지도가 열리지 않으면 아래 목록에서 장소를 찾아보세요.
-        </p>
+        </output>
         <nav className='mt-8' aria-label='장소 카테고리'>
           <ul className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
             {PUBLIC_PLACE_CATEGORIES.map(category => (

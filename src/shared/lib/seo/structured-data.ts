@@ -1,16 +1,27 @@
 import { SITE_DESCRIPTION, SITE_LOCALE, SITE_NAME, absoluteSiteUrl } from '@/shared/lib/seo/site';
 
 /**
- * Escape a JSON-LD payload for inline `<script>` embedding. `<`, `>` and `&`
- * are escaped so a value can never terminate the script element.
+ * Characters that could terminate or alter an inline `<script>` element.
+ * `JSON.stringify` leaves them untouched, so they are re-encoded as JSON
+ * `\uXXXX` escapes, which every JSON parser decodes back to the same text.
+ */
+const SCRIPT_UNSAFE_CHARACTERS = ['<', '>', '&', '\u2028', '\u2029'] as const;
+const BACKSLASH = String.fromCodePoint(0x5c);
+
+function toJsonUnicodeEscape(character: string): string {
+  const codePoint = character.codePointAt(0) ?? 0;
+  return `${BACKSLASH}u${codePoint.toString(16).padStart(4, '0')}`;
+}
+
+/**
+ * Escape a JSON-LD payload for inline `<script type="application/ld+json">`
+ * embedding so no value can close the script element.
  */
 export function serializeJsonLd(value: object): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
+  return SCRIPT_UNSAFE_CHARACTERS.reduce(
+    (text, character) => text.replaceAll(character, toJsonUnicodeEscape(character)),
+    JSON.stringify(value)
+  );
 }
 
 /** WebSite + WebApplication graph for the home page. */

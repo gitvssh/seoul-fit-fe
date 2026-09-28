@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from '@/shared/lib/seo/site';
+import { SITE_DESCRIPTION, SITE_NAME } from '@/shared/lib/seo/site';
 
-export const alt = SITE_TITLE;
+export { SITE_TITLE as alt } from '@/shared/lib/seo/site';
 export const size = {
   width: 1200,
   height: 630,
