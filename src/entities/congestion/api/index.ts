@@ -3,16 +3,17 @@
  * @description 혼잡도 API 서비스 계층
  */
 
-import type { 
-  SeoulCongestionApiResponse, 
+import type {
+  SeoulCongestionApiResponse,
   CongestionData,
   CongestionCacheData,
-  CongestionLevel
+  CongestionLevel,
 } from '../model/types';
 import { parsePopulation } from '../lib/congestion-utils';
 import { getLocationByCode } from '@/entities/weather';
 
-const API_KEY = process.env.SEOUL_API_KEY || '';
+import { getSeoulApiKey } from '@/config/environment';
+
 const BASE_URL = 'http://openapi.seoul.go.kr:8088';
 
 // 캐시 설정
@@ -22,9 +23,11 @@ const congestionCache = new Map<string, CongestionCacheData>();
 /**
  * 서울시 혼잡도 데이터 가져오기
  */
-export async function fetchSeoulCongestionData(areaCode: string): Promise<SeoulCongestionApiResponse> {
-  const apiUrl = `${BASE_URL}/${API_KEY}/json/citydata/1/1/${areaCode}`;
-  
+export async function fetchSeoulCongestionData(
+  areaCode: string
+): Promise<SeoulCongestionApiResponse> {
+  const apiUrl = `${BASE_URL}/${getSeoulApiKey()}/json/citydata/1/1/${encodeURIComponent(areaCode)}`;
+
   const response = await fetch(apiUrl, {
     method: 'GET',
     headers: {
@@ -133,7 +136,7 @@ export async function fetchMultipleCongestionData(areaCodes: string[]): Promise<
 
       // API 호출
       const apiResponse = await fetchSeoulCongestionData(areaCode);
-      
+
       if (!validateApiResponse(apiResponse)) {
         console.error(`${areaCode}: API 응답 에러`);
         continue;

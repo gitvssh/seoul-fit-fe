@@ -16,8 +16,18 @@ export {
 export {
   findNearestAreaCode,
   findNearestAreaMatch,
+  findNearestAreaMatches,
   getLocationByCode,
 } from './lib/location-finder';
+
+// Upstream result helpers
+export {
+  getUpstreamResult,
+  isAreaNotFoundResult,
+  isAreaUnavailable,
+  markAreaUnavailable,
+  resetUnavailableAreas,
+} from './lib/upstream';
 
 // Data exports
 export { SEOUL_LOCATIONS } from './model/locations';

@@ -1,6 +1,11 @@
 /**
  * @fileoverview Seoul Major Locations Data
  * @description 서울 열린데이터광장에서 제공한 서울시 주요 장소 목록
+ *
+ * 2026-10-11 실시간 도시데이터(citydata) API의 POI001~POI140 응답으로 검증했다.
+ * 서울광장(POI099)·청와대(POI113)는 API에서 사라져 제거했고, 잠실롯데타워(POI120)는
+ * 이름이 바뀌었으며 POI129~POI131이 새로 추가됐다. 새 지역의 좌표는 지도에서 읽은
+ * 대표 지점이다. 목록이 다시 바뀌어도 route handler가 다음 후보 지역으로 넘어간다.
  */
 
 import type { Location } from './types';
@@ -107,7 +112,6 @@ export const SEOUL_LOCATIONS: Location[] = [
   { code: 'POI095', name: '반포한강공원', lat: 37.5133, lng: 126.9965 },
   { code: 'POI096', name: '북서울꿈의숲', lat: 37.6206, lng: 127.0411 },
   { code: 'POI098', name: '서리풀공원·몽마르뜨공원', lat: 37.4954, lng: 127.0093 },
-  { code: 'POI099', name: '서울광장', lat: 37.5658, lng: 126.978 },
   { code: 'POI100', name: '서울대공원', lat: 37.4349, lng: 126.9878 },
   { code: 'POI101', name: '서울숲공원', lat: 37.5448, lng: 127.0374 },
   { code: 'POI102', name: '아차산', lat: 37.5546, lng: 127.1034 },
@@ -121,7 +125,6 @@ export const SEOUL_LOCATIONS: Location[] = [
   { code: 'POI110', name: '잠실한강공원', lat: 37.52, lng: 127.0829 },
   { code: 'POI111', name: '잠원한강공원', lat: 37.52, lng: 127.011 },
   { code: 'POI112', name: '청계산', lat: 37.4348, lng: 127.0569 },
-  { code: 'POI113', name: '청와대', lat: 37.5862, lng: 126.9746 },
 
   // 추가 상업지역
   { code: 'POI114', name: '북창동 먹자골목', lat: 37.5636, lng: 126.9824 },
@@ -130,7 +133,7 @@ export const SEOUL_LOCATIONS: Location[] = [
   { code: 'POI117', name: '신정네거리역', lat: 37.5252, lng: 126.8627 },
   { code: 'POI118', name: '잠실새내역', lat: 37.5112, lng: 127.0861 },
   { code: 'POI119', name: '잠실역', lat: 37.5133, lng: 127.1 },
-  { code: 'POI120', name: '잠실롯데타워 일대', lat: 37.5133, lng: 127.1025 },
+  { code: 'POI120', name: '잠실롯데타워·석촌호수', lat: 37.5133, lng: 127.1025 },
   { code: 'POI121', name: '송리단길·호수단길', lat: 37.5133, lng: 127.105 },
   { code: 'POI122', name: '신촌 스타광장', lat: 37.5561, lng: 126.9364 },
   { code: 'POI123', name: '보라매공원', lat: 37.4858, lng: 126.9242 },
@@ -139,4 +142,7 @@ export const SEOUL_LOCATIONS: Location[] = [
   { code: 'POI126', name: '여의서로', lat: 37.5216, lng: 126.92 },
   { code: 'POI127', name: '올림픽공원', lat: 37.5219, lng: 127.1227 },
   { code: 'POI128', name: '홍제폭포', lat: 37.5906, lng: 126.9451 },
+  { code: 'POI129', name: '송현녹지광장', lat: 37.5767, lng: 126.9812 },
+  { code: 'POI130', name: '시의회 앞', lat: 37.5673, lng: 126.9771 },
+  { code: 'POI131', name: '숭례문', lat: 37.56, lng: 126.9753 },
 ];

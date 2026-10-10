@@ -7,9 +7,12 @@
  * 서울 열린데이터 광장 API 원본 응답 타입
  */
 export interface SeoulWeatherApiResponse {
+  // 정상 응답은 RESULT['RESULT.CODE'], 오류 응답은 RESULT.CODE 형태로 온다.
   RESULT?: {
-    'RESULT.CODE': string;
-    'RESULT.MESSAGE': string;
+    'RESULT.CODE'?: string;
+    'RESULT.MESSAGE'?: string;
+    CODE?: string;
+    MESSAGE?: string;
   };
   CITYDATA?: {
     AREA_NM: string;

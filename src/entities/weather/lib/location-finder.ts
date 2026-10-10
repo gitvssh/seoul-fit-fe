@@ -27,6 +27,20 @@ function calculateDistanceKm(
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
+/**
+ * 가까운 순서대로 실시간 도시데이터 지역 후보를 돌려준다.
+ * 지역 목록이 API와 어긋나도 다음 후보로 넘어갈 수 있도록 route handler가 사용한다.
+ */
+export function findNearestAreaMatches(lat: number, lng: number, limit = 3): NearestAreaMatch[] {
+  const origin = { lat, lng };
+  return SEOUL_LOCATIONS.map(location => ({
+    location,
+    distanceKm: calculateDistanceKm(origin, location),
+  }))
+    .sort((first, second) => first.distanceKm - second.distanceKm)
+    .slice(0, Math.max(0, limit));
+}
+
 export function findNearestAreaMatch(lat: number, lng: number): NearestAreaMatch {
   const origin = { lat, lng };
   let nearest = SEOUL_LOCATIONS[0];
@@ -82,9 +96,7 @@ export function findNearestLocation(
   let nearestLocation = locations[0];
 
   for (const location of locations) {
-    const distance = Math.sqrt(
-      Math.pow(lat - location.lat, 2) + Math.pow(lng - location.lng, 2)
-    );
+    const distance = Math.sqrt(Math.pow(lat - location.lat, 2) + Math.pow(lng - location.lng, 2));
 
     if (distance < minDistance) {
       minDistance = distance;

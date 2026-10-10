@@ -3,13 +3,10 @@
  * @description 날씨 API 서비스 계층
  */
 
-import type { 
-  SeoulWeatherApiResponse, 
-  WeatherData,
-  WeatherCacheData 
-} from '../model/types';
+import type { SeoulWeatherApiResponse, WeatherData, WeatherCacheData } from '../model/types';
 
-const API_KEY = process.env.SEOUL_API_KEY || '';
+import { getSeoulApiKey } from '@/config/environment';
+
 const BASE_URL = 'http://openapi.seoul.go.kr:8088';
 
 // 캐시 설정
@@ -20,8 +17,8 @@ const weatherCache = new Map<string, WeatherCacheData>();
  * 서울시 날씨 데이터 가져오기
  */
 export async function fetchSeoulWeatherData(areaCode: string): Promise<SeoulWeatherApiResponse> {
-  const apiUrl = `${BASE_URL}/${API_KEY}/json/citydata/1/1/${areaCode}`;
-  
+  const apiUrl = `${BASE_URL}/${getSeoulApiKey()}/json/citydata/1/1/${encodeURIComponent(areaCode)}`;
+
   const response = await fetch(apiUrl, {
     method: 'GET',
     headers: {
