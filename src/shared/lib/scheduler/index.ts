@@ -39,7 +39,6 @@ class DataScheduler {
 
       // 3. 따릉이 스케줄러 시작 (1분마다)
       this.startBikeScheduler();
-
     } catch (error) {
       this.isInitialized = false; // 실패 시 다시 초기화 가능하도록
       throw error;

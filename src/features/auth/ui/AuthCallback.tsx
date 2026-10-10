@@ -18,7 +18,7 @@ function AuthContent() {
     const code = searchParams?.get('code');
     const error = searchParams?.get('error');
     const state = searchParams?.get('state');
-    
+
     handleCallback({
       code: code || undefined,
       error: error || undefined,
@@ -31,7 +31,7 @@ function AuthContent() {
   }
 
   if (status === 'success') {
-    return <LoadingStates.Success message="로그인 성공!" />;
+    return <LoadingStates.Success message='로그인 성공!' />;
   }
 
   if (status === 'error') {
@@ -45,8 +45,8 @@ export const AuthCallback = () => {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
+        <div className='min-h-screen flex items-center justify-center'>
+          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600' />
         </div>
       }
     >

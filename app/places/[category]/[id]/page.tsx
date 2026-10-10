@@ -117,11 +117,7 @@ export default async function PlaceDetailPage({ params }: PlaceDetailPageProps) 
         {image && (
           // Provider image URLs are dynamic; an img avoids rejecting valid public source hosts at build time.
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt=''
-            className='mt-8 max-h-96 w-full rounded-xl object-cover'
-          />
+          <img src={image} alt='' className='mt-8 max-h-96 w-full rounded-xl object-cover' />
         )}
 
         <dl className='mt-8 space-y-4 text-sm'>

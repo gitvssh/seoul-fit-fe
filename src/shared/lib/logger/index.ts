@@ -168,8 +168,8 @@ export class Logger {
    */
   private logToConsole(entry: LogEntry): void {
     const prefix = this.getPrefix();
-    const timestamp = Logger.globalConfig.enableTimestamp 
-      ? `[${entry.timestamp.toISOString()}] ` 
+    const timestamp = Logger.globalConfig.enableTimestamp
+      ? `[${entry.timestamp.toISOString()}] `
       : '';
     const fullPrefix = `${timestamp}${prefix}[${entry.context}]`;
 

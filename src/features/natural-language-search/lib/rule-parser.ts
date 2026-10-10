@@ -9,10 +9,25 @@ const CATEGORY_RULES: Array<{
 }> = [
   { category: 'library', pattern: /도서관|책|library|book/i, label: '도서관', labelEn: 'Library' },
   { category: 'park', pattern: /공원|산책|park|walk/i, label: '공원', labelEn: 'Park' },
-  { category: 'restaurant', pattern: /맛집|식당|음식|restaurant|food/i, label: '맛집', labelEn: 'Restaurant' },
-  { category: 'sports', pattern: /체육|운동|스포츠|sports|workout/i, label: '체육시설', labelEn: 'Sports' },
+  {
+    category: 'restaurant',
+    pattern: /맛집|식당|음식|restaurant|food/i,
+    label: '맛집',
+    labelEn: 'Restaurant',
+  },
+  {
+    category: 'sports',
+    pattern: /체육|운동|스포츠|sports|workout/i,
+    label: '체육시설',
+    labelEn: 'Sports',
+  },
   { category: 'subway', pattern: /지하철|역\b|subway|metro/i, label: '지하철', labelEn: 'Subway' },
-  { category: 'bike', pattern: /따릉이|자전거|bike|bicycle/i, label: '따릉이', labelEn: 'Seoul Bike' },
+  {
+    category: 'bike',
+    pattern: /따릉이|자전거|bike|bicycle/i,
+    label: '따릉이',
+    labelEn: 'Seoul Bike',
+  },
   {
     category: 'cooling_shelter',
     pattern: /무더위|쉼터|더위\s*피|cool(?:ing)?\s*(?:center|shelter)/i,

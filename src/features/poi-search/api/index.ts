@@ -26,9 +26,7 @@ export function searchNearbyPOIs(options: POISearchOptions): POISearchResult {
   const sortedPOIs = sortPOIsByDistance(poisWithDistance);
 
   // 반경 필터링 (선택적)
-  const filteredPOIs = radius
-    ? filterPOIsByRadius(sortedPOIs, radius)
-    : sortedPOIs;
+  const filteredPOIs = radius ? filterPOIsByRadius(sortedPOIs, radius) : sortedPOIs;
 
   // 개수 제한
   const limitedPOIs = filteredPOIs.slice(0, limit);

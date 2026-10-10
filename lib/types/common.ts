@@ -59,7 +59,7 @@ export interface Pagination {
   /** 현재 페이지 */
   page: number;
   /** 페이지 크기 */
-size: number;
+  size: number;
   /** 전체 개수 */
   total: number;
   /** 다음 페이지 존재 여부 */

@@ -1,6 +1,6 @@
 /**
  * Subway Stations API Route (단순 프록시)
- * 
+ *
  * 역할: Next.js API 라우트 진입점
  * 실제 로직: src/entities/subway에서 처리
  */

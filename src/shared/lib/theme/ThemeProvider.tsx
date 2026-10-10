@@ -54,11 +54,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // applied the stored preference to <html>, so there is no flash.
   const [preference, setPreferenceState] = React.useState<ThemePreference>('system');
   const [mapDark, setMapDarkState] = React.useState(false);
-  const systemDark = React.useSyncExternalStore(
-    subscribeSystem,
-    readSystemDark,
-    () => false
-  );
+  const systemDark = React.useSyncExternalStore(subscribeSystem, readSystemDark, () => false);
 
   React.useEffect(() => {
     setPreferenceState(readPreference());

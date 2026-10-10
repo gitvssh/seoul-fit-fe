@@ -14,12 +14,7 @@ import type { POIWithDistance } from '../model/types';
  * @param lng2 두 번째 지점의 경도
  * @returns 두 지점 사이의 거리 (미터 단위)
  */
-export function calculateDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
+export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371e3; // 지구 반지름 (미터)
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
@@ -67,10 +62,7 @@ export function sortPOIsByDistance(pois: POIWithDistance[]): POIWithDistance[] {
  * @param radius 반경 (미터 단위)
  * @returns 반경 내의 POI 목록
  */
-export function filterPOIsByRadius(
-  pois: POIWithDistance[],
-  radius: number
-): POIWithDistance[] {
+export function filterPOIsByRadius(pois: POIWithDistance[], radius: number): POIWithDistance[] {
   return pois.filter(poi => poi.distance <= radius);
 }
 

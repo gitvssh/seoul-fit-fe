@@ -20,8 +20,4 @@ export {
 } from './api';
 
 // Converters
-export {
-  convertLibraryRowToAppFormat,
-  convertLibraries,
-  paginateLibraries,
-} from './lib/converter';
+export { convertLibraryRowToAppFormat, convertLibraries, paginateLibraries } from './lib/converter';

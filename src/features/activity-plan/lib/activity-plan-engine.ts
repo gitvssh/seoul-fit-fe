@@ -2,11 +2,7 @@ import type { Facility, FacilityCategory, Position } from '@/lib/types';
 import { calculateDistanceKm } from '@/features/place-filter/lib/place-filter';
 import { recommendFacilities } from '@/features/recommendation/lib/recommendation-engine';
 import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
-import type {
-  ActivityPlan,
-  ActivityPlanContext,
-  ActivityPlanStop,
-} from '../model/types';
+import type { ActivityPlan, ActivityPlanContext, ActivityPlanStop } from '../model/types';
 
 const BASE_STAY_MINUTES: Record<FacilityCategory, number> = {
   subway: 10,
@@ -35,10 +31,7 @@ function permutations<T>(values: T[], length: number): T[][] {
       return;
     }
     remaining.forEach((value, index) => {
-      walk(
-        [...selected, value],
-        [...remaining.slice(0, index), ...remaining.slice(index + 1)]
-      );
+      walk([...selected, value], [...remaining.slice(0, index), ...remaining.slice(index + 1)]);
     });
   };
   walk([], values);
@@ -135,9 +128,7 @@ export function createActivityPlan(
 
       const diversity = new Set(sequence.map(item => item.facility.category)).size;
       const score =
-        sequence.reduce((sum, item) => sum + item.score, 0) +
-        diversity * 8 -
-        totalTravel * 0.8;
+        sequence.reduce((sum, item) => sum + item.score, 0) + diversity * 8 - totalTravel * 0.8;
       if (!best || score > best.score) {
         best = {
           facilities: sequence.map(item => item.facility),
@@ -169,9 +160,7 @@ export function createActivityPlan(
   });
   const totalTravel = best.travel.reduce((sum, minutes) => sum + minutes, 0);
   const totalStay = best.stay.reduce((sum, minutes) => sum + minutes, 0);
-  const warnings = [
-    '이동 시간은 직선거리 기반 보행 추정치이며 실제 길찾기와 다를 수 있습니다.',
-  ];
+  const warnings = ['이동 시간은 직선거리 기반 보행 추정치이며 실제 길찾기와 다를 수 있습니다.'];
   if (stops.some(stop => !stop.facility.operatingHours)) {
     warnings.push('운영시간을 확인할 수 없는 장소는 방문 전에 공식 정보를 확인하세요.');
   }

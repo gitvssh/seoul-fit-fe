@@ -57,16 +57,13 @@ export async function getRestaurantsByLanguage(
   const params = new URLSearchParams();
   if (dataDate) params.append('dataDate', dataDate);
 
-  const response = await fetch(
-    `${BASE_URL}/api/v1/restaurants/language/${langCodeId}?${params}`,
-    {
-      method: 'GET',
-      headers: {
-        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch(`${BASE_URL}/api/v1/restaurants/language/${langCodeId}?${params}`, {
+    method: 'GET',
+    headers: {
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`언어별 음식점 정보 조회 실패: ${response.status}`);
@@ -281,7 +278,7 @@ export async function getRestaurantsNearby(
     }
 
     const data = await response.json();
-    
+
     // 배열인지 확인하고 변환
     if (Array.isArray(data)) {
       return data.map(convertToFacility);
@@ -316,7 +313,7 @@ export async function getAllRestaurants(accessToken?: string): Promise<Facility[
     }
 
     const data = await response.json();
-    
+
     if (Array.isArray(data)) {
       return data.map(convertToFacility);
     } else if (data.restaurants && Array.isArray(data.restaurants)) {

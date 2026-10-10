@@ -15,12 +15,12 @@ import { MapView } from './MapView';
 import { ClusterBottomSheetWrapper } from './ClusterBottomSheetWrapper';
 import { FacilityBottomSheetWrapper } from './FacilityBottomSheetWrapper';
 import SideBar from '@/shared/ui/layout/SideBar';
-import type { 
-  UserPreferences, 
-  FacilityCategory, 
+import type {
+  UserPreferences,
+  FacilityCategory,
   Position,
   Facility,
-  ClusteredFacility 
+  ClusteredFacility,
 } from '@/lib/types';
 import type { SearchItem } from '@/shared/lib/hooks/useSearchCache';
 import { convertSearchResultToFacility } from '@/shared/api/searchDetail';
@@ -98,7 +98,7 @@ export interface MapContainerRef {
 
 /**
  * 지도 컨테이너 컴포넌트 (리팩토링된 버전)
- * 
+ *
  * 주요 개선사항:
  * - 프로바이더 패턴을 통한 상태 관리 분리
  * - 단일 책임 원칙 준수
@@ -106,7 +106,9 @@ export interface MapContainerRef {
  * - 관심사 분리를 통한 유지보수성 향상
  */
 // 내부 컴포넌트 - FacilityContext 사용
-const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<MapContainerRef> }> = ({
+const MapContainerInner: React.FC<
+  MapContainerProps & { forwardedRef: React.Ref<MapContainerRef> }
+> = ({
   className,
   onMapClick,
   isSidebarOpen,
@@ -131,10 +133,7 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
   } = useFacilityContext();
 
   const revealFacility = useCallback(
-    (
-      facility: Facility,
-      selectionSource: 'public_place' | 'search_result' = 'search_result'
-    ) => {
+    (facility: Facility, selectionSource: 'public_place' | 'search_result' = 'search_result') => {
       if (!isValidSeoulCoordinate(facility.position.lat, facility.position.lng)) {
         throw new Error('선택한 장소의 위치 정보가 올바르지 않습니다.');
       }
@@ -197,12 +196,12 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
     },
     [facilities]
   );
-  
+
   // console.log('[MapContainerInner] 렌더링됨');
   // console.log('[MapContainerInner] isSidebarOpen:', isSidebarOpen);
   // console.log('[MapContainerInner] activeCategories:', activeCategories);
   // console.log('[MapContainerInner] toggleCategory 함수 존재:', !!toggleCategory);
-  
+
   React.useImperativeHandle(
     forwardedRef,
     () => ({
@@ -216,10 +215,7 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
           nextUrl.searchParams.set('lng', String(facility.position.lng));
           const publicSlug = SEARCH_TO_PUBLIC_SLUG[searchItem.category];
           if (publicSlug && searchItem.ref_id !== undefined) {
-            nextUrl.searchParams.set(
-              'place',
-              `${publicSlug}:${searchItem.ref_id}`
-            );
+            nextUrl.searchParams.set('place', `${publicSlug}:${searchItem.ref_id}`);
           }
           window.history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}`);
         } catch (error) {
@@ -310,7 +306,7 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
 
     return () => controller.abort();
   }, [mapStatus.success, revealFacility, searchParams]);
-  
+
   return (
     <>
       <div className={className}>
@@ -323,7 +319,7 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
           {selectionMessage}
         </p>
       </div>
-      
+
       {/* 사이드바 - 맵 마커 토글용 (백엔드 업데이트 없음) */}
       {isSidebarOpen !== undefined && (
         <SideBar
@@ -343,29 +339,35 @@ const MapContainerInner: React.FC<MapContainerProps & { forwardedRef: React.Ref<
 
 // MapContainer - FacilityProvider로 감싸기
 const MapContainer = React.forwardRef<MapContainerRef, MapContainerProps>(
-  ({ 
-    className,
-    preferences, 
-    onPreferenceToggle, 
-    onMapClick, 
-    onLocationReset,
-    initialCenter = { lat: 37.5665, lng: 126.978 },
-    initialZoom = 3,
-    isSidebarOpen,
-    onSidebarClose,
-    onLogin,
-    onLogout,
-    showWarning,
-    onWarningClose,
-  }, ref) => {
+  (
+    {
+      className,
+      preferences,
+      onPreferenceToggle,
+      onMapClick,
+      onLocationReset,
+      initialCenter = { lat: 37.5665, lng: 126.978 },
+      initialZoom = 3,
+      isSidebarOpen,
+      onSidebarClose,
+      onLogin,
+      onLogout,
+      showWarning,
+      onWarningClose,
+    },
+    ref
+  ) => {
     // console.log('[MapContainer] 렌더링 시작');
     // console.log('[MapContainer] Props:', { preferences, initialCenter, initialZoom });
-    
+
     // 지도 클릭 핸들러
-    const handleMapClick = useCallback((position: Position) => {
-      console.log('Map clicked');
-      onMapClick?.();
-    }, [onMapClick]);
+    const handleMapClick = useCallback(
+      (position: Position) => {
+        console.log('Map clicked');
+        onMapClick?.();
+      },
+      [onMapClick]
+    );
 
     // 지도 유휴 상태 핸들러
     const handleMapIdle = useCallback(() => {
@@ -389,7 +391,7 @@ const MapContainer = React.forwardRef<MapContainerRef, MapContainerProps>(
       <MapProvider
         initialCenter={initialCenter}
         initialZoom={initialZoom}
-        containerId="kakaoMap"
+        containerId='kakaoMap'
         onMapClick={handleMapClick}
         onMapIdle={handleMapIdle}
       >

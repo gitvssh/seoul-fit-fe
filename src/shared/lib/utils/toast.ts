@@ -10,7 +10,7 @@ class Toast {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
-    
+
     // Add styling
     const styles = {
       position: 'fixed',
@@ -34,16 +34,16 @@ class Toast {
     };
 
     Object.assign(toast.style, styles, typeStyles[type]);
-    
+
     return toast;
   }
 
   private show(message: string, type: ToastType, options?: ToastOptions) {
     const duration = options?.duration ?? 3000;
     const toast = this.createToastElement(message, type);
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
       toast.style.animation = 'slideOut 0.3s ease-in';
       setTimeout(() => {
@@ -118,7 +118,7 @@ export function showToast(message: string, type: ToastType = 'info', duration: n
   toastElement.className = 'toast';
   toastElement.classList.add(`toast-${type}`);
   toastElement.textContent = message;
-  
+
   // Apply base styles
   Object.assign(toastElement.style, {
     position: 'fixed',
@@ -144,9 +144,9 @@ export function showToast(message: string, type: ToastType = 'info', duration: n
   };
 
   Object.assign(toastElement.style, typeStyles[type]);
-  
+
   document.body.appendChild(toastElement);
-  
+
   // Auto-remove with fade-out animation
   setTimeout(() => {
     toastElement.classList.add('fade-out');

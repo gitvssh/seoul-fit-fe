@@ -19,5 +19,5 @@ export type {
   SignupData,
   OAuthCallbackParams,
   AuthResponse,
-  InterestOption
+  InterestOption,
 } from './model/types';

@@ -61,29 +61,26 @@ export function useUser(): UseUserReturn {
     [accessToken]
   );
 
-  const getMyInfo = useCallback(
-    async (): Promise<UserResult> => {
-      if (!accessToken) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
+  const getMyInfo = useCallback(async (): Promise<UserResult> => {
+    if (!accessToken) {
+      throw new Error('인증 토큰이 없습니다.');
+    }
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const userData = await userService.getMyInfo(accessToken);
-        setUser(userData);
-        return userData;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : '내 정보 조회에 실패했습니다.';
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [accessToken]
-  );
+    try {
+      const userData = await userService.getMyInfo(accessToken);
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '내 정보 조회에 실패했습니다.';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
 
   const updateUser = useCallback(
     async (userId: number, updateData: userService.UpdateUserRequest): Promise<UserResult> => {
@@ -133,29 +130,26 @@ export function useUser(): UseUserReturn {
     [accessToken]
   );
 
-  const getUserInterests = useCallback(
-    async () => {
-      if (!accessToken) {
-        throw new Error('인증 토큰이 없습니다.');
-      }
+  const getUserInterests = useCallback(async () => {
+    if (!accessToken) {
+      throw new Error('인증 토큰이 없습니다.');
+    }
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const interests = await userService.getUserInterests(accessToken);
-        return interests;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : '사용자 관심사 조회에 실패했습니다.';
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [accessToken]
-  );
+    try {
+      const interests = await userService.getUserInterests(accessToken);
+      return interests;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : '사용자 관심사 조회에 실패했습니다.';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accessToken]);
 
   const updateUserInterests = useCallback(
     async (interests: UserInterests[]) => {

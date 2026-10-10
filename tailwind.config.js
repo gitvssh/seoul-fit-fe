@@ -120,7 +120,10 @@ module.exports = {
         mono: ['var(--font-mono)'],
       },
       fontSize: {
-        display: ['1.75rem', { lineHeight: '2.25rem', letterSpacing: '-0.01em', fontWeight: '700' }],
+        display: [
+          '1.75rem',
+          { lineHeight: '2.25rem', letterSpacing: '-0.01em', fontWeight: '700' },
+        ],
         title: ['1.25rem', { lineHeight: '1.75rem', fontWeight: '700' }],
         section: ['1.0625rem', { lineHeight: '1.5rem', fontWeight: '600' }],
         body: ['0.9375rem', { lineHeight: '1.375rem' }],

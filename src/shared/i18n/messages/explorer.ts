@@ -14,7 +14,8 @@ export const ko = {
   'explorer.regionMoved': '{region}(으)로 지도를 이동했습니다.',
   'explorer.seoulNow': '서울 지금',
   'explorer.loadingLive': '현재 위치의 도시데이터를 확인 중입니다.',
-  'explorer.unsupportedLive': '이 위치의 실시간 도시데이터를 확인할 수 없어 일반 장소 정보로 추천합니다.',
+  'explorer.unsupportedLive':
+    '이 위치의 실시간 도시데이터를 확인할 수 없어 일반 장소 정보로 추천합니다.',
   'explorer.nearestArea': '가까운 지원 지역',
   'explorer.airQuality': '미세먼지 {value}',
   'explorer.congestion': '혼잡 {value}',
@@ -64,7 +65,8 @@ export const en: Record<keyof typeof ko, string> = {
   'explorer.regionMoved': 'Moved the map to {region}.',
   'explorer.seoulNow': 'Seoul now',
   'explorer.loadingLive': 'Checking city data near your location.',
-  'explorer.unsupportedLive': 'Live city data is unavailable here, so recommendations use general place data.',
+  'explorer.unsupportedLive':
+    'Live city data is unavailable here, so recommendations use general place data.',
   'explorer.nearestArea': 'Nearest supported area',
   'explorer.airQuality': 'Air quality {value}',
   'explorer.congestion': 'Crowding {value}',

@@ -17,7 +17,7 @@ export function useRestaurantFacilities() {
     console.log('[useRestaurantFacilities] 음식점 데이터 조회 시작');
     setLoading(true);
     setError(null);
-    
+
     try {
       const facilities = await getRestaurantsNearby(lat, lng);
       console.log(`[useRestaurantFacilities] 음식점 ${facilities.length}개 조회 완료`);
@@ -38,7 +38,7 @@ export function useRestaurantFacilities() {
     console.log('[useRestaurantFacilities] 모든 음식점 데이터 조회 시작');
     setLoading(true);
     setError(null);
-    
+
     try {
       const facilities = await getAllRestaurants();
       console.log(`[useRestaurantFacilities] 음식점 ${facilities.length}개 조회 완료`);

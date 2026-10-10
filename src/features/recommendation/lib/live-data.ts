@@ -15,10 +15,7 @@ const LABELS: Record<LiveDataFreshness, string> = {
   unknown: '기준 시각 미확인',
 };
 
-export function getLiveDataStatus(
-  timestamp: string | undefined,
-  now = new Date()
-): LiveDataStatus {
+export function getLiveDataStatus(timestamp: string | undefined, now = new Date()): LiveDataStatus {
   if (!timestamp) {
     return {
       freshness: 'unknown',

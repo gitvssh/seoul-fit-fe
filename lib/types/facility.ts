@@ -21,7 +21,7 @@ export const FACILITY_CATEGORIES = {
 } as const;
 
 // 시설 카테고리 타입
-export type FacilityCategory = typeof FACILITY_CATEGORIES[keyof typeof FACILITY_CATEGORIES];
+export type FacilityCategory = (typeof FACILITY_CATEGORIES)[keyof typeof FACILITY_CATEGORIES];
 
 // 기본 시설 정보
 export interface BaseFacility {
@@ -127,7 +127,7 @@ export interface CulturalEvent {
   requiresReservation: boolean;
   /** 예약 URL */
   reservationUrl?: string;
-  
+
   // 추가 속성 (서울시 API 호환)
   /** 무료 여부 */
   isFree?: boolean | string;
@@ -218,7 +218,7 @@ export interface Facility extends BaseFacility {
   culturalFacility?: CulturalFacilityInfo;
   /** 맛집 정보 */
   restaurantInfo?: RestaurantInfo;
-  
+
   // 추가 속성들 (기존 코드 호환성)
   /** 문화 이벤트 정보 */
   culturalEvent?: CulturalEvent;

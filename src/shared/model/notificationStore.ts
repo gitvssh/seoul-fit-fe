@@ -84,12 +84,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const updatedNotifications = currentNotifications.map(notification => ({
         ...notification,
         status: 'READ' as const,
-        readAt: notification.readAt || new Date().toISOString()
+        readAt: notification.readAt || new Date().toISOString(),
       }));
 
-      set({ 
+      set({
         notifications: updatedNotifications,
-        unreadCount: 0 
+        unreadCount: 0,
       });
     } catch (error) {
       console.error('모든 알림 읽음 처리 실패:', error);

@@ -1,4 +1,10 @@
-import type { CongestionData, Facility, FacilityCategory, Position, WeatherData } from '@/lib/types';
+import type {
+  CongestionData,
+  Facility,
+  FacilityCategory,
+  Position,
+  WeatherData,
+} from '@/lib/types';
 
 export type RecommendationPreset =
   | 'available_now'

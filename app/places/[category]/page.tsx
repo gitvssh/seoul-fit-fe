@@ -20,7 +20,10 @@ function parsePage(value: string | undefined): number {
   return Number.isSafeInteger(page) && page > 0 ? page : 1;
 }
 
-export async function generateMetadata({ params, searchParams }: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
   const placeCategory = getPublicPlaceCategory(category);
   if (!placeCategory) return {};

@@ -11,9 +11,9 @@ interface LocationCoords {
 
 export const useLocationTrigger = () => {
   // Use separate selectors to avoid creating new objects
-  const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const accessToken = useAuthStore(state => state.accessToken);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const lastLocationRef = useRef<LocationCoords | null>(null);
 
   const callLocationTrigger = async (coords: LocationCoords) => {

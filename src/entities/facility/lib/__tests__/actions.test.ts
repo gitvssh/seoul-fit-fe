@@ -1,9 +1,5 @@
 import type { Facility } from '@/lib/types';
-import {
-  getFacilityReservationUrl,
-  getKakaoDirectionsUrl,
-  getSafeExternalUrl,
-} from '../actions';
+import { getFacilityReservationUrl, getKakaoDirectionsUrl, getSafeExternalUrl } from '../actions';
 
 const facility: Facility = {
   id: 'sports-1',

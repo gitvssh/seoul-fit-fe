@@ -31,7 +31,7 @@ export const useKakaoMap = ({ containerId, center, level = 3 }: UseKakaoMapOptio
         setMapStatus({ loading: false, success: false, error: '지도 컨테이너를 찾을 수 없습니다' });
         return;
       }
-      console.log('[useKakaoMap] 컨테이너 찾음:', container)
+      console.log('[useKakaoMap] 컨테이너 찾음:', container);
 
       const windowWithKakao = window as WindowWithKakao;
       if (!windowWithKakao.kakao?.maps) {
@@ -39,7 +39,7 @@ export const useKakaoMap = ({ containerId, center, level = 3 }: UseKakaoMapOptio
         setMapStatus({ loading: false, success: false, error: '카카오맵 API를 찾을 수 없습니다' });
         return;
       }
-      console.log('[useKakaoMap] kakao.maps 확인됨')
+      console.log('[useKakaoMap] kakao.maps 확인됨');
 
       const kakaoMaps = windowWithKakao.kakao.maps;
       const map = new kakaoMaps.Map(container, {
@@ -131,7 +131,7 @@ export const useKakaoMap = ({ containerId, center, level = 3 }: UseKakaoMapOptio
         }
       };
 
-      script.onerror = (error) => {
+      script.onerror = error => {
         console.error('[useKakaoMap] 스크립트 로드 실패:', error);
         setMapStatus({ loading: false, success: false, error: '카카오맵 로드 실패' });
       };
@@ -148,7 +148,7 @@ export const useKakaoMap = ({ containerId, center, level = 3 }: UseKakaoMapOptio
 
   useEffect(() => {
     initializeMap();
-    
+
     // 컴포넌트 언마운트 시 정리
     return () => {
       setMapInstance(null);

@@ -72,13 +72,12 @@ const LoadingState: React.FC = () => (
 );
 
 const CongestionContent: React.FC<{ data: CongestionData }> = ({ data }) => {
-  
   // API 응답 형식 처리 (AREA_CONGEST_LVL 또는 level)
   const congestionLevel = data.AREA_CONGEST_LVL || data.level || '보통';
   const areaName = data.AREA_NM || data.facilityId || '현재 위치 주변';
   const congestionMessage = data.AREA_CONGEST_MSG || '';
   const status = getLiveDataStatus(data.timestamp);
-  
+
   return (
     <div className='space-y-3'>
       {/* 장소 정보 */}
@@ -109,7 +108,8 @@ const CongestionContent: React.FC<{ data: CongestionData }> = ({ data }) => {
       {/* 혼잡도 메시지 */}
       <div className='p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg'>
         <div className='text-xs text-blue-800 leading-relaxed'>
-          💬 {congestionMessage || `${areaName} 지역의 현재 혼잡도는 "${congestionLevel}" 수준입니다.`}
+          💬{' '}
+          {congestionMessage || `${areaName} 지역의 현재 혼잡도는 "${congestionLevel}" 수준입니다.`}
         </div>
       </div>
     </div>

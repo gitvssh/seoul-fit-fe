@@ -6,13 +6,13 @@
  * @since 2.0.0
  */
 
-import type { 
-  Position, 
-  CongestionLevel, 
+import type {
+  Position,
+  CongestionLevel,
   Facility,
   FacilityCategory,
   UserPreferences as NewUserPreferences,
-  ClusteredFacility
+  ClusteredFacility,
 } from './index';
 
 // ===== 기존 UserPreferences 구조 (임시 호환성) =====
@@ -34,11 +34,11 @@ export interface LegacyUserPreferences extends Record<FacilityCategory, boolean>
 // 혼잡도 데이터
 export interface CongestionData {
   // 서울시 API 형식
-  AREA_CD?: string;           // 장소 코드
-  AREA_NM?: string;           // 장소명  
-  AREA_CONGEST_LVL?: string;  // 혼잡도 레벨 (여유, 보통, 약간 붐빔, 붐빔)
-  AREA_CONGEST_MSG?: string;  // 혼잡도 메시지
-  
+  AREA_CD?: string; // 장소 코드
+  AREA_NM?: string; // 장소명
+  AREA_CONGEST_LVL?: string; // 혼잡도 레벨 (여유, 보통, 약간 붐빔, 붐빔)
+  AREA_CONGEST_MSG?: string; // 혼잡도 메시지
+
   // 기존 형식 (하위 호환성)
   facilityId?: string;
   level?: CongestionLevel;
@@ -50,20 +50,20 @@ export interface CongestionData {
 
 // 날씨 데이터 - UI와 호환되는 원시 API 형식 사용
 export interface WeatherData {
-  AREA_NM: string;         // 장소명
-  AREA_CD: string;         // 장소코드  
-  WEATHER_STTS: string;    // 날씨 현황
-  TEMP: string;            // 기온
-  SENSIBLE_TEMP: string;   // 체감온도
-  MAX_TEMP: string;        // 일 최고온도
-  MIN_TEMP: string;        // 일 최저온도
-  HUMIDITY: string;        // 습도
-  PRECIPITATION: string;   // 강수량
-  PCP_MSG: string;         // 강수 관련 메시지
-  UV_INDEX_LVL: string;    // 자외선 지수 단계
-  UV_MSG: string;          // 자외선 메시지
-  PM25_INDEX: string;      // 초미세먼지 정도
-  PM10_INDEX: string;      // 미세먼지 정도
+  AREA_NM: string; // 장소명
+  AREA_CD: string; // 장소코드
+  WEATHER_STTS: string; // 날씨 현황
+  TEMP: string; // 기온
+  SENSIBLE_TEMP: string; // 체감온도
+  MAX_TEMP: string; // 일 최고온도
+  MIN_TEMP: string; // 일 최저온도
+  HUMIDITY: string; // 습도
+  PRECIPITATION: string; // 강수량
+  PCP_MSG: string; // 강수 관련 메시지
+  UV_INDEX_LVL: string; // 자외선 지수 단계
+  UV_MSG: string; // 자외선 메시지
+  PM25_INDEX: string; // 초미세먼지 정도
+  PM10_INDEX: string; // 미세먼지 정도
   /** 서울시 데이터 조회 시각 */
   timestamp?: string;
   /** 서버 메모리 캐시 응답 여부 */
@@ -249,7 +249,7 @@ export interface NotificationPage {
   notifications: Notification[];
   totalCount: number;
   hasMore: boolean;
-  content?: Notification[];  // 기존 코드 호환성
+  content?: Notification[]; // 기존 코드 호환성
 }
 
 // 알림 히스토리 결과
@@ -266,32 +266,32 @@ export interface NotificationHistoryResult {
 // ===== 확장된 Facility 타입 (기존 코드 호환성) =====
 export interface ExtendedFacility extends Facility {
   // subwayStation은 Facility에 이미 정의되어 있으므로 제거
-  
+
   // 자전거 시설 정보 (Facility에 이미 정의되어 있으므로 제거)
-  
+
   // 도서관 정보
   library?: {
     books: number;
     studyRooms: number;
     computerRooms: number;
   };
-  
+
   // 공원 정보
   park?: {
     area: number;
     facilities: string[];
     playgrounds: number;
   };
-  
+
   // 문화 이벤트 정보은 이미 Facility에 정의되어 있으므로 제거
-  
+
   // 무더위 쉼터 정보
   coolingShelter?: {
     capacity: number;
     facilities: string[];
     airConditioned: boolean;
   };
-  
+
   // 맛집 정보
   restaurant?: {
     cuisineType: string;
@@ -351,7 +351,7 @@ export function convertToLegacyPreferences(preferences: NewUserPreferences): Leg
  */
 export function convertFromLegacyPreferences(legacy: LegacyUserPreferences): NewUserPreferences {
   const preferredCategories: FacilityCategory[] = [];
-  
+
   Object.entries(legacy).forEach(([category, enabled]) => {
     if (enabled && category in legacy) {
       preferredCategories.push(category as FacilityCategory);

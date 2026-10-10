@@ -13,9 +13,7 @@ export interface LocalFavorite {
   savedAt: string;
 }
 
-export function getFacilityFavoriteKey(
-  facility: Pick<Facility, 'id' | 'category'>
-): string {
+export function getFacilityFavoriteKey(facility: Pick<Facility, 'id' | 'category'>): string {
   return `${facility.category}:${facility.id}`;
 }
 

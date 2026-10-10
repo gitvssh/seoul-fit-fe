@@ -34,11 +34,7 @@ export function convertParks(parks: ParkRow[]): Park[] {
 /**
  * 페이지네이션 적용
  */
-export function paginateParks(
-  parks: Park[],
-  page: number,
-  size: number
-): Park[] {
+export function paginateParks(parks: Park[], page: number, size: number): Park[] {
   const startIndex = page * size;
   const endIndex = startIndex + size;
   return parks.slice(startIndex, endIndex);

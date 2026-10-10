@@ -12,18 +12,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '위도와 경도가 필요합니다.' }, { status: 400 });
     }
 
-    const endpoint = all === 'true'
-      ? '/api/v1/libraries/all'
-      : `/api/v1/libraries/nearby?latitude=${lat}&longitude=${lng}`;
-    const response = await fetch(
-      `${getBackendInternalUrl()}${endpoint}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const endpoint =
+      all === 'true'
+        ? '/api/v1/libraries/all'
+        : `/api/v1/libraries/nearby?latitude=${lat}&longitude=${lng}`;
+    const response = await fetch(`${getBackendInternalUrl()}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
       return NextResponse.json(

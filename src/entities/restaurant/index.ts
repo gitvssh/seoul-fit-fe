@@ -4,19 +4,19 @@
  */
 
 // Types
-export type { 
-  Restaurant, 
-  RestaurantRaw, 
+export type {
+  Restaurant,
+  RestaurantRaw,
   RestaurantSearchParams,
-  RestaurantWithDistance 
+  RestaurantWithDistance,
 } from './model/types';
 
 // API functions
-export { 
+export {
   transformRestaurantData,
   validateRestaurantId,
   calculateDistance,
   fetchAllRestaurants,
   fetchNearbyRestaurants,
-  validateLocationParams
+  validateLocationParams,
 } from './api';

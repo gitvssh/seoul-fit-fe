@@ -12,10 +12,7 @@ import type {
 import { Button } from '@/shared/ui/button';
 import { trackEvent } from '@/shared/lib/analytics/analytics';
 import { createActivityPlan } from '../lib/activity-plan-engine';
-import type {
-  ActivityBudgetMinutes,
-  ActivityPlan,
-} from '../model/types';
+import type { ActivityBudgetMinutes, ActivityPlan } from '../model/types';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface ActivityPlannerProps {
@@ -72,9 +69,7 @@ export function ActivityPlanner({
             <Route className='h-3.5 w-3.5 text-emerald-600' aria-hidden='true' />
             {t('activity.title')}
           </h3>
-          <p className='mt-0.5 text-[11px] text-gray-600'>
-            {t('activity.description')}
-          </p>
+          <p className='mt-0.5 text-[11px] text-gray-600'>{t('activity.description')}</p>
         </div>
         <div className='flex items-center gap-1.5'>
           <label htmlFor='activity-budget' className='sr-only'>
@@ -143,9 +138,7 @@ export function ActivityPlanner({
                 </li>
               ))}
             </ol>
-            <p className='mt-2 text-[11px] leading-4 text-amber-800'>
-              {t('activity.warning')}
-            </p>
+            <p className='mt-2 text-[11px] leading-4 text-amber-800'>{t('activity.warning')}</p>
           </div>
         ) : hasTried ? (
           <p className='rounded-lg bg-gray-50 px-3 py-4 text-center text-xs text-gray-600'>

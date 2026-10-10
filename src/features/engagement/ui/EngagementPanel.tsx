@@ -1,16 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  BellRing,
-  Bookmark,
-  Clock3,
-  Loader2,
-  MapPin,
-  RefreshCw,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { BellRing, Bookmark, Clock3, Loader2, MapPin, RefreshCw, Trash2, X } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -96,11 +87,7 @@ function subscriptionRequest(
   };
 }
 
-export function EngagementPanel({
-  isOpen,
-  currentLocation,
-  onClose,
-}: EngagementPanelProps) {
+export function EngagementPanel({ isOpen, currentLocation, onClose }: EngagementPanelProps) {
   const { isAuthenticated, accessToken, user } = useAuthStore();
   const { fetchNotificationHistory, fetchUnreadCount } = useNotificationStore();
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -140,21 +127,18 @@ export function EngagementPanel({
           )
         );
       }
-      const [nextFavorites, nextRecent, nextZones, nextSubscriptions] =
-        await Promise.all([
-          getFavoritePlaces(accessToken),
-          getRecentPlaces(accessToken),
-          getSavedZones(accessToken),
-          getAlertSubscriptions(accessToken),
-        ]);
+      const [nextFavorites, nextRecent, nextZones, nextSubscriptions] = await Promise.all([
+        getFavoritePlaces(accessToken),
+        getRecentPlaces(accessToken),
+        getSavedZones(accessToken),
+        getAlertSubscriptions(accessToken),
+      ]);
       setFavorites(nextFavorites);
       setRecentPlaces(nextRecent);
       setZones(nextZones);
       setSubscriptions(nextSubscriptions);
       setSelectedZoneId(current =>
-        current && nextZones.some(zone => zone.id === current)
-          ? current
-          : (nextZones[0]?.id ?? '')
+        current && nextZones.some(zone => zone.id === current) ? current : (nextZones[0]?.id ?? '')
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '내 생활 정보를 불러오지 못했습니다.');
@@ -275,7 +259,9 @@ export function EngagementPanel({
                   >
                     <a className='min-w-0 flex-1' href={placeHref(place)}>
                       <p className='truncate text-sm font-medium text-gray-900'>{place.name}</p>
-                      <p className='truncate text-xs text-gray-500'>{place.address || '주소 미확인'}</p>
+                      <p className='truncate text-xs text-gray-500'>
+                        {place.address || '주소 미확인'}
+                      </p>
                     </a>
                     <Button
                       type='button'

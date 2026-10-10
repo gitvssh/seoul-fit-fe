@@ -12,10 +12,7 @@ import { convertLibraries, paginateLibraries } from '../lib/converter';
 /**
  * 백엔드에서 전체 도서관 데이터 조회
  */
-async function fetchLibrariesFromBackend(
-  page: number,
-  size: number
-): Promise<Library[] | null> {
+async function fetchLibrariesFromBackend(page: number, size: number): Promise<Library[] | null> {
   try {
     const response = await axios.get<LibraryApiResponse>(
       `${getBackendInternalUrl()}/api/v1/libraries/all`,
@@ -26,7 +23,7 @@ async function fetchLibrariesFromBackend(
     );
 
     console.log('[Library] 백엔드에서 데이터 로드 성공');
-    
+
     // 다양한 응답 형태 처리
     if (Array.isArray(response.data)) {
       return response.data as Library[];
@@ -35,7 +32,7 @@ async function fetchLibrariesFromBackend(
     } else if (response.data?.data) {
       return response.data.data;
     }
-    
+
     return null;
   } catch (error) {
     console.warn('[Library] 백엔드 서버 연결 실패:', error);
@@ -46,19 +43,16 @@ async function fetchLibrariesFromBackend(
 /**
  * 서울 공공데이터 API에서 도서관 데이터 조회
  */
-async function fetchLibrariesFromSeoulApi(
-  page: number,
-  size: number
-): Promise<Library[]> {
+async function fetchLibrariesFromSeoulApi(page: number, size: number): Promise<Library[]> {
   try {
     const libraryRows = await loadAllLibraries();
     const formattedLibraries = convertLibraries(libraryRows);
     const paginatedLibraries = paginateLibraries(formattedLibraries, page, size);
-    
+
     console.log(
       `[Library] 공공데이터에서 직접 로드 성공: ${formattedLibraries.length}개 (페이지: ${paginatedLibraries.length}개)`
     );
-    
+
     return paginatedLibraries;
   } catch (error) {
     console.error('[Library] 공공데이터 호출 실패:', error);
@@ -69,9 +63,7 @@ async function fetchLibrariesFromSeoulApi(
 /**
  * 전체 도서관 데이터 조회 (백엔드 우선, 실패시 공공데이터)
  */
-export async function fetchAllLibraries(
-  params: LibrarySearchParams
-): Promise<Library[]> {
+export async function fetchAllLibraries(params: LibrarySearchParams): Promise<Library[]> {
   const page = params.page ?? 0;
   const size = params.size ?? 100;
 
@@ -95,7 +87,7 @@ export function validateSearchParams(
 ): LibrarySearchParams {
   const page = pageParam ? parseInt(pageParam) : 0;
   const size = sizeParam ? parseInt(sizeParam) : 100;
-  
+
   return {
     page: isNaN(page) || page < 0 ? 0 : page,
     size: isNaN(size) || size <= 0 ? 100 : size,
@@ -150,7 +142,7 @@ export function validateLocationWithRadius(
   }
 
   const parsedRadius = radius ? parseFloat(radius) : 2;
-  
+
   return {
     lat: parsedLat,
     lng: parsedLng,

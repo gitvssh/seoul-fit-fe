@@ -52,9 +52,7 @@ function getCacheKey(lat: number, lng: number): string {
 }
 
 function isValidCoordinate(lat: number, lng: number): boolean {
-  return !isNaN(lat) && !isNaN(lng) && 
-         lat >= -90 && lat <= 90 && 
-         lng >= -180 && lng <= 180;
+  return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 }
 
 function transformAPIResponse(apiResponse: OpenWeatherAPIResponse): WeatherAPIResponse {
@@ -84,7 +82,7 @@ export async function getWeatherData(lat: number, lng: number): Promise<WeatherA
 
   // Check cache
   const cached = weatherCache.get(cacheKey);
-  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+  if (cached && now - cached.timestamp < CACHE_DURATION) {
     return cached.data;
   }
 

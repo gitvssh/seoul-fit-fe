@@ -383,9 +383,7 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                 {facility.name}
               </h3>
               <p className='text-sm text-gray-500 truncate flex items-center gap-1 mt-1'>
-                <span
-                  className={`inline-block h-1.5 w-1.5 rounded-full ${openStatus.dotClass}`}
-                />
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${openStatus.dotClass}`} />
                 {t(`category.${facility.category}` as MessageKey)} · {openStatus.label}
               </p>
             </div>
@@ -432,9 +430,7 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
             <section className='mb-4 rounded-2xl border border-violet-100 bg-violet-50 p-4'>
               <div className='flex items-center justify-between gap-3'>
                 <div>
-                  <p className='text-xs font-medium text-violet-700'>
-                    {t('facility.decision')}
-                  </p>
+                  <p className='text-xs font-medium text-violet-700'>{t('facility.decision')}</p>
                   <p className='mt-1 text-sm font-semibold text-gray-900'>
                     {decisionSummary.reasonCodes[0]
                       ? t(`reason.${decisionSummary.reasonCodes[0]}` as MessageKey)
@@ -462,9 +458,7 @@ export const FacilityBottomSheet: React.FC<FacilityBottomSheetProps> = ({
                   })}
                 </p>
               )}
-              <p className='mt-2 text-[11px] text-gray-500'>
-                {t('facility.referenceScore')}
-              </p>
+              <p className='mt-2 text-[11px] text-gray-500'>{t('facility.referenceScore')}</p>
             </section>
           )}
 

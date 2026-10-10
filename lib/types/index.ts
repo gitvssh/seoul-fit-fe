@@ -21,9 +21,7 @@ export type {
 } from './common';
 
 // ===== 시설 관련 타입 =====
-export {
-  FACILITY_CATEGORIES,
-} from './facility';
+export { FACILITY_CATEGORIES } from './facility';
 
 export type {
   FacilityCategory,
@@ -80,9 +78,7 @@ export type {
 } from './map';
 
 // ===== API 관련 타입 =====
-export {
-  ApiErrorCode,
-} from './api';
+export { ApiErrorCode } from './api';
 
 export type {
   OAuthVerifyRequest,
@@ -180,9 +176,7 @@ export type {
 // ===== 기존 호환성을 위한 재export =====
 
 // 기존 코드에서 사용하던 타입들을 그대로 유지
-export type {
-  BikeStationData,
-} from './legacy';
+export type { BikeStationData } from './legacy';
 
 // ===== 유틸리티 타입 =====
 
@@ -339,7 +333,20 @@ export function isValidPosition(value: unknown): value is import('./common').Pos
  * @param value - 확인할 값
  * @returns 값이 유효한 FacilityCategory인지 여부
  */
-export function isValidFacilityCategory(value: unknown): value is import('./facility').FacilityCategory {
-  const FACILITY_CATEGORIES_VALUES = ['sports', 'culture', 'restaurant', 'library', 'park', 'subway', 'bike', 'cooling_shelter', 'cultural_event', 'cultural_reservation'];
+export function isValidFacilityCategory(
+  value: unknown
+): value is import('./facility').FacilityCategory {
+  const FACILITY_CATEGORIES_VALUES = [
+    'sports',
+    'culture',
+    'restaurant',
+    'library',
+    'park',
+    'subway',
+    'bike',
+    'cooling_shelter',
+    'cultural_event',
+    'cultural_reservation',
+  ];
   return isString(value) && FACILITY_CATEGORIES_VALUES.includes(value);
 }

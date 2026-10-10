@@ -65,7 +65,12 @@ const ICON_NODES: Record<FacilityCategory, IconNode> = {
     ['path', { d: 'M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z' }],
     ['path', { d: 'M7 16v6' }],
     ['path', { d: 'M13 19v3' }],
-    ['path', { d: 'M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5' }],
+    [
+      'path',
+      {
+        d: 'M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5',
+      },
+    ],
   ],
   library: [
     ['path', { d: 'm16 6 4 14' }],
@@ -97,7 +102,12 @@ const ICON_NODES: Record<FacilityCategory, IconNode> = {
     ['path', { d: 'M16 18h.01' }],
   ],
   cultural_reservation: [
-    ['path', { d: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z' }],
+    [
+      'path',
+      {
+        d: 'M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z',
+      },
+    ],
     ['path', { d: 'M13 5v2' }],
     ['path', { d: 'M13 17v2' }],
     ['path', { d: 'M13 11v2' }],
@@ -123,10 +133,20 @@ const ICON_NODES: Record<FacilityCategory, IconNode> = {
     ['path', { d: 'm19 5-7 7' }],
   ],
   sports: [
-    ['path', { d: 'M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z' }],
+    [
+      'path',
+      {
+        d: 'M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z',
+      },
+    ],
     ['path', { d: 'm2.5 21.5 1.4-1.4' }],
     ['path', { d: 'm20.1 3.9 1.4-1.4' }],
-    ['path', { d: 'M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z' }],
+    [
+      'path',
+      {
+        d: 'M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z',
+      },
+    ],
     ['path', { d: 'm9.6 14.4 4.8-4.8' }],
   ],
   bike: [
@@ -146,7 +166,16 @@ const ICON_NODES: Record<FacilityCategory, IconNode> = {
 };
 
 interface CategoryStyle {
-  token: 'park' | 'library' | 'culture' | 'event' | 'cooling' | 'restaurant' | 'sports' | 'bike' | 'subway';
+  token:
+    | 'park'
+    | 'library'
+    | 'culture'
+    | 'event'
+    | 'cooling'
+    | 'restaurant'
+    | 'sports'
+    | 'bike'
+    | 'subway';
   glyph: MarkerGlyph;
 }
 

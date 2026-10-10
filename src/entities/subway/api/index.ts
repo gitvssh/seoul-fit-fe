@@ -13,11 +13,7 @@ import type {
 import type { SubwayStationRow } from '@/lib/seoulApi';
 import { serverCache } from '@/lib/serverCache';
 import { dataScheduler } from '@/shared/lib/scheduler';
-import {
-  formatArrivalMessage,
-  formatTime,
-  cleanStationName,
-} from '../lib/formatter';
+import { formatArrivalMessage, formatTime, cleanStationName } from '../lib/formatter';
 
 const API_KEY = process.env.SEOUL_API_KEY || '';
 const BASE_URL = 'http://swopenapi.seoul.go.kr/api/subway';
@@ -52,9 +48,7 @@ export async function fetchSubwayArrivalData(
  * @param arrivals 원본 도착 정보 배열
  * @returns 포맷된 도착 정보 배열
  */
-export function formatArrivalData(
-  arrivals: SubwayArrivalRow[]
-): FormattedSubwayArrival[] {
+export function formatArrivalData(arrivals: SubwayArrivalRow[]): FormattedSubwayArrival[] {
   return arrivals.map(arrival => ({
     subwayId: arrival.subwayId,
     updnLine: arrival.updnLine,

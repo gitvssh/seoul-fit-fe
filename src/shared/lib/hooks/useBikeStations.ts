@@ -19,19 +19,17 @@ export const useBikeStations = (): UseBikeStationsReturn => {
   const fetchBikeStations = useCallback(async (lat: number, lng: number, radius: number = 1.5) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       console.log(`[useBikeStations] 따릉이 데이터 조회 시작: 반경=${radius}km`);
       const stations = await getNearbyBikeStations(lat, lng, radius);
-      
+
       if (stations && stations.length > 0) {
         console.log(`[useBikeStations] 따릉이 스테이션 ${stations.length}개 조회 완료`);
         setBikeStations(stations);
-        
+
         // BikeStationData를 Facility로 변환
-        const convertedFacilities = stations.map(station => 
-          convertBikeStationToFacility(station)
-        );
+        const convertedFacilities = stations.map(station => convertBikeStationToFacility(station));
         setFacilities(convertedFacilities);
       } else {
         console.log('[useBikeStations] 따릉이 스테이션 데이터 없음');

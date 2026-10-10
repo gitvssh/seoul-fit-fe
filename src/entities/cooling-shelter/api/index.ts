@@ -15,7 +15,7 @@ export async function fetchNearbyCoolingShelters(
   try {
     const { lat, lng, radius = 1 } = params;
     const backendUrl = getBackendInternalUrl();
-    
+
     const response = await fetch(
       `${backendUrl}/api/v1/cooling-shelters/nearby?latitude=${lat}&longitude=${lng}&radius=${radius}`,
       {

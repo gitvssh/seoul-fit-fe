@@ -18,7 +18,7 @@ spec:
     - seoulfit.dev.damecasol.com
   rules:
     - matches:
-        - path: {type: PathPrefix, value: /}
+        - path: { type: PathPrefix, value: / }
       backendRefs:
         - name: seoul-fit-fe
           port: 3000

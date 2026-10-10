@@ -66,18 +66,15 @@ export const useOAuthCallback = () => {
       }
 
       try {
-        const response = await fetch(
-          env.createPublicBackendEndpoint('/api/auth/oauth/login'),
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              provider: 'KAKAO',
-              authorizationCode: code,
-              redirectUri: env.kakaoRedirectUri,
-            }),
-          }
-        );
+        const response = await fetch(env.createPublicBackendEndpoint('/api/auth/oauth/login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider: 'KAKAO',
+            authorizationCode: code,
+            redirectUri: env.kakaoRedirectUri,
+          }),
+        });
 
         if (!response.ok) {
           handleError('카카오 로그인에 실패했습니다. 다시 시도해 주세요.');
@@ -85,17 +82,14 @@ export const useOAuthCallback = () => {
         }
 
         const auth: AuthResponse = await response.json();
-        const profileResponse = await fetch(
-          env.createPublicBackendEndpoint('/api/users/me'),
-          {
-            headers: {
-              Authorization: `Bearer ${auth.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const profileResponse = await fetch(env.createPublicBackendEndpoint('/api/users/me'), {
+          headers: {
+            Authorization: `Bearer ${auth.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
         const profile = profileResponse.ok
-          ? await profileResponse.json() as UserProfile
+          ? ((await profileResponse.json()) as UserProfile)
           : undefined;
 
         setAuth(toStoredUser(auth, profile), auth.accessToken, auth.refreshToken);

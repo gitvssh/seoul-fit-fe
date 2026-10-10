@@ -19,12 +19,7 @@ export interface SignupData extends UserInfo {
 }
 
 // OAuth 인증 상태
-export type AuthStatus = 
-  | 'loading'
-  | 'success' 
-  | 'error' 
-  | 'need_signup' 
-  | 'success_signup';
+export type AuthStatus = 'loading' | 'success' | 'error' | 'need_signup' | 'success_signup';
 
 // OAuth 콜백 파라미터
 export interface OAuthCallbackParams {

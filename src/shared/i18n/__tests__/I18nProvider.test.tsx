@@ -1,9 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import {
-  I18nProvider,
-  LOCALE_STORAGE_KEY,
-  useI18n,
-} from '../I18nProvider';
+import { I18nProvider, LOCALE_STORAGE_KEY, useI18n } from '../I18nProvider';
 
 function Harness() {
   const { locale, setLocale, t } = useI18n();
@@ -29,9 +25,7 @@ describe('I18nProvider', () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByRole('button')).toHaveTextContent(
-        'No places match this map and filters.'
-      )
+      expect(screen.getByRole('button')).toHaveTextContent('No places match this map and filters.')
     );
     expect(document.documentElement.lang).toBe('en');
   });
@@ -46,8 +40,6 @@ describe('I18nProvider', () => {
     fireEvent.click(screen.getByRole('button'));
 
     expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('en');
-    expect(screen.getByRole('button')).toHaveTextContent(
-      'No places match this map and filters.'
-    );
+    expect(screen.getByRole('button')).toHaveTextContent('No places match this map and filters.');
   });
 });

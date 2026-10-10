@@ -4,12 +4,7 @@
  */
 
 // Types
-export type {
-  Park,
-  ParkSearchParams,
-  PaginatedParks,
-  ParkApiResponse,
-} from './model/types';
+export type { Park, ParkSearchParams, PaginatedParks, ParkApiResponse } from './model/types';
 
 // API Functions
 export {
@@ -21,8 +16,4 @@ export {
 } from './api';
 
 // Converters
-export {
-  convertParkRowToAppFormat,
-  convertParks,
-  paginateParks,
-} from './lib/converter';
+export { convertParkRowToAppFormat, convertParks, paginateParks } from './lib/converter';

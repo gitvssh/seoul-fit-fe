@@ -119,7 +119,7 @@ export interface ClusterMarker {
 }
 
 // 지도 이벤트 타입
-export type MapEventType = 
+export type MapEventType =
   | 'click'
   | 'dblclick'
   | 'rightclick'

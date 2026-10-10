@@ -11,7 +11,4 @@ export type {
 } from './model/types';
 
 // API Functions
-export {
-  fetchNearbyCoolingShelters,
-  validateLocationParams,
-} from './api';
+export { fetchNearbyCoolingShelters, validateLocationParams } from './api';

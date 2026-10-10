@@ -3,15 +3,7 @@
 
 import React from 'react';
 import { Button } from '@/shared/ui/button';
-import {
-  RefreshCw,
-  Users,
-  Cloud,
-  CloudRain,
-  Sun,
-  Navigation,
-  Thermometer,
-} from 'lucide-react';
+import { RefreshCw, Users, Cloud, CloudRain, Sun, Navigation, Thermometer } from 'lucide-react';
 import type { CongestionData, WeatherData } from '@/lib/types';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 

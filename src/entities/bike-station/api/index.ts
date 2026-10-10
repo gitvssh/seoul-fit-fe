@@ -3,7 +3,12 @@
  * @description 따릉이 대여소 관련 비즈니스 로직 및 API 호출
  */
 
-import { BikeStationRaw, BikeStation, BikeStationSearchParams, BikeStationSearchResult } from '../model/types';
+import {
+  BikeStationRaw,
+  BikeStation,
+  BikeStationSearchParams,
+  BikeStationSearchResult,
+} from '../model/types';
 import { serverCache } from '@/lib/serverCache';
 import { dataScheduler } from '@/shared/lib/scheduler';
 import { calculateDistance } from '@/entities/restaurant/api';
@@ -42,13 +47,13 @@ export function getCacheInfo() {
  * Raw 데이터를 BikeStation 타입으로 변환
  */
 export function transformBikeStation(
-  station: BikeStationRaw, 
-  userLat: number, 
+  station: BikeStationRaw,
+  userLat: number,
   userLng: number
 ): BikeStation {
   const lat = parseFloat(station.stationLatitude);
   const lng = parseFloat(station.stationLongitude);
-  
+
   return {
     code: station.stationId,
     name: station.stationName,

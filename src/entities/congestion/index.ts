@@ -14,11 +14,7 @@ export {
 } from './api';
 
 // Utility exports
-export {
-  getCongestionColor,
-  getCongestionScore,
-  parsePopulation,
-} from './lib/congestion-utils';
+export { getCongestionColor, getCongestionScore, parsePopulation } from './lib/congestion-utils';
 
 // Type exports
 export type {

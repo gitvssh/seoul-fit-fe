@@ -55,8 +55,7 @@ const appUrl = withoutTrailingSlash(process.env.NEXT_PUBLIC_APP_URL || LOCAL_APP
 const publicBackendUrl = withoutTrailingSlash(
   process.env.NEXT_PUBLIC_BACKEND_URL || LOCAL_BACKEND_URL
 );
-const kakaoRedirectUri =
-  process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI || `${appUrl}/auth/callback`;
+const kakaoRedirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI || `${appUrl}/auth/callback`;
 
 export const env = {
   nodeEnv,

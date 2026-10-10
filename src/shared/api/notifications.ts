@@ -61,16 +61,13 @@ export async function getNotificationHistory(
   page: number = 0,
   size: number = 20
 ): Promise<NotificationPage> {
-  const response = await fetch(
-    `${BASE_URL}/api/notifications?page=${page}&size=${size}`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch(`${BASE_URL}/api/notifications?page=${page}&size=${size}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`알림 히스토리 조회 실패: ${response.status}`);
@@ -94,16 +91,13 @@ export async function markNotificationAsRead(
   _userId: number,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(
-    `${BASE_URL}/api/notifications/${notificationId}/read`,
-    {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch(`${BASE_URL}/api/notifications/${notificationId}/read`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`알림 읽음 처리 실패: ${response.status}`);
@@ -117,16 +111,13 @@ export async function markAllNotificationsAsRead(
   _userId: number,
   accessToken: string
 ): Promise<void> {
-  const response = await fetch(
-    `${BASE_URL}/api/notifications/read-all`,
-    {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch(`${BASE_URL}/api/notifications/read-all`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
   if (!response.ok) {
     // JWT 토큰 만료 처리

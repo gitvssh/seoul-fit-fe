@@ -5,11 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { transformRestaurantData } from '@/entities/restaurant';
-import type { 
-  Restaurant, 
-  RestaurantRaw, 
-  RestaurantSearchParams 
-} from '@/entities/restaurant';
+import type { Restaurant, RestaurantRaw, RestaurantSearchParams } from '@/entities/restaurant';
 
 /**
  * 레스토랑 데이터 fetch 함수
@@ -17,20 +13,20 @@ import type {
 const fetchRestaurantsData = async (params: RestaurantSearchParams = {}): Promise<Restaurant[]> => {
   const { lat, lng, all } = params;
   const searchParams = new URLSearchParams();
-  
+
   if (all) {
     searchParams.set('all', 'true');
   } else if (lat && lng) {
     searchParams.set('lat', lat.toString());
     searchParams.set('lng', lng.toString());
   }
-  
+
   const response = await fetch(`/api/restaurants?${searchParams}`);
-  
+
   if (!response.ok) {
     throw new Error('레스토랑 데이터 조회 실패');
   }
-  
+
   const rawData: RestaurantRaw[] = await response.json();
   return transformRestaurantData(rawData);
 };
@@ -46,7 +42,7 @@ export const useRestaurants = (params: RestaurantSearchParams = {}) => {
   const refetch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const restaurants = await fetchRestaurantsData(params);
       setData(restaurants);

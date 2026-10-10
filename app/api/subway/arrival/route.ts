@@ -1,16 +1,12 @@
 /**
  * Subway Arrival API Route (단순 프록시)
- * 
+ *
  * 역할: Next.js API 라우트 진입점
  * 실제 로직: src/entities/subway에서 처리
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  fetchSubwayArrivalData,
-  formatArrivalData,
-  validateApiResponse,
-} from '@/entities/subway';
+import { fetchSubwayArrivalData, formatArrivalData, validateApiResponse } from '@/entities/subway';
 
 /**
  * GET 지하철 실시간 도착 정보 API
@@ -53,9 +49,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('지하철 도착 정보 조회 중 오류:', error);
-    return NextResponse.json(
-      { error: '서버 내부 오류가 발생했습니다.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '서버 내부 오류가 발생했습니다.' }, { status: 500 });
   }
 }

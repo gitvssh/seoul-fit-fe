@@ -98,7 +98,10 @@ function distanceScore(distanceKm: number): number {
   return 0;
 }
 
-function freshnessScore(facility: Facility, now: Date): {
+function freshnessScore(
+  facility: Facility,
+  now: Date
+): {
   score: number;
   reason?: RecommendationReasonCode;
   warning?: RecommendationWarningCode;
@@ -124,7 +127,8 @@ function presetScore(
       else if (openState === 'unknown') score = 8;
       break;
     case 'quiet':
-      if (['library', 'park', 'cooling_shelter', 'culture'].includes(facility.category)) score += 12;
+      if (['library', 'park', 'cooling_shelter', 'culture'].includes(facility.category))
+        score += 12;
       if (!isCrowded(context.congestion)) {
         score += context.congestion ? 8 : 4;
         if (context.congestion) reasons.push('quiet_context');
@@ -192,8 +196,7 @@ export function scoreFacility(
   const reasonCodes: RecommendationReasonCode[] = [];
   const warningCodes: RecommendationWarningCode[] = [];
   const preferred = context.preferredCategories || [];
-  const interest =
-    preferred.length === 0 ? 12 : preferred.includes(facility.category) ? 25 : 0;
+  const interest = preferred.length === 0 ? 12 : preferred.includes(facility.category) ? 25 : 0;
   if (interest === 25) reasonCodes.push('interest_match');
 
   const distancePoints = distanceScore(distance);
@@ -227,7 +230,10 @@ export function scoreFacility(
   };
   const score = Math.max(
     0,
-    Math.min(100, Object.values(factors).reduce((sum, value) => sum + value, 0))
+    Math.min(
+      100,
+      Object.values(factors).reduce((sum, value) => sum + value, 0)
+    )
   );
   // 사용자가 고른 상황과 직접 관련된 근거를 먼저 보여줍니다.
   const uniqueReasons = [...new Set([...preset.reasons, ...reasonCodes])].slice(0, 3);
@@ -266,8 +272,7 @@ export function getNearbyAlternatives(
 ): FacilityRecommendation[] {
   return recommendFacilities(
     facilities.filter(
-      facility =>
-        !(facility.id === selected.id && facility.category === selected.category)
+      facility => !(facility.id === selected.id && facility.category === selected.category)
     ),
     { ...context, origin: selected.position },
     Math.max(limit * 4, limit)

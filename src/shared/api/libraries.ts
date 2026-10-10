@@ -72,15 +72,15 @@ export async function fetchAllLibraries(
     });
 
     // API가 배열을 직접 반환하는 경우와 객체로 래핑된 경우 모두 처리
-    const libraries = Array.isArray(response.data) 
-      ? response.data 
+    const libraries = Array.isArray(response.data)
+      ? response.data
       : (response.data as any).libraries || (response.data as any).data || [];
-      
+
     console.log('[fetchAllLibraries] 도서관 데이터 수신:', libraries.length, '개');
     if (libraries.length > 0) {
       console.log('[fetchAllLibraries] 첫 번째 도서관 데이터:', libraries[0]);
     }
-    
+
     return {
       libraries,
       totalCount: libraries.length,

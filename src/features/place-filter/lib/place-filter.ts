@@ -111,7 +111,6 @@ export function applyPlaceFilters(
     })
     .sort(
       (first, second) =>
-        (first.distance ?? Number.POSITIVE_INFINITY) -
-        (second.distance ?? Number.POSITIVE_INFINITY)
+        (first.distance ?? Number.POSITIVE_INFINITY) - (second.distance ?? Number.POSITIVE_INFINITY)
     );
 }

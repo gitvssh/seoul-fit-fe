@@ -21,7 +21,7 @@ export interface MainAppProps {
 
 export const MainApp: React.FC<MainAppProps> = ({ className }) => {
   const { locale } = useI18n();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
@@ -119,7 +119,7 @@ export const MainApp: React.FC<MainAppProps> = ({ className }) => {
           onPreferenceToggle={togglePreference}
           onMapClick={handleMapClick}
           onLocationReset={() => setSearchQuery('')}
-          className="w-full h-full"
+          className='w-full h-full'
           isSidebarOpen={isSidebarOpen}
           onSidebarClose={() => setIsSidebarOpen(false)}
           onLogin={login}

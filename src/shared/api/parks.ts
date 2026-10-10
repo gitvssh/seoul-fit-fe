@@ -69,15 +69,15 @@ export async function fetchAllParks(page: number = 0, size: number = 100): Promi
     });
 
     // API가 배열을 직접 반환하는 경우와 객체로 래핑된 경우 모두 처리
-    const parks = Array.isArray(response.data) 
-      ? response.data 
+    const parks = Array.isArray(response.data)
+      ? response.data
       : (response.data as any).parks || (response.data as any).data || [];
-      
+
     console.log('[fetchAllParks] 공원 데이터 수신:', parks.length, '개');
     if (parks.length > 0) {
       console.log('[fetchAllParks] 첫 번째 공원 데이터:', parks[0]);
     }
-    
+
     return {
       parks,
       totalCount: parks.length,

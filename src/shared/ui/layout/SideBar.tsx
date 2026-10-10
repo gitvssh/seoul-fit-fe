@@ -42,10 +42,7 @@ export default function SideBar({
   useFocusTrap(sidebarRef, isOpen, onClose);
 
   // 선택된 항목 수 계산 (메모화)
-  const selectedCount = React.useMemo(
-    () => activeCategories.length,
-    [activeCategories]
-  );
+  const selectedCount = React.useMemo(() => activeCategories.length, [activeCategories]);
 
   // 카테고리 토글 핸들러 (최적화)
   const handleToggle = useCallback(
@@ -159,8 +156,7 @@ export default function SideBar({
                 const config = FACILITY_CONFIGS[facilityType];
                 const isSelected = activeCategories.includes(facilityType);
                 const categoryLabelKey = `category.${facilityType}` as MessageKey;
-                const categoryDescriptionKey =
-                  `categoryDescription.${facilityType}` as MessageKey;
+                const categoryDescriptionKey = `categoryDescription.${facilityType}` as MessageKey;
 
                 return (
                   <div

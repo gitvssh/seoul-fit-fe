@@ -75,7 +75,8 @@ export function usePreferences() {
 
       // 사용자 관심사에 따라 선호도 설정
       userInterests.interests.forEach(interest => {
-        const facilityCategory = INTEREST_CATEGORY_MAP[interest.category as keyof typeof INTEREST_CATEGORY_MAP];
+        const facilityCategory =
+          INTEREST_CATEGORY_MAP[interest.category as keyof typeof INTEREST_CATEGORY_MAP];
         if (facilityCategory && facilityCategory in userPreferences) {
           (userPreferences as any)[facilityCategory] = true;
         }
@@ -126,9 +127,9 @@ export function usePreferences() {
 
     if (isAuthenticated && user?.id) {
       try {
-        const selectedInterests = FACILITY_PREFERENCE_KEYS
-          .filter(category => newPreferences[category])
-          .map(category => FACILITY_TO_INTEREST_MAP[category]);
+        const selectedInterests = FACILITY_PREFERENCE_KEYS.filter(
+          category => newPreferences[category]
+        ).map(category => FACILITY_TO_INTEREST_MAP[category]);
 
         await updateUserInterests(selectedInterests);
       } catch (error) {
@@ -166,7 +167,8 @@ export function usePreferences() {
 
         // 사용자 관심사에 따라 선호도 설정
         userInterests.interests.forEach(interest => {
-          const facilityCategory = INTEREST_CATEGORY_MAP[interest.category as keyof typeof INTEREST_CATEGORY_MAP];
+          const facilityCategory =
+            INTEREST_CATEGORY_MAP[interest.category as keyof typeof INTEREST_CATEGORY_MAP];
           if (facilityCategory && facilityCategory in userPreferences) {
             (userPreferences as any)[facilityCategory] = true;
           }

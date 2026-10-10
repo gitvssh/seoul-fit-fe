@@ -65,7 +65,11 @@ export function useLocation(mapInstanceOrOptions?: any): any {
   const { handleLocationChange } = useLocationTrigger();
 
   // Determine the mode
-  const isSimpleMode = !mapInstanceOrOptions || (mapInstanceOrOptions && typeof mapInstanceOrOptions === 'object' && !mapInstanceOrOptions.setCenter);
+  const isSimpleMode =
+    !mapInstanceOrOptions ||
+    (mapInstanceOrOptions &&
+      typeof mapInstanceOrOptions === 'object' &&
+      !mapInstanceOrOptions.setCenter);
   const mapInstance = isSimpleMode ? null : mapInstanceOrOptions;
   const options = isSimpleMode ? (mapInstanceOrOptions as LocationOptions | undefined) : undefined;
 
@@ -91,7 +95,7 @@ export function useLocation(mapInstanceOrOptions?: any): any {
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -99,7 +103,7 @@ export function useLocation(mapInstanceOrOptions?: any): any {
         setAccuracy(position.coords.accuracy);
         setLoading(false);
       },
-      (err) => {
+      err => {
         setError(err);
         setLoading(false);
       },
@@ -118,14 +122,14 @@ export function useLocation(mapInstanceOrOptions?: any): any {
     }
 
     const id = navigator.geolocation.watchPosition(
-      (position) => {
+      position => {
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
         setAccuracy(position.coords.accuracy);
       },
-      (err) => {
+      err => {
         setError(err);
       },
       defaultOptions
@@ -213,7 +217,7 @@ export function useLocation(mapInstanceOrOptions?: any): any {
 
         // 위치 추적도 자동 시작
         startLocationTracking();
-        
+
         // 위치 트리거는 useEffect에서 처리
       },
       error => {

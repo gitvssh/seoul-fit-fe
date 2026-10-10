@@ -82,86 +82,86 @@ const getWeatherIcon = (data: WeatherData) => {
 const WeatherContent: React.FC<{ data: WeatherData }> = ({ data }) => {
   const status = getLiveDataStatus(data.timestamp);
   return (
-  <div className='space-y-3'>
-    {/* 장소 정보 */}
-    <div className='flex items-center gap-2 p-2 bg-gray-50 rounded-lg'>
-      <div className='flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center'>
-        {getWeatherIcon(data)}
-      </div>
-      <div className='flex-1 min-w-0'>
-        <div className='text-sm font-medium text-gray-900 truncate'>{data.AREA_NM}</div>
-        <div className='text-xs text-gray-500'>
-          서울시 도시데이터 · {status.label} {status.referenceTimeLabel}
+    <div className='space-y-3'>
+      {/* 장소 정보 */}
+      <div className='flex items-center gap-2 p-2 bg-gray-50 rounded-lg'>
+        <div className='flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center'>
+          {getWeatherIcon(data)}
+        </div>
+        <div className='flex-1 min-w-0'>
+          <div className='text-sm font-medium text-gray-900 truncate'>{data.AREA_NM}</div>
+          <div className='text-xs text-gray-500'>
+            서울시 도시데이터 · {status.label} {status.referenceTimeLabel}
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* 현재 기온 */}
-    {data.TEMP && (
-      <div className='grid grid-cols-2 gap-2'>
-        <div className='p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center'>
-          <div className='flex items-center justify-center mb-1'>
-            <Thermometer className='h-4 w-4 text-blue-600' />
+      {/* 현재 기온 */}
+      {data.TEMP && (
+        <div className='grid grid-cols-2 gap-2'>
+          <div className='p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center'>
+            <div className='flex items-center justify-center mb-1'>
+              <Thermometer className='h-4 w-4 text-blue-600' />
+            </div>
+            <div className='text-lg font-bold text-blue-800'>{data.TEMP}°</div>
+            <div className='text-xs text-blue-600'>현재 기온</div>
           </div>
-          <div className='text-lg font-bold text-blue-800'>{data.TEMP}°</div>
-          <div className='text-xs text-blue-600'>현재 기온</div>
+          <div className='p-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg text-center'>
+            <div className='flex items-center justify-center mb-1'>
+              <Thermometer className='h-4 w-4 text-orange-600' />
+            </div>
+            <div className='text-lg font-bold text-orange-800'>{data.SENSIBLE_TEMP}°</div>
+            <div className='text-xs text-orange-600'>체감 기온</div>
+          </div>
         </div>
-        <div className='p-2 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg text-center'>
-          <div className='flex items-center justify-center mb-1'>
-            <Thermometer className='h-4 w-4 text-orange-600' />
-          </div>
-          <div className='text-lg font-bold text-orange-800'>{data.SENSIBLE_TEMP}°</div>
-          <div className='text-xs text-orange-600'>체감 기온</div>
-        </div>
-      </div>
-    )}
+      )}
 
-    {/* 최고/최저 기온 */}
-    {(data.MAX_TEMP || data.MIN_TEMP) && (
-      <div className='flex justify-between p-2 bg-gray-50 rounded-lg'>
-        {data.MAX_TEMP && (
-          <div className='text-center flex-1'>
-            <div className='text-xs text-gray-500 mb-1'>최고</div>
-            <div className='text-sm font-semibold text-red-600'>{data.MAX_TEMP}°</div>
-          </div>
-        )}
-        {data.MIN_TEMP && (
-          <div className='text-center flex-1'>
-            <div className='text-xs text-gray-500 mb-1'>최저</div>
-            <div className='text-sm font-semibold text-blue-600'>{data.MIN_TEMP}°</div>
-          </div>
-        )}
-      </div>
-    )}
-
-    {/* 날씨 메시지 */}
-    {data.PCP_MSG && (
-      <div className='p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg'>
-        <div className='text-xs text-blue-800 leading-relaxed'>
-          <Droplets className='h-3 w-3 inline mr-1' />
-          {data.PCP_MSG}
-          {data.UV_MSG && (
-            <div className='mt-1'>
-              <Sun className='h-3 w-3 inline mr-1' />
-              {data.UV_MSG}
+      {/* 최고/최저 기온 */}
+      {(data.MAX_TEMP || data.MIN_TEMP) && (
+        <div className='flex justify-between p-2 bg-gray-50 rounded-lg'>
+          {data.MAX_TEMP && (
+            <div className='text-center flex-1'>
+              <div className='text-xs text-gray-500 mb-1'>최고</div>
+              <div className='text-sm font-semibold text-red-600'>{data.MAX_TEMP}°</div>
+            </div>
+          )}
+          {data.MIN_TEMP && (
+            <div className='text-center flex-1'>
+              <div className='text-xs text-gray-500 mb-1'>최저</div>
+              <div className='text-sm font-semibold text-blue-600'>{data.MIN_TEMP}°</div>
             </div>
           )}
         </div>
-      </div>
-    )}
+      )}
 
-    {/* 미세먼지 정보 */}
-    {(data.PM25_INDEX || data.PM10_INDEX) && (
-      <div className='p-2 bg-green-50 rounded-lg'>
-        <div className='text-xs text-green-800'>
-          <Wind className='h-3 w-3 inline mr-1' />
-          <strong>대기질:</strong>
-          {data.PM10_INDEX && <span className='ml-1'>미세먼지 {data.PM10_INDEX}</span>}
-          {data.PM25_INDEX && <span className='ml-2'>초미세먼지 {data.PM25_INDEX}</span>}
+      {/* 날씨 메시지 */}
+      {data.PCP_MSG && (
+        <div className='p-2 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg'>
+          <div className='text-xs text-blue-800 leading-relaxed'>
+            <Droplets className='h-3 w-3 inline mr-1' />
+            {data.PCP_MSG}
+            {data.UV_MSG && (
+              <div className='mt-1'>
+                <Sun className='h-3 w-3 inline mr-1' />
+                {data.UV_MSG}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
-  </div>
+      )}
+
+      {/* 미세먼지 정보 */}
+      {(data.PM25_INDEX || data.PM10_INDEX) && (
+        <div className='p-2 bg-green-50 rounded-lg'>
+          <div className='text-xs text-green-800'>
+            <Wind className='h-3 w-3 inline mr-1' />
+            <strong>대기질:</strong>
+            {data.PM10_INDEX && <span className='ml-1'>미세먼지 {data.PM10_INDEX}</span>}
+            {data.PM25_INDEX && <span className='ml-2'>초미세먼지 {data.PM25_INDEX}</span>}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

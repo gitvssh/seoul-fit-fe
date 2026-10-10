@@ -11,7 +11,7 @@ export interface HeaderRef {
   blurSearchInput: () => void;
 }
 
-// MapContainer Component Ref  
+// MapContainer Component Ref
 export interface MapContainerRef {
   handleSearchSelect: (searchItem: SearchItem) => Promise<void>;
   handleSearchClear: () => void;

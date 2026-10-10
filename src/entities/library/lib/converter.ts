@@ -40,11 +40,7 @@ export function convertLibraries(libraries: LibraryRow[]): Library[] {
 /**
  * 페이지네이션 적용
  */
-export function paginateLibraries(
-  libraries: Library[],
-  page: number,
-  size: number
-): Library[] {
+export function paginateLibraries(libraries: Library[], page: number, size: number): Library[] {
   const startIndex = page * size;
   const endIndex = startIndex + size;
   return libraries.slice(startIndex, endIndex);

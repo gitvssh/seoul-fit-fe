@@ -21,10 +21,7 @@ const CATEGORY_SOURCES: Record<Facility['category'], string> = {
   cultural_reservation: '서울시 공공서비스예약',
 };
 
-const FRESHNESS_LABELS: Record<
-  NonNullable<Facility['freshnessStatus']>,
-  string
-> = {
+const FRESHNESS_LABELS: Record<NonNullable<Facility['freshnessStatus']>, string> = {
   live: '실시간',
   recent: '최근 갱신',
   stale: '갱신 지연',
@@ -47,14 +44,9 @@ function inferFreshness(
   return 'stale';
 }
 
-export function getFacilityProvenance(
-  facility: Facility,
-  now = new Date()
-): FacilityProvenance {
+export function getFacilityProvenance(facility: Facility, now = new Date()): FacilityProvenance {
   const freshness = inferFreshness(facility.sourceUpdatedAt, facility.freshnessStatus, now);
-  const parsedUpdatedAt = facility.sourceUpdatedAt
-    ? new Date(facility.sourceUpdatedAt)
-    : undefined;
+  const parsedUpdatedAt = facility.sourceUpdatedAt ? new Date(facility.sourceUpdatedAt) : undefined;
   const updatedLabel =
     parsedUpdatedAt && Number.isFinite(parsedUpdatedAt.getTime())
       ? new Intl.DateTimeFormat('ko-KR', {

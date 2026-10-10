@@ -394,9 +394,7 @@ const Header = React.forwardRef<HeaderRef, HeaderProps>(
                   } else if (event.key === 'ArrowDown' && showSuggestions) {
                     event.preventDefault();
                     document
-                      .querySelector<HTMLElement>(
-                        '#global-search-suggestions [role="option"]'
-                      )
+                      .querySelector<HTMLElement>('#global-search-suggestions [role="option"]')
                       ?.focus();
                   }
                 }}

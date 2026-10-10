@@ -78,16 +78,16 @@ npm run build
 
 ## 환경 변수 역할
 
-| 구분           | 변수                             | 용도                                                |
-| -------------- | -------------------------------- | --------------------------------------------------- |
-| build/public   | `NEXT_PUBLIC_APP_URL`            | 브라우저가 보는 앱 origin                           |
-| build/public   | `NEXT_PUBLIC_BACKEND_URL`        | 브라우저의 backend 요청 주소                        |
-| build/public   | `NEXT_PUBLIC_KAKAO_CLIENT_ID`    | 카카오 OAuth 공개 client id                         |
-| build/public   | `NEXT_PUBLIC_KAKAO_MAP_API_KEY`  | 카카오 지도 JavaScript key                          |
-| build/public   | `NEXT_PUBLIC_KAKAO_REDIRECT_URI` | OAuth callback override                             |
+| 구분           | 변수                             | 용도                                                               |
+| -------------- | -------------------------------- | ------------------------------------------------------------------ |
+| build/public   | `NEXT_PUBLIC_APP_URL`            | 브라우저가 보는 앱 origin                                          |
+| build/public   | `NEXT_PUBLIC_BACKEND_URL`        | 브라우저의 backend 요청 주소                                       |
+| build/public   | `NEXT_PUBLIC_KAKAO_CLIENT_ID`    | 카카오 OAuth 공개 client id                                        |
+| build/public   | `NEXT_PUBLIC_KAKAO_MAP_API_KEY`  | 카카오 지도 JavaScript key                                         |
+| build/public   | `NEXT_PUBLIC_KAKAO_REDIRECT_URI` | OAuth callback override                                            |
 | build/public   | `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | 빌드 계약의 예약 키, 항상 빈 값. 앱은 읽지 않으며 GA4는 Zaraz 소유 |
-| runtime/server | `BACKEND_INTERNAL_URL`           | Route Handler·SSR의 backend 주소                    |
-| runtime/server | `SEOUL_API_KEY`                  | 서울 열린데이터 요청 key                            |
+| runtime/server | `BACKEND_INTERNAL_URL`           | Route Handler·SSR의 backend 주소                                   |
+| runtime/server | `SEOUL_API_KEY`                  | 서울 열린데이터 요청 key                                           |
 
 ## 배포
 

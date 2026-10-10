@@ -12,7 +12,7 @@ import { getBackendInternalUrl } from '@/config/environment';
  */
 export const transformRestaurantData = (raw: RestaurantRaw[]): Restaurant[] => {
   return raw
-    .filter(item => item.langCodeId === 'ko')  // 한국어 데이터만
+    .filter(item => item.langCodeId === 'ko') // 한국어 데이터만
     .map(item => ({
       id: `restaurant_${item.id}`,
       name: item.name,
@@ -40,21 +40,23 @@ export const validateRestaurantId = (id: string): boolean => {
  * 레스토랑 위치 기반 거리 계산 (Haversine 공식)
  */
 export const calculateDistance = (
-  lat1: number, 
-  lng1: number, 
-  lat2: number, 
+  lat1: number,
+  lng1: number,
+  lat2: number,
   lng2: number
 ): number => {
   const R = 6371; // 지구 반지름 (km)
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLng/2) * Math.sin(dLng/2);
-    
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
@@ -86,10 +88,7 @@ export const fetchAllRestaurants = async (): Promise<Restaurant[]> => {
 /**
  * 위치 기반 레스토랑 데이터 조회
  */
-export const fetchNearbyRestaurants = async (
-  lat: number,
-  lng: number
-): Promise<Restaurant[]> => {
+export const fetchNearbyRestaurants = async (lat: number, lng: number): Promise<Restaurant[]> => {
   try {
     const response = await fetch(
       `${getBackendInternalUrl()}/api/v1/restaurants/nearby?latitude=${lat}&longitude=${lng}`,

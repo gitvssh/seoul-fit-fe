@@ -1,8 +1,4 @@
-import {
-  createSavedZone,
-  deleteFavoritePlace,
-  getFavoritePlaces,
-} from '../engagement';
+import { createSavedZone, deleteFavoritePlace, getFavoritePlaces } from '../engagement';
 
 global.fetch = jest.fn();
 

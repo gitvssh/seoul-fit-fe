@@ -15,7 +15,7 @@ export async function fetchNearbyCulturalSpaces(
   try {
     const { lat, lng, radius = 2 } = params;
     const backendUrl = getBackendInternalUrl();
-    
+
     const response = await fetch(
       `${backendUrl}/api/v1/cultural-spaces/nearby?latitude=${lat}&longitude=${lng}${radius ? `&radius=${radius}` : ''}`,
       {
@@ -74,7 +74,7 @@ export function validateLocationWithRadius(
   }
 
   const parsedRadius = radius ? parseFloat(radius) : 2;
-  
+
   return {
     ...coords,
     radius: isNaN(parsedRadius) || parsedRadius <= 0 ? 2 : parsedRadius,

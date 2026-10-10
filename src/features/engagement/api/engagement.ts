@@ -75,10 +75,7 @@ export const deleteSavedZone = (token: string, zoneId: number) =>
 export const getAlertSubscriptions = (token: string) =>
   authenticatedRequest<AlertSubscription[]>('/api/me/alert-subscriptions', token);
 
-export const createAlertSubscription = (
-  token: string,
-  subscription: AlertSubscriptionRequest
-) =>
+export const createAlertSubscription = (token: string, subscription: AlertSubscriptionRequest) =>
   authenticatedRequest<AlertSubscription>('/api/me/alert-subscriptions', token, {
     method: 'POST',
     body: JSON.stringify(subscription),
@@ -89,14 +86,10 @@ export const updateAlertSubscription = (
   subscriptionId: number,
   subscription: AlertSubscriptionRequest
 ) =>
-  authenticatedRequest<AlertSubscription>(
-    `/api/me/alert-subscriptions/${subscriptionId}`,
-    token,
-    {
-      method: 'PATCH',
-      body: JSON.stringify(subscription),
-    }
-  );
+  authenticatedRequest<AlertSubscription>(`/api/me/alert-subscriptions/${subscriptionId}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify(subscription),
+  });
 
 export const deleteAlertSubscription = (token: string, subscriptionId: number) =>
   authenticatedRequest<void>(`/api/me/alert-subscriptions/${subscriptionId}`, token, {

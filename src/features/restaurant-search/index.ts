@@ -8,5 +8,5 @@ export {
   useAllRestaurants,
   useNearbyRestaurants,
   getAllRestaurants,
-  getNearbyRestaurants
+  getNearbyRestaurants,
 } from './api';

@@ -7,10 +7,7 @@ import {
   getFavoritePlaces,
   saveFavoritePlace,
 } from '@/features/engagement/api/engagement';
-import {
-  toEngagementPlaceRequest,
-  type SavedPlace,
-} from '@/features/engagement/model/types';
+import { toEngagementPlaceRequest, type SavedPlace } from '@/features/engagement/model/types';
 import { useAuthStore } from '@/shared/model/authStore';
 import {
   getFacilityFavoriteKey,
@@ -76,10 +73,7 @@ export function useLocalFacilityFavorite(facility: Facility | null) {
 
       if (isAuthenticated && accessToken) {
         if (nextFavorite) {
-          const saved = await saveFavoritePlace(
-            accessToken,
-            toEngagementPlaceRequest(facility)
-          );
+          const saved = await saveFavoritePlace(accessToken, toEngagementPlaceRequest(facility));
           setRemotePlace(saved);
         } else {
           let saved = remotePlace;
@@ -102,14 +96,7 @@ export function useLocalFacilityFavorite(facility: Facility | null) {
     } finally {
       setIsSaving(false);
     }
-  }, [
-    accessToken,
-    facility,
-    isAuthenticated,
-    isFavorite,
-    isSaving,
-    remotePlace,
-  ]);
+  }, [accessToken, facility, isAuthenticated, isFavorite, isSaving, remotePlace]);
 
   return { isFavorite, isSaving, error, toggleFavorite };
 }

@@ -467,8 +467,7 @@ export function FacilityProvider({
         facility =>
           facility.category === transient.category &&
           (facility.id === transient.id ||
-            (facility.name === transient.name &&
-              facility.address === transient.address))
+            (facility.name === transient.name && facility.address === transient.address))
       );
       if (existingIndex >= 0) {
         combined[existingIndex] = transient;

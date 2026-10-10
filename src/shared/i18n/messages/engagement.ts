@@ -1,8 +1,4 @@
 /** 내 생활: 저장·생활권·알림 */
-export const ko = {
+export const ko = {} as const;
 
-} as const;
-
-export const en: Record<keyof typeof ko, string> = {
-
-};
+export const en: Record<keyof typeof ko, string> = {};

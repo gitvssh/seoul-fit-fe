@@ -56,7 +56,7 @@ export interface UserPreferences {
   preferredCategories?: FacilityCategory[];
   /** 기본 검색 반경 (km) */
   defaultRadius?: number;
-  
+
   // 카테고리별 선호도 (UI에서 사용하는 형식)
   sports?: boolean;
   culture?: boolean;

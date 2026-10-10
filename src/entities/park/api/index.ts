@@ -12,21 +12,15 @@ import { convertParks, paginateParks } from '../lib/converter';
 /**
  * 백엔드에서 전체 공원 데이터 조회
  */
-async function fetchParksFromBackend(
-  page: number,
-  size: number
-): Promise<Park[] | null> {
+async function fetchParksFromBackend(page: number, size: number): Promise<Park[] | null> {
   try {
-    const response = await axios.get<ParkApiResponse>(
-      `${getBackendInternalUrl()}/api/parks/all`,
-      {
-        params: { page, size },
-        timeout: 5000, // 타임아웃 5초
-      }
-    );
+    const response = await axios.get<ParkApiResponse>(`${getBackendInternalUrl()}/api/parks/all`, {
+      params: { page, size },
+      timeout: 5000, // 타임아웃 5초
+    });
 
     console.log('[Park] 백엔드에서 데이터 로드 성공');
-    
+
     // 다양한 응답 형태 처리
     if (Array.isArray(response.data)) {
       return response.data as Park[];
@@ -35,7 +29,7 @@ async function fetchParksFromBackend(
     } else if (response.data?.data) {
       return response.data.data;
     }
-    
+
     return null;
   } catch (error) {
     console.warn('[Park] 백엔드 서버 연결 실패:', error);
@@ -46,19 +40,16 @@ async function fetchParksFromBackend(
 /**
  * 서울 공공데이터 API에서 공원 데이터 조회
  */
-async function fetchParksFromSeoulApi(
-  page: number,
-  size: number
-): Promise<Park[]> {
+async function fetchParksFromSeoulApi(page: number, size: number): Promise<Park[]> {
   try {
     const parkRows = await loadAllParks();
     const formattedParks = convertParks(parkRows);
     const paginatedParks = paginateParks(formattedParks, page, size);
-    
+
     console.log(
       `[Park] 공공데이터에서 직접 로드 성공: ${formattedParks.length}개 (페이지: ${paginatedParks.length}개)`
     );
-    
+
     return paginatedParks;
   } catch (error) {
     console.error('[Park] 공공데이터 호출 실패:', error);
@@ -69,9 +60,7 @@ async function fetchParksFromSeoulApi(
 /**
  * 전체 공원 데이터 조회 (백엔드 우선, 실패시 공공데이터)
  */
-export async function fetchAllParks(
-  params: ParkSearchParams
-): Promise<Park[]> {
+export async function fetchAllParks(params: ParkSearchParams): Promise<Park[]> {
   const page = params.page ?? 0;
   const size = params.size ?? 100;
 
@@ -95,7 +84,7 @@ export function validateParkParams(
 ): ParkSearchParams {
   const page = pageParam ? parseInt(pageParam) : 0;
   const size = sizeParam ? parseInt(sizeParam) : 100;
-  
+
   return {
     page: isNaN(page) || page < 0 ? 0 : page,
     size: isNaN(size) || size <= 0 ? 100 : size,
@@ -163,7 +152,7 @@ export function validateLocationWithRadius(
   }
 
   const parsedRadius = radius ? parseFloat(radius) : 2;
-  
+
   return {
     ...coords,
     radius: isNaN(parsedRadius) || parsedRadius <= 0 ? 2 : parsedRadius,

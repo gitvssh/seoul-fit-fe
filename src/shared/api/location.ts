@@ -238,14 +238,14 @@ export function getCurrentLocation(options?: GeolocationOptions): Promise<Locati
     };
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         resolve({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
           accuracy: position.coords.accuracy,
         });
       },
-      (error) => {
+      error => {
         reject(error);
       },
       defaultOptions

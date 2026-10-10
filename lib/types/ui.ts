@@ -15,22 +15,10 @@ import type { User } from './user';
 export type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 // 색상 변형 타입
-export type ColorVariant = 
-  | 'primary' 
-  | 'secondary' 
-  | 'success' 
-  | 'warning' 
-  | 'error' 
-  | 'info';
+export type ColorVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
 
 // 버튼 변형 타입
-export type ButtonVariant = 
-  | 'default' 
-  | 'destructive' 
-  | 'outline' 
-  | 'secondary' 
-  | 'ghost' 
-  | 'link';
+export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 
 // 정렬 타입
 export type Alignment = 'left' | 'center' | 'right';
@@ -39,14 +27,14 @@ export type Alignment = 'left' | 'center' | 'right';
 export type Direction = 'horizontal' | 'vertical';
 
 // 위치 타입
-export type Position = 
-  | 'top' 
-  | 'bottom' 
-  | 'left' 
-  | 'right' 
-  | 'top-left' 
-  | 'top-right' 
-  | 'bottom-left' 
+export type Position =
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
   | 'bottom-right';
 
 // ===== 이벤트 핸들러 타입 =====
@@ -336,22 +324,10 @@ export interface EmptyStateProps extends BaseComponentProps {
 // ===== 애니메이션 타입 =====
 
 // 애니메이션 타입
-export type AnimationType = 
-  | 'fade' 
-  | 'slide' 
-  | 'scale' 
-  | 'bounce' 
-  | 'flip' 
-  | 'zoom';
+export type AnimationType = 'fade' | 'slide' | 'scale' | 'bounce' | 'flip' | 'zoom';
 
 // 애니메이션 방향
-export type AnimationDirection = 
-  | 'up' 
-  | 'down' 
-  | 'left' 
-  | 'right' 
-  | 'in' 
-  | 'out';
+export type AnimationDirection = 'up' | 'down' | 'left' | 'right' | 'in' | 'out';
 
 // 애니메이션 Props
 export interface AnimationProps {

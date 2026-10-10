@@ -47,9 +47,9 @@ export const FacilityBottomSheetWrapper: React.FC = () => {
       lastRecordedPlaceRef.current = null;
     });
   }, [accessToken, isAuthenticated, selectedFacility]);
-  
+
   if (!selectedFacility) return null;
-  
+
   return (
     <FacilityBottomSheet
       facility={selectedFacility}

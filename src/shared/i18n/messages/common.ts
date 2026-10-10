@@ -12,7 +12,8 @@ export const ko = {
   'common.reload': '새로고침',
   'sidebar.title': '지도 마커 설정',
   'sidebar.selected': '{count}개 선택',
-  'sidebar.description': '지도에 표시할 마커를 선택하세요. 체크된 카테고리의 시설만 지도에 표시됩니다.',
+  'sidebar.description':
+    '지도에 표시할 마커를 선택하세요. 체크된 카테고리의 시설만 지도에 표시됩니다.',
   'sidebar.close': '메뉴 닫기',
   'sidebar.profile': '프로필',
   'sidebar.defaultUser': '사용자',
@@ -33,7 +34,8 @@ export const en: Record<keyof typeof ko, string> = {
   'common.reload': 'Reload',
   'sidebar.title': 'Map marker settings',
   'sidebar.selected': '{count} selected',
-  'sidebar.description': 'Choose the markers to show. Only facilities in checked categories appear on the map.',
+  'sidebar.description':
+    'Choose the markers to show. Only facilities in checked categories appear on the map.',
   'sidebar.close': 'Close menu',
   'sidebar.profile': 'Profile',
   'sidebar.defaultUser': 'User',

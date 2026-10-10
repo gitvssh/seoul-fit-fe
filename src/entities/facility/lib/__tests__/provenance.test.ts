@@ -18,16 +18,12 @@ describe('facility provenance', () => {
   it('갱신 경과 시간으로 신선도를 판정한다', () => {
     const now = new Date('2026-07-25T12:00:00+09:00');
     expect(
-      getFacilityProvenance(
-        { ...facility, sourceUpdatedAt: '2026-07-25T11:50:00+09:00' },
-        now
-      ).freshness
+      getFacilityProvenance({ ...facility, sourceUpdatedAt: '2026-07-25T11:50:00+09:00' }, now)
+        .freshness
     ).toBe('live');
     expect(
-      getFacilityProvenance(
-        { ...facility, sourceUpdatedAt: '2026-07-23T12:00:00+09:00' },
-        now
-      ).freshness
+      getFacilityProvenance({ ...facility, sourceUpdatedAt: '2026-07-23T12:00:00+09:00' }, now)
+        .freshness
     ).toBe('stale');
   });
 });

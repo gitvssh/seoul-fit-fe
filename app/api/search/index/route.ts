@@ -1,15 +1,12 @@
 /**
  * Search Index API Route (단순 프록시)
- * 
+ *
  * 역할: Next.js API 라우트 진입점
  * 실제 로직: src/entities/search에서 처리
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  validateSearchParams, 
-  fetchPOISearchIndex
-} from '@/entities/search';
+import { validateSearchParams, fetchPOISearchIndex } from '@/entities/search';
 
 /**
  * GET POI 검색 인덱스 조회
@@ -36,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // POI 검색 인덱스 조회
     const result = await fetchPOISearchIndex(pagination);
-    
+
     // 항상 items 배열만 반환 (기존 API와 호환성 유지)
     return NextResponse.json(result.items);
   } catch (error) {

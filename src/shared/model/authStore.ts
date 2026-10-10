@@ -110,16 +110,13 @@ export const useAuthStore = create<AuthToken>()(
         if (currentState.user) {
           try {
             // OAuth 정보로 사용자 정보 조회
-            const response = await fetch(
-              env.createPublicBackendEndpoint('/api/users/me'),
-              {
-                method: 'GET',
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
+            const response = await fetch(env.createPublicBackendEndpoint('/api/users/me'), {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
 
             if (response.ok) {
               const userResult = await response.json();
@@ -170,13 +167,16 @@ export const useAuthStore = create<AuthToken>()(
               const refreshToken = Cookies.get('refresh_token');
 
               if (refreshToken) {
-                const refreshResponse = await fetch(env.createPublicBackendEndpoint('/api/auth/refresh'), {
-                  method: 'POST',
-                  headers: {
-                    'Refresh-Token': refreshToken,
-                    'Content-Type': 'application/json',
-                  },
-                });
+                const refreshResponse = await fetch(
+                  env.createPublicBackendEndpoint('/api/auth/refresh'),
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Refresh-Token': refreshToken,
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
 
                 if (refreshResponse.ok) {
                   const tokenData = await refreshResponse.json();

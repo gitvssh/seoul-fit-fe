@@ -34,7 +34,8 @@ export const en: Record<keyof typeof ko, string> = {
   'facility.drag': 'Drag to resize',
   'facility.decision': 'Available now',
   'facility.genericDecision': 'Based on general place information.',
-  'facility.referenceScore': 'Reference score based on distance, hours, booking, and data freshness.',
+  'facility.referenceScore':
+    'Reference score based on distance, hours, booking, and data freshness.',
   'facility.directions': 'Directions',
   'facility.share': 'Share',
   'facility.saved': 'Saved',

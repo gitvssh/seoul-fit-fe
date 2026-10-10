@@ -28,10 +28,7 @@ export async function GET(request: NextRequest) {
 
     // 좌표 유효성 검증
     if (isNaN(lat) || isNaN(lng)) {
-      return NextResponse.json(
-        { error: '올바른 좌표 형식이 아닙니다.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '올바른 좌표 형식이 아닙니다.' }, { status: 400 });
     }
 
     if (process.env.NODE_ENV === 'development') {
@@ -45,7 +42,8 @@ export async function GET(request: NextRequest) {
     let hasMore = true;
 
     // 첫 페이지만 가져오기 (성능을 위해)
-    while (hasMore && page < 5) { // 최대 5페이지(5000개)만 조회
+    while (hasMore && page < 5) {
+      // 최대 5페이지(5000개)만 조회
       const backendResponse = await fetch(
         `${backendUrl}/api/search/index?page=${page}&size=${pageSize}`,
         {
@@ -63,7 +61,7 @@ export async function GET(request: NextRequest) {
       }
 
       const data = await backendResponse.json();
-      
+
       if (data.content && data.content.length > 0) {
         allPOIs = allPOIs.concat(data.content);
         hasMore = data.hasNext;
@@ -84,7 +82,12 @@ export async function GET(request: NextRequest) {
         const poiData = poi as any; // 타입 단언
         // 주소에서 좌표 추출 시도 (실제 좌표가 없는 경우)
         // 백엔드에서 좌표 데이터가 제공되면 이 부분 수정 필요
-        const distance = calculateDistance(lat, lng, poiData.latitude || lat, poiData.longitude || lng);
+        const distance = calculateDistance(
+          lat,
+          lng,
+          poiData.latitude || lat,
+          poiData.longitude || lng
+        );
         return {
           ...poiData,
           distance,
@@ -118,10 +121,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('반경 내 POI 조회 중 오류:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: '서버 내부 오류가 발생했습니다.',
-        details: error instanceof Error ? error.message : '알 수 없는 오류'
+        details: error instanceof Error ? error.message : '알 수 없는 오류',
       },
       { status: 500 }
     );

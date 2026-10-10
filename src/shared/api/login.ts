@@ -25,10 +25,10 @@ export const consumeOAuthState = (receivedState?: string): boolean => {
   const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
   sessionStorage.removeItem(OAUTH_STATE_KEY);
   return Boolean(
-    expectedState
-      && receivedState
-      && expectedState.length === receivedState.length
-      && expectedState === receivedState
+    expectedState &&
+      receivedState &&
+      expectedState.length === receivedState.length &&
+      expectedState === receivedState
   );
 };
 

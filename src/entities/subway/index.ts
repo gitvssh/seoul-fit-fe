@@ -14,11 +14,7 @@ export {
 } from './api';
 
 // Utility exports
-export {
-  formatArrivalMessage,
-  formatTime,
-  cleanStationName,
-} from './lib/formatter';
+export { formatArrivalMessage, formatTime, cleanStationName } from './lib/formatter';
 
 // Type exports
 export type {

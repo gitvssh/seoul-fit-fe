@@ -4,10 +4,7 @@
  */
 
 // API exports
-export {
-  searchNearbyPOIs,
-  getPOIsInRadius,
-} from './api';
+export { searchNearbyPOIs, getPOIsInRadius } from './api';
 
 // Utility exports
 export {

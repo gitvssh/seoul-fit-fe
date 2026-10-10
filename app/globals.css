@@ -10,11 +10,7 @@
  */
 @font-face {
   font-family: 'Pretendard Fallback';
-  src:
-    local('Apple SD Gothic Neo'),
-    local('Malgun Gothic'),
-    local('Noto Sans KR'),
-    local('Arial');
+  src: local('Apple SD Gothic Neo'), local('Malgun Gothic'), local('Noto Sans KR'), local('Arial');
   ascent-override: 95.2%;
   descent-override: 24.1%;
   line-gap-override: 0%;
@@ -23,8 +19,8 @@
 :root {
   --radius: 0.75rem;
   --font-sans:
-    'Pretendard Variable', 'Pretendard Fallback', 'Apple SD Gothic Neo', 'Malgun Gothic',
-    system-ui, sans-serif;
+    'Pretendard Variable', 'Pretendard Fallback', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui,
+    sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* surfaces and ink */
@@ -225,7 +221,13 @@
     display: none;
   }
   .edge-fade-x {
-    mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 16px,
+      black calc(100% - 16px),
+      transparent
+    );
   }
 }
 

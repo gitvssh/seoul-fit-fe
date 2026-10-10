@@ -32,11 +32,13 @@ function convertToFacility(sports: SportsApiResponse): Facility {
     reservationUrl: sports.homepage,
     availableSlots: [],
     equipment: [],
-    fee: sports.fee ? {
-      adult: parseInt(sports.fee) || 0,
-      child: parseInt(sports.fee) || 0,
-      senior: parseInt(sports.fee) || 0,
-    } : undefined,
+    fee: sports.fee
+      ? {
+          adult: parseInt(sports.fee) || 0,
+          child: parseInt(sports.fee) || 0,
+          senior: parseInt(sports.fee) || 0,
+        }
+      : undefined,
     isIndoor: false, // API에서 제공하지 않으므로 기본값
   };
 
@@ -125,10 +127,7 @@ export async function getSportsNearby(
 /**
  * 체육시설 검색
  */
-export async function searchSports(
-  keyword: string,
-  accessToken?: string
-): Promise<Facility[]> {
+export async function searchSports(keyword: string, accessToken?: string): Promise<Facility[]> {
   try {
     const params = new URLSearchParams({ keyword });
 
@@ -156,10 +155,7 @@ export async function searchSports(
 /**
  * 체육시설 상세 정보 조회
  */
-export async function getSportsDetail(
-  id: number,
-  accessToken?: string
-): Promise<Facility | null> {
+export async function getSportsDetail(id: number, accessToken?: string): Promise<Facility | null> {
   try {
     const response = await fetch(`${BASE_URL}/api/sports/${id}`, {
       method: 'GET',
