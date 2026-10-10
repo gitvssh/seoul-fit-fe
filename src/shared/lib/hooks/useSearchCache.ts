@@ -94,6 +94,35 @@ const searchUtils = {
   },
 };
 
+// 검색 인덱스 원시 항목 (backend 응답)
+interface RawSearchIndexItem {
+  id: number;
+  name: string;
+  address?: string;
+  remark?: string;
+  aliases?: string;
+  refTable?: string;
+  refId?: number;
+  ref_table?: string;
+  ref_id?: number;
+}
+
+/**
+ * 검색 인덱스 응답을 항목 배열로 정규화한다.
+ * 게이트웨이가 `/api/search`를 backend로 직접 보내면 Spring Page 형태(`{ content: [] }`)가 오고,
+ * Next Route Handler를 거치면 배열이 온다. 두 형태를 모두 받아야 POI 검색이 비지 않는다.
+ */
+export function normalizeSearchIndexPayload(payload: unknown): RawSearchIndexItem[] {
+  if (Array.isArray(payload)) return payload as RawSearchIndexItem[];
+  if (payload && typeof payload === 'object') {
+    const record = payload as { content?: unknown; data?: unknown; items?: unknown };
+    for (const candidate of [record.content, record.data, record.items]) {
+      if (Array.isArray(candidate)) return candidate as RawSearchIndexItem[];
+    }
+  }
+  return [];
+}
+
 // 통합 검색 아이템 타입
 export interface SearchItem {
   id: string;
@@ -223,8 +252,6 @@ export const useSearchCache = () => {
       setIsLoading(true);
       setError(null);
 
-      console.log('검색 데이터 로딩 시작...');
-
       // backend POI 검색 인덱스와 실시간 교통 항목을 병렬로 적재한다.
       const [poiRes, subwayRes, bikeRes] = await Promise.allSettled([
         fetch('/api/search/index?page=0&size=20000'),
@@ -235,19 +262,9 @@ export const useSearchCache = () => {
       const combinedData: SearchItem[] = [];
 
       if (poiRes.status === 'fulfilled' && poiRes.value.ok) {
-        const poiData = (await poiRes.value.json()) as Array<{
-          id: number;
-          name: string;
-          address?: string;
-          remark?: string;
-          aliases?: string;
-          refTable?: string;
-          refId?: number;
-          ref_table?: string;
-          ref_id?: number;
-        }>;
+        const poiData = normalizeSearchIndexPayload(await poiRes.value.json());
 
-        if (Array.isArray(poiData)) {
+        if (poiData.length > 0) {
           poiData.forEach(item => {
             const refTable = item.refTable || item.ref_table;
             const refId = item.refId ?? item.ref_id;
@@ -276,7 +293,6 @@ export const useSearchCache = () => {
       if (subwayRes.status === 'fulfilled' && subwayRes.value.ok) {
         try {
           const subwayData = await subwayRes.value.json();
-          console.log('지하철 API 응답 구조:', subwayData);
 
           if (subwayData.success && subwayData.data?.stations) {
             interface SubwayStation {
@@ -302,8 +318,6 @@ export const useSearchCache = () => {
               })
             );
             combinedData.push(...subwayItems);
-            console.log(`지하철 데이터 로드 성공: ${subwayItems.length}개`);
-            console.log('지하철 샘플 데이터:', subwayItems.slice(0, 3));
           } else {
             console.warn('지하철 데이터 구조 이상:', subwayData);
           }
@@ -340,14 +354,12 @@ export const useSearchCache = () => {
                 : undefined,
           }));
           combinedData.push(...bikeItems);
-          console.log(`따릉이 데이터 로드: ${bikeItems.length}개`);
         }
       } else {
         console.warn('따릉이 데이터 로드 실패');
       }
 
       setSearchCache(combinedData);
-      console.log(`총 검색 데이터: ${combinedData.length}개`);
     } catch (err) {
       console.error('검색 데이터 로드 중 오류:', err);
       setError('검색 데이터 로드에 실패했습니다.');
@@ -421,17 +433,6 @@ export const useSearchCache = () => {
           }
           return a.name.length - b.name.length;
         });
-
-      if (process.env.NODE_ENV === 'development' && itemsWithScores.length > 0) {
-        console.log(
-          `검색어 "${trimmedQuery}" 결과 (상위 5개):`,
-          itemsWithScores.slice(0, 5).map(item => ({
-            name: item.name,
-            score: item.score,
-            category: item.category,
-          }))
-        );
-      }
 
       return itemsWithScores.slice(0, limit).map(({ score, ...item }) => item);
     },
