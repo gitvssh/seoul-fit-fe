@@ -21,11 +21,16 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'culture.seoul.go.kr',
-      },
+      { protocol: 'https', hostname: 'culture.seoul.go.kr' },
+      // Kakao profile images for signed-in users
+      { protocol: 'https', hostname: '**.kakaocdn.net' },
+      { protocol: 'http', hostname: '**.kakaocdn.net' },
+      { protocol: 'https', hostname: '**.kakao.com' },
     ],
+  },
+  async redirects() {
+    // The legacy Pages Router duplicate of the home screen was removed.
+    return [{ source: '/home', destination: '/', permanent: true }];
   },
   reactStrictMode: false, // 개발 환경에서 중복 렌더링 방지
   typescript: {

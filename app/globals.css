@@ -1,77 +1,252 @@
-@import 'tw-animate-css';
 @import '../styles/marker-animations.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Pretendard Variable is self-hosted from the npm package (dynamic unicode-range
+ * subsets, imported in app/layout.tsx). This fallback keeps layout stable while
+ * a subset is still loading: the overrides match Pretendard's hhea metrics.
+ */
+@font-face {
+  font-family: 'Pretendard Fallback';
+  src:
+    local('Apple SD Gothic Neo'),
+    local('Malgun Gothic'),
+    local('Noto Sans KR'),
+    local('Arial');
+  ascent-override: 95.2%;
+  descent-override: 24.1%;
+  line-gap-override: 0%;
+}
+
 :root {
-  --font-geist-sans: Arial, Helvetica, sans-serif;
-  --font-geist-mono: 'Courier New', monospace;
-  --radius: 0.625rem;
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --radius: 0.75rem;
+  --font-sans:
+    'Pretendard Variable', 'Pretendard Fallback', 'Apple SD Gothic Neo', 'Malgun Gothic',
+    system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* surfaces and ink */
+  --background: 210 25% 98%;
+  --foreground: 218 28% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 218 28% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
+  --popover-foreground: 218 28% 12%;
+  --surface-elevated: 0 0% 100%;
+  --surface-elevated-foreground: 218 28% 12%;
+  --surface-glass: 0 0% 100%;
+  --scrim: 220 30% 8%;
+
+  /* brand: 한강 블루 */
+  --primary: 207 92% 38%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 24% 94%;
+  --secondary-foreground: 218 25% 20%;
+  --muted: 210 20% 95%;
+  --muted-foreground: 216 14% 42%;
+  --accent: 207 100% 95%;
+  --accent-foreground: 207 90% 30%;
+  --destructive: 355 78% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 20% 88%;
+  --input: 215 14% 56%;
+  --ring: 207 92% 45%;
+
+  /* status: solid for filled badges, soft for tinted backgrounds */
+  --success: 152 70% 30%;
+  --success-foreground: 0 0% 100%;
+  --success-soft: 150 60% 94%;
+  --success-soft-foreground: 152 80% 20%;
+  --warning: 30 95% 36%;
+  --warning-foreground: 0 0% 100%;
+  --warning-soft: 40 100% 93%;
+  --warning-soft-foreground: 28 90% 26%;
+  --info: 207 92% 38%;
+  --info-foreground: 0 0% 100%;
+  --info-soft: 207 100% 95%;
+  --info-soft-foreground: 207 90% 30%;
+  --live: 347 88% 46%;
+  --live-foreground: 0 0% 100%;
+  --live-soft: 347 100% 95%;
+  --live-soft-foreground: 347 80% 34%;
+  --live-brand: 348 93% 63%;
+
+  --chart-1: 207 92% 38%;
+  --chart-2: 347 88% 46%;
+  --chart-3: 152 70% 30%;
+  --chart-4: 36 95% 42%;
+  --chart-5: 252 62% 56%;
+
+  /* category marker fills (the map tiles stay light, so these are shared by both themes) */
+  --cat-park: 152 62% 33%;
+  --cat-library: 252 62% 56%;
+  --cat-culture: 292 60% 44%;
+  --cat-event: 345 88% 50%;
+  --cat-cooling: 196 90% 40%;
+  --cat-restaurant: 22 92% 48%;
+  --cat-sports: 43 100% 48%;
+  --cat-bike: 84 72% 38%;
+  --cat-subway: 222 22% 36%;
+  --marker-ink: 220 30% 10%;
+  --cat-park-text: 152 72% 24%;
+  --cat-library-text: 252 72% 24%;
+  --cat-culture-text: 292 70% 24%;
+  --cat-event-text: 345 98% 24%;
+  --cat-cooling-text: 196 100% 24%;
+  --cat-restaurant-text: 22 100% 24%;
+  --cat-sports-text: 43 100% 30%;
+  --cat-bike-text: 84 82% 24%;
+  --cat-subway-text: 222 32% 24%;
+
+  /* elevation for surfaces floating over the map */
+  --shadow-float-sm: 0 1px 2px hsl(220 30% 10% / 0.06), 0 2px 8px hsl(220 30% 10% / 0.08);
+  --shadow-float-md: 0 1px 3px hsl(220 30% 10% / 0.06), 0 4px 12px hsl(220 30% 10% / 0.1);
+  --shadow-float-lg: 0 2px 6px hsl(220 30% 10% / 0.08), 0 12px 32px hsl(220 30% 10% / 0.16);
+  --shadow-marker: 0 1px 2px hsl(220 30% 10% / 0.25), 0 3px 8px hsl(220 30% 10% / 0.2);
+
+  /* motion */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-sheet: 300ms;
+  --dur-exit: 160ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* layout */
+  --header-height: 3.5rem;
+  --sheet-visible: 0px;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  --background: 220 24% 8%;
+  --foreground: 210 20% 95%;
+  --card: 220 20% 12%;
+  --card-foreground: 210 20% 95%;
+  --popover: 220 20% 14%;
+  --popover-foreground: 210 20% 95%;
+  --surface-elevated: 220 18% 16%;
+  --surface-elevated-foreground: 210 20% 95%;
+  --surface-glass: 220 20% 12%;
+  --scrim: 220 30% 4%;
+
+  --primary: 207 90% 62%;
+  --primary-foreground: 220 30% 8%;
+  --secondary: 220 15% 18%;
+  --secondary-foreground: 210 15% 88%;
+  --muted: 220 15% 16%;
+  --muted-foreground: 215 12% 68%;
+  --accent: 207 50% 20%;
+  --accent-foreground: 207 90% 78%;
+  --destructive: 355 80% 64%;
+  --destructive-foreground: 220 30% 8%;
+  --border: 220 14% 20%;
+  --input: 220 12% 46%;
+  --ring: 207 90% 62%;
+
+  --success: 152 60% 50%;
+  --success-foreground: 220 30% 8%;
+  --success-soft: 152 40% 16%;
+  --success-soft-foreground: 150 60% 75%;
+  --warning: 40 95% 58%;
+  --warning-foreground: 220 30% 8%;
+  --warning-soft: 36 50% 16%;
+  --warning-soft-foreground: 40 95% 72%;
+  --info: 207 90% 62%;
+  --info-foreground: 220 30% 8%;
+  --info-soft: 207 50% 20%;
+  --info-soft-foreground: 207 90% 78%;
+  --live: 347 90% 66%;
+  --live-foreground: 220 30% 8%;
+  --live-soft: 347 45% 18%;
+  --live-soft-foreground: 347 95% 80%;
+  --live-brand: 348 93% 63%;
+
+  --chart-1: 207 90% 62%;
+  --chart-2: 347 90% 66%;
+  --chart-3: 152 60% 50%;
+  --chart-4: 40 95% 58%;
+  --chart-5: 252 47% 68%;
+
+  --cat-park-text: 152 47% 68%;
+  --cat-library-text: 252 47% 68%;
+  --cat-culture-text: 292 45% 68%;
+  --cat-event-text: 345 73% 68%;
+  --cat-cooling-text: 196 75% 68%;
+  --cat-restaurant-text: 22 77% 68%;
+  --cat-sports-text: 43 85% 68%;
+  --cat-bike-text: 84 57% 68%;
+  --cat-subway-text: 222 40% 68%;
+
+  /* shadows fade on dark surfaces, so floating surfaces also carry a 1px border */
+  --shadow-float-sm: 0 1px 2px hsl(220 40% 2% / 0.5), 0 2px 8px hsl(220 40% 2% / 0.5);
+  --shadow-float-md: 0 1px 3px hsl(220 40% 2% / 0.5), 0 4px 14px hsl(220 40% 2% / 0.55);
+  --shadow-float-lg: 0 2px 6px hsl(220 40% 2% / 0.55), 0 14px 36px hsl(220 40% 2% / 0.65);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    font-synthesis: none;
+  }
   body {
     @apply bg-background text-foreground;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
   }
   :focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
 }
 
+@layer utilities {
+  /* glass band for the header strip and chip rows floating over the map */
+  .surface-glass {
+    background-color: hsl(var(--surface-glass) / 0.84);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .surface-glass {
+      background-color: hsl(var(--surface-glass) / 0.96);
+    }
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .edge-fade-x {
+    mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+  }
+}
+
+/* Optional dark map tiles (opt-in). Only the tile layer is inverted; overlays and
+   the Kakao logo are untouched. */
+.dark[data-map-dark='true'] #kakaoMap div:has(> img[src*='/tile/']) {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.75);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.motion-keep-fade),
+  *:not(.motion-keep-fade)::before,
+  *:not(.motion-keep-fade)::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .motion-keep-fade {
+    transition-property: opacity !important;
+    transition-duration: 150ms !important;
   }
 }
 
@@ -83,4 +258,3 @@
     forced-color-adjust: auto;
   }
 }
-

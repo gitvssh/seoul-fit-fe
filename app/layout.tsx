@@ -1,6 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/shared/ui/auth/AuthProvider';
 import { I18nProvider } from '@/shared/i18n/I18nProvider';
+import { ThemeProvider } from '@/shared/lib/theme/ThemeProvider';
+import { THEME_INIT_SCRIPT } from '@/shared/lib/theme/theme';
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -8,6 +10,7 @@ import {
   SITE_ORIGIN,
   SITE_TITLE,
 } from '@/shared/lib/seo/site';
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -57,17 +60,32 @@ export const metadata: Metadata = {
   category: 'travel',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F9FAFB' },
+    { media: '(prefers-color-scheme: dark)', color: '#101319' },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='ko'>
-      <body className='antialiased'>
-        <I18nProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </I18nProvider>
+    <html lang='ko' suppressHydrationWarning>
+      <body className='font-sans antialiased'>
+        {/* Applies the stored theme before hydration so there is no light/dark flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <ThemeProvider>
+          <I18nProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
