@@ -5,7 +5,6 @@
 
 // Components
 export { AuthCallback } from './ui/AuthCallback';
-export { SignupForm } from './ui/SignupForm';
 export { LoadingStates } from './ui/LoadingStates';
 
 // Hooks
