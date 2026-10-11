@@ -7,26 +7,22 @@ const subwayStation = {
   route: '1호선',
 };
 
-const bikeStation = {
-  code: 'bike_1',
-  name: '서울역 따릉이',
-};
+const bikeStations = [
+  { code: 'bike_1', name: '서울역 따릉이' },
+  { code: 'bike_2', name: '349. 어린이도서관' },
+  { code: 'bike_3', name: '개봉도서관 앞' },
+];
+
+const poiIndex = [
+  { id: 101, name: '남산공원', address: '서울특별시 중구', refTable: 'park', refId: 42 },
+  { id: 102, name: '개봉도서관', address: '서울특별시 구로구', refTable: 'libraries', refId: 7 },
+  { id: 103, name: '서울도서관', address: '서울특별시 중구', refTable: 'libraries', refId: 8 },
+];
 
 function mockInitialLoad() {
   (fetch as jest.Mock).mockImplementation((url: string) => {
     if (url.startsWith('/api/search/index')) {
-      return Promise.resolve({
-        ok: true,
-        json: async () => [
-          {
-            id: 101,
-            name: '남산공원',
-            address: '서울특별시 중구',
-            refTable: 'park',
-            refId: 42,
-          },
-        ],
-      });
+      return Promise.resolve({ ok: true, json: async () => poiIndex });
     }
 
     if (url.startsWith('/api/subway')) {
@@ -38,7 +34,7 @@ function mockInitialLoad() {
 
     return Promise.resolve({
       ok: true,
-      json: async () => ({ success: true, data: { stations: [bikeStation] } }),
+      json: async () => ({ success: true, data: { stations: bikeStations } }),
     });
   });
 }
@@ -57,8 +53,8 @@ describe('useSearchCache', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.searchCache).toHaveLength(3);
-    expect(result.current.totalCount).toBe(3);
+    expect(result.current.searchCache).toHaveLength(7);
+    expect(result.current.totalCount).toBe(7);
     expect(result.current.search('남산')).toEqual([
       expect.objectContaining({
         category: 'park',
@@ -135,7 +131,7 @@ describe('useSearchCache', () => {
       }
       return Promise.resolve({
         ok: true,
-        json: async () => ({ success: true, data: { stations: [bikeStation] } }),
+        json: async () => ({ success: true, data: { stations: bikeStations } }),
       });
     });
     const { result } = renderHook(() => useSearchCache());
@@ -147,6 +143,46 @@ describe('useSearchCache', () => {
       ref_table: 'libraries',
       ref_id: 70,
     });
+  });
+
+  it('ranks an exact library name above bike stations that contain it', async () => {
+    const { result } = renderHook(() => useSearchCache());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.search('개봉도서관').map(item => [item.category, item.name])).toEqual([
+      ['library', '개봉도서관'],
+      ['bike', '개봉도서관 앞'],
+    ]);
+  });
+
+  it('returns libraries before bike stations for a category word', async () => {
+    const { result } = renderHook(() => useSearchCache());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.search('도서관').map(item => item.category)).toEqual([
+      'library',
+      'library',
+      'bike',
+      'bike',
+    ]);
+  });
+
+  it('finds 서울도서관 by 초성 once es-hangul is loaded on demand', async () => {
+    const { result } = renderHook(() => useSearchCache());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await waitFor(() =>
+      expect(result.current.search('ㅅㅇㄷㅅㄱ')).toEqual([
+        expect.objectContaining({ name: '서울도서관', category: 'library' }),
+      ])
+    );
+  });
+
+  it('returns an empty list when nothing matches', async () => {
+    const { result } = renderHook(() => useSearchCache());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.search('zzzz')).toEqual([]);
   });
 
   it('normalizes array, Spring page, wrapped and malformed index payloads', () => {

@@ -1,5 +1,27 @@
-/** 검색창, 최근 검색, 자연어 조건 */
+/**
+ * 검색창, 최근 검색, 자연어 조건.
+ * `search.*`가 SearchBox(features/place-search)의 정본이다. `header.*`는 이전 헤더 검색창이
+ * 아직 쓰는 키이며, 헤더가 SearchBox로 바뀌면 함께 제거한다.
+ */
 export const ko = {
+  'search.label': '장소와 조건 검색',
+  'search.placeholder': '장소 또는 “한산한 실내 도서관” 검색',
+  'search.clear': '검색어 지우기',
+  'search.suggestions': '검색 제안',
+  'search.recent': '최근 검색',
+  'search.recentCount': '최근 검색 {count}건',
+  'search.clearHistory': '최근 검색 모두 지우기',
+  'search.removeHistory': '{query} 검색 기록 삭제',
+  'search.loading': '장소 정보를 불러오는 중이에요.',
+  'search.error': '검색 정보를 불러오지 못했어요.',
+  'search.retry': '다시 시도',
+  'search.resultCount': '검색 결과 {count}건',
+  'search.resultCountOne': '검색 결과 1건',
+  'search.noResults': '‘{query}’에 맞는 장소가 없어요.',
+  'search.noResultsHint': '동네나 역 이름, 또는 공원·도서관 같은 카테고리로 검색해 보세요.',
+  'search.noResultsStatus': '검색 결과가 없어요.',
+  'search.resetFilters': '필터 초기화',
+  'search.applyRule': '조건으로 지도 보기',
   'header.searchLabel': '장소와 조건 검색',
   'header.searchPlaceholder': '장소 또는 “한산한 실내 도서관” 검색',
   'header.clearSearch': '검색어 지우기',
@@ -13,6 +35,24 @@ export const ko = {
 } as const;
 
 export const en: Record<keyof typeof ko, string> = {
+  'search.label': 'Search places and conditions',
+  'search.placeholder': 'Search a place or “quiet indoor library”',
+  'search.clear': 'Clear search',
+  'search.suggestions': 'Search suggestions',
+  'search.recent': 'Recent searches',
+  'search.recentCount': '{count} recent searches',
+  'search.clearHistory': 'Clear recent searches',
+  'search.removeHistory': 'Remove {query} from recent searches',
+  'search.loading': 'Loading place data.',
+  'search.error': 'Search data could not be loaded.',
+  'search.retry': 'Try again',
+  'search.resultCount': '{count} results',
+  'search.resultCountOne': '1 result',
+  'search.noResults': 'No places match ‘{query}’.',
+  'search.noResultsHint': 'Try a neighbourhood, a station, or a category such as park or library.',
+  'search.noResultsStatus': 'No results.',
+  'search.resetFilters': 'Reset filters',
+  'search.applyRule': 'Show the map with these conditions',
   'header.searchLabel': 'Search places and conditions',
   'header.searchPlaceholder': 'Search a place or “quiet indoor library”',
   'header.clearSearch': 'Clear search',
