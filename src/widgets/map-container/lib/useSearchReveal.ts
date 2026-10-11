@@ -6,7 +6,6 @@ import type { Facility, FacilityCategory } from '@/lib/types';
 import type { SearchItem } from '@/shared/lib/hooks/useSearchCache';
 import { convertSearchResultToFacility } from '@/shared/api/searchDetail';
 import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
-import { env } from '@/config/environment';
 import { useNaturalLanguageRuleStore } from '@/features/natural-language-search/model/rule-store';
 import { useFacilityContext, type SelectionSource } from '../ui/providers/FacilityProvider';
 import { useMapContext } from '../ui/providers/MapProvider';
@@ -172,10 +171,9 @@ export function useSearchReveal() {
     const controller = new AbortController();
     void (async () => {
       try {
+        // 같은 출처의 route handler가 내부 주소로 대신 조회한다(게이트웨이는 /api/public을 backend로 보내지 않는다).
         const response = await fetch(
-          env.createPublicBackendEndpoint(
-            `/api/public/places/${encodeURIComponent(categorySlug)}/${id}`
-          ),
+          `/api/public/places/${encodeURIComponent(categorySlug)}/${id}`,
           { cache: 'no-store', signal: controller.signal }
         );
         if (!response.ok) throw new Error('공개 장소 정보를 불러오지 못했습니다.');
