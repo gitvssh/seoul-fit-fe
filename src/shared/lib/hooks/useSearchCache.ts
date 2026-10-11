@@ -1,98 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-
-// 검색 스코어를 포함한 검색 아이템
-interface SearchItemWithScore extends SearchItem {
-  score: number;
-}
-
-// 고급 검색 유틸리티 함수들
-const searchUtils = {
-  // 한글 → 초성 변환
-  getChosung: (str: string): string => {
-    const chosung = [
-      'ㄱ',
-      'ㄲ',
-      'ㄴ',
-      'ㄷ',
-      'ㄸ',
-      'ㄹ',
-      'ㅁ',
-      'ㅂ',
-      'ㅃ',
-      'ㅅ',
-      'ㅆ',
-      'ㅇ',
-      'ㅈ',
-      'ㅉ',
-      'ㅊ',
-      'ㅋ',
-      'ㅌ',
-      'ㅍ',
-      'ㅎ',
-    ];
-    return str.replace(/[가-힣]/g, char => {
-      const code = char.charCodeAt(0) - 44032;
-      if (code >= 0 && code <= 11171) {
-        return chosung[Math.floor(code / 588)];
-      }
-      return char;
-    });
-  },
-
-  // 텍스트 정규화 (띄어쓰기, 특수문자 제거)
-  normalize: (str: string): string => {
-    return str.toLowerCase().replace(/[\s\-_()]/g, '');
-  },
-
-  // 매치 스코어 계산
-  getMatchScore: (text: string, query: string): number => {
-    const normalizedText = searchUtils.normalize(text);
-    const normalizedQuery = searchUtils.normalize(query);
-    const chosungText = searchUtils.getChosung(text);
-    const chosungQuery = searchUtils.getChosung(query);
-
-    // 1. 완전일치 (100점)
-    if (normalizedText === normalizedQuery) return 100;
-
-    // 2. 시작매치 (90점)
-    if (normalizedText.startsWith(normalizedQuery)) return 90;
-
-    // 3. 포함매치 (70점)
-    if (normalizedText.includes(normalizedQuery)) return 70;
-
-    // 4. 초성 완전매치 (60점)
-    if (chosungText === chosungQuery) return 60;
-
-    // 5. 초성 시작매치 (50점)
-    if (chosungText.startsWith(chosungQuery)) return 50;
-
-    // 6. 초성 포함매치 (40점)
-    if (chosungText.includes(chosungQuery)) return 40;
-
-    // 7. 부분 단어 매치 (30점)
-    const words = normalizedText.split(/[\s\-_]/);
-    for (const word of words) {
-      if (word.startsWith(normalizedQuery)) return 30;
-    }
-
-    return 0;
-  },
-
-  // 카테고리 우선순위
-  getCategoryPriority: (category: SearchItem['category']): number => {
-    const priorities = {
-      subway: 1,
-      bike: 2,
-      library: 3,
-      park: 4,
-      cultural_event: 5,
-      cultural_reservation: 6,
-      cooling_center: 7,
-      restaurant: 8,
-    };
-    return priorities[category] || 9;
-  },
-};
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {
+  getLoadedHangul,
+  loadHangul,
+  prepareSearchEntry,
+  rankSearchEntries,
+  type HangulModule,
+} from '@/features/place-search/lib/ranking';
 
 // 검색 인덱스 원시 항목 (backend 응답)
 interface RawSearchIndexItem {
@@ -368,81 +281,38 @@ export const useSearchCache = () => {
     }
   }, []);
 
-  // 검색 캐시 전처리 (메모이제이션)
-  const preprocessedCache = useMemo(() => {
-    return searchCache.map(item => {
-      const searchFields: string[] = [item.name];
+  // 검색 항목 전처리 (정규화 1회). 순위 규칙은 features/place-search/lib/ranking.ts에 있다.
+  const searchEntries = useMemo(() => searchCache.map(prepareSearchEntry), [searchCache]);
 
-      if (item.address) {
-        searchFields.push(...item.address.split(',').map(addr => addr.trim()));
-      }
+  // 초성·자모 검색용 es-hangul은 첫 검색에서 지연 적재한다. 적재 전에는 비퍼지 일치만 동작한다.
+  const [hangul, setHangul] = useState<HangulModule | null>(() => getLoadedHangul());
+  const hangulRequestedRef = useRef(false);
+  const ensureHangul = useCallback(() => {
+    if (hangul || hangulRequestedRef.current) return;
+    hangulRequestedRef.current = true;
+    loadHangul()
+      .then(setHangul)
+      .catch(error => {
+        hangulRequestedRef.current = false;
+        console.warn('초성 검색 모듈 로드 실패:', error);
+      });
+  }, [hangul]);
 
-      if (item.remark) {
-        searchFields.push(...item.remark.split(',').map(remark => remark.trim()));
-      }
-
-      if (item.aliases) {
-        searchFields.push(...item.aliases.split(',').map(alias => alias.trim()));
-      }
-
-      return {
-        ...item,
-        searchFields,
-      };
-    });
-  }, [searchCache]);
-
-  // 고급 검색 함수 (최적화됨)
+  // 고급 검색 함수: 정확 > 접두 > 단어 시작 > 부분 > 초성·자모, 동점은 카테고리·이름 길이 순
   const search = useCallback(
     (query: string, limit: number = 10): SearchItem[] => {
-      if (!query.trim() || query.length < 1) return [];
-
       const trimmedQuery = query.trim();
-
-      // 전처리된 캐시를 사용하여 성능 향상
-      const itemsWithScores: SearchItemWithScore[] = preprocessedCache
-        .map(item => {
-          let maxScore = 0;
-          for (const field of item.searchFields) {
-            const score = searchUtils.getMatchScore(field, trimmedQuery);
-            maxScore = Math.max(maxScore, score);
-          }
-
-          return {
-            id: item.id,
-            name: item.name,
-            address: item.address,
-            remark: item.remark,
-            aliases: item.aliases,
-            category: item.category,
-            ref_table: item.ref_table,
-            ref_id: item.ref_id,
-            position: item.position,
-            score: maxScore,
-          };
-        })
-        .filter(item => item.score > 0)
-        .sort((a, b) => {
-          if (b.score !== a.score) {
-            return b.score - a.score;
-          }
-          const aPriority = searchUtils.getCategoryPriority(a.category);
-          const bPriority = searchUtils.getCategoryPriority(b.category);
-          if (aPriority !== bPriority) {
-            return aPriority - bPriority;
-          }
-          return a.name.length - b.name.length;
-        });
-
-      return itemsWithScores.slice(0, limit).map(({ score, ...item }) => item);
+      if (!trimmedQuery) return [];
+      if (!hangul) ensureHangul();
+      return rankSearchEntries(searchEntries, trimmedQuery, { limit, hangul });
     },
-    [preprocessedCache]
+    [searchEntries, hangul, ensureHangul]
   );
 
   // 카테고리별 검색
   const searchByCategory = useCallback(
     (query: string, categories: SearchItem['category'][], limit: number = 10): SearchItem[] => {
-      if (!query.trim() || query.length < 1) return [];
+      if (!query.trim()) return [];
 
       return search(query, searchCache.length)
         .filter(item => categories.includes(item.category))
