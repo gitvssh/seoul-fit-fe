@@ -56,7 +56,9 @@ export interface AnalyticsEventParams {
     | 'natural_language'
     | 'search_history'
     | 'search_result'
-    | 'region_shortcut';
+    | 'region_shortcut'
+    | 'list'
+    | 'planner';
   duration_bucket?: string;
   stop_count?: string;
   language?: 'ko' | 'en';

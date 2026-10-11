@@ -3,7 +3,27 @@
  */
 
 import { isValidSeoulCoordinate } from './coordinate-validator';
-import type { Facility } from '@/lib/types';
+import type { Facility, Position } from '@/lib/types';
+
+const SEOUL_LAT_RANGE: readonly [number, number] = [33, 39];
+const SEOUL_LNG_RANGE: readonly [number, number] = [124, 132];
+
+const inRange = (value: number, [min, max]: readonly [number, number]) =>
+  value >= min && value <= max;
+
+/**
+ * 두 좌표 값의 축을 값의 범위로 판별한다.
+ * 서울 열린데이터는 데이터셋마다 XCNTS/YDNTS가 위도·경도 어느 쪽인지 다르다
+ * (도서관 API는 xcnts=위도, ydnts=경도). 숫자 범위로 판별하면 어느 순서로 와도 안전하다.
+ */
+export function resolveSeoulLatLng(first: unknown, second: unknown): Position | null {
+  const a = Number(first);
+  const b = Number(second);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  if (inRange(a, SEOUL_LAT_RANGE) && inRange(b, SEOUL_LNG_RANGE)) return { lat: a, lng: b };
+  if (inRange(b, SEOUL_LAT_RANGE) && inRange(a, SEOUL_LNG_RANGE)) return { lat: b, lng: a };
+  return null;
+}
 
 /**
  * 공원 데이터를 Facility로 변환
@@ -49,32 +69,19 @@ export function convertParkToFacility(park: any, index: number): Facility | null
  */
 export function convertLibraryToFacility(library: any, index: number): Facility | null {
   // 좌표 확인
-  let position;
+  // 좌표 확인: 백엔드 도서관 응답은 xcnts=위도, ydnts=경도이므로 축을 값으로 판별한다.
+  let position: Position | null = null;
   if (library.xcnts !== undefined && library.ydnts !== undefined) {
-    // xcnts는 경도(lng), ydnts는 위도(lat)
-    position = {
-      lat: parseFloat(String(library.ydnts)) || 0,
-      lng: parseFloat(String(library.xcnts)) || 0,
-    };
+    position = resolveSeoulLatLng(library.xcnts, library.ydnts);
   } else if (library.latitude !== undefined && library.longitude !== undefined) {
-    position = {
-      lat: parseFloat(String(library.latitude)) || 0,
-      lng: parseFloat(String(library.longitude)) || 0,
-    };
+    position = resolveSeoulLatLng(library.latitude, library.longitude);
   } else if (library.lat !== undefined && library.lng !== undefined) {
-    position = {
-      lat: parseFloat(String(library.lat)) || 0,
-      lng: parseFloat(String(library.lng)) || 0,
-    };
+    position = resolveSeoulLatLng(library.lat, library.lng);
   } else if (library.position) {
-    position = library.position;
-  } else {
-    console.warn('[convertLibraryToFacility] 좌표 없음:', library.lbrryName || library.name);
-    return null;
+    position = resolveSeoulLatLng(library.position.lat, library.position.lng);
   }
 
-  // 좌표 유효성 검사
-  if (!isValidSeoulCoordinate(position.lat, position.lng)) {
+  if (!position || !isValidSeoulCoordinate(position.lat, position.lng)) {
     return null;
   }
 
