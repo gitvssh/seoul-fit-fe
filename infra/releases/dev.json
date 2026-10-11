@@ -1,9 +1,9 @@
 {
-  "digest": "sha256:c5014b268004aa96f55fcb1d585ddcf63917d5c1ebf7c27f7da1a3d0187c4710",
+  "digest": "sha256:6803045a0e73dda4b96785f8abddd003ffd507b82f8128201b0faa9698204e76",
   "environment": "dev",
-  "image": "registry.damecasol.com/seoul-fit/frontend:dev-fecf8209f630c653834777906715cfc7ea05c83c",
+  "image": "registry.damecasol.com/seoul-fit/frontend:dev-aa2e3935ba5a6b387d20859184094ab8af6fbe84",
   "public_input_sha256": "sha256:1adb0966770936ddf2c81d798b0db593b8a19385393782b215ec7c8007665169",
   "schema_version": 1,
-  "service_version": "sha256:c5014b268004aa96f55fcb1d585ddcf63917d5c1ebf7c27f7da1a3d0187c4710",
-  "source_sha": "fecf8209f630c653834777906715cfc7ea05c83c"
+  "service_version": "sha256:6803045a0e73dda4b96785f8abddd003ffd507b82f8128201b0faa9698204e76",
+  "source_sha": "aa2e3935ba5a6b387d20859184094ab8af6fbe84"
 }
