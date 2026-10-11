@@ -1,10 +1,23 @@
-/** 테마, 토스트, 다이얼로그 */
+/** 테마, 토스트, 다이얼로그(로그아웃·카테고리 경고) */
 export const ko = {
   'theme.label': '화면 테마',
-  'theme.system': '시스템 설정',
+  'theme.system': '시스템',
   'theme.light': '라이트',
   'theme.dark': '다크',
+  'theme.current': '현재 {value}',
   'theme.mapDark': '지도도 어둡게',
+  'theme.mapDarkHint': '다크 테마일 때 지도 타일을 어둡게 바꿉니다.',
+  'toast.region': '알림',
+  'toast.close': '알림 닫기',
+  'logout.title': '로그아웃할까요?',
+  'logout.description': '로그아웃하면 이 기기의 지도 마커 설정이 기본값으로 돌아갑니다.',
+  'logout.cancel': '취소',
+  'logout.confirm': '로그아웃',
+  'logout.successTitle': '로그아웃했습니다',
+  'logout.successDescription': '홈으로 이동합니다.',
+  'warning.title': '카테고리를 하나 이상 선택해 주세요',
+  'warning.description': '지도에 장소를 표시하려면 카테고리가 최소 하나 필요합니다.',
+  'warning.confirm': '확인',
 } as const;
 
 export const en: Record<keyof typeof ko, string> = {
@@ -12,5 +25,19 @@ export const en: Record<keyof typeof ko, string> = {
   'theme.system': 'System',
   'theme.light': 'Light',
   'theme.dark': 'Dark',
+  'theme.current': 'Current: {value}',
   'theme.mapDark': 'Dark map tiles',
+  'theme.mapDarkHint': 'Darkens the map tiles while the dark theme is active.',
+  'toast.region': 'Notifications',
+  'toast.close': 'Dismiss notification',
+  'logout.title': 'Log out?',
+  'logout.description':
+    'Logging out resets the map marker settings on this device to the defaults.',
+  'logout.cancel': 'Cancel',
+  'logout.confirm': 'Log out',
+  'logout.successTitle': 'You are logged out',
+  'logout.successDescription': 'Taking you to the home page.',
+  'warning.title': 'Select at least one category',
+  'warning.description': 'The map needs at least one category to show places.',
+  'warning.confirm': 'OK',
 };

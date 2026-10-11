@@ -5,7 +5,14 @@ import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
+import { buttonVariants } from './button';
+import { useRestoreFocus } from './dialog';
 
+/**
+ * 화면 가장자리에서 미끄러져 나오는 모달 패널(설정 사이드 메뉴). Radix Dialog 기반이라
+ * role=dialog, aria-modal, 포커스 트랩, Escape, 포커스 복귀를 제공한다. 레이어는 `z-sidebar`
+ * 이므로 그 위에 `z-dialog`의 Dialog(경고·로그아웃)가 올라올 수 있다.
+ */
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot='sheet' {...props} />;
 }
@@ -30,7 +37,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot='sheet-overlay'
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-dialog bg-scrim/40',
+        'motion-keep-fade fixed inset-0 z-sidebar bg-scrim/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:duration-sheet data-[state=closed]:duration-base',
         className
       )}
       {...props}
@@ -38,38 +45,54 @@ function SheetOverlay({
   );
 }
 
+interface SheetContentProps extends React.ComponentProps<typeof SheetPrimitive.Content> {
+  side?: 'top' | 'right' | 'bottom' | 'left';
+  /** 우상단 닫기 버튼의 접근 가능한 이름. 생략하면 호출자가 직접 `SheetClose`를 둔다. */
+  closeLabel?: string;
+}
+
 function SheetContent({
   className,
   children,
   side = 'right',
+  closeLabel,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: 'top' | 'right' | 'bottom' | 'left';
-}) {
+}: SheetContentProps) {
+  const restoreFocus = useRestoreFocus(props);
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot='sheet-content'
+        aria-modal='true'
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-dialog flex flex-col gap-4 shadow-float-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
+          'fixed z-sidebar flex flex-col gap-4 bg-card text-card-foreground shadow-float-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-sheet data-[state=closed]:duration-base data-[state=open]:ease-enter data-[state=closed]:ease-exit',
           side === 'right' &&
-            'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
+            'inset-y-0 right-0 h-full w-3/4 border-l border-border data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
           side === 'left' &&
-            'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
+            'inset-y-0 left-0 h-full w-3/4 border-r border-border data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
           side === 'top' &&
-            'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
+            'inset-x-0 top-0 h-auto border-b border-border data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
           side === 'bottom' &&
-            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+            'inset-x-0 bottom-0 h-auto border-t border-border data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
           className
         )}
         {...props}
+        {...restoreFocus}
       >
         {children}
-        <SheetPrimitive.Close className='ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none'>
-          <XIcon className='size-4' />
-          <span className='sr-only'>Close</span>
-        </SheetPrimitive.Close>
+        {closeLabel ? (
+          <SheetPrimitive.Close
+            data-slot='sheet-close'
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'icon' }),
+              'absolute right-3 top-3'
+            )}
+            aria-label={closeLabel}
+          >
+            <XIcon className='size-4' aria-hidden='true' />
+          </SheetPrimitive.Close>
+        ) : null}
       </SheetPrimitive.Content>
     </SheetPortal>
   );
@@ -99,7 +122,7 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
   return (
     <SheetPrimitive.Title
       data-slot='sheet-title'
-      className={cn('text-foreground font-semibold', className)}
+      className={cn('text-title text-foreground', className)}
       {...props}
     />
   );
@@ -112,7 +135,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot='sheet-description'
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('text-body-sm text-muted-foreground', className)}
       {...props}
     />
   );

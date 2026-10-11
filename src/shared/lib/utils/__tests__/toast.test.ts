@@ -1,148 +1,85 @@
-import { showToast, showSuccessToast, showErrorToast, showWarningToast } from '../toast';
+import { toast as sonnerToast } from 'sonner';
+import {
+  TOAST_DURATION_MS,
+  showErrorToast,
+  showSuccessToast,
+  showToast,
+  showWarningToast,
+  toast,
+} from '../toast';
 
-// Mock DOM methods
-const mockElement = {
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(() => 'success-id'),
+    error: jest.fn(() => 'error-id'),
+    info: jest.fn(() => 'info-id'),
+    warning: jest.fn(() => 'warning-id'),
+    dismiss: jest.fn(),
   },
-  className: '',
-  textContent: '',
-  style: {} as Record<string, string>,
-  remove: jest.fn(),
-};
+}));
 
-describe('Toast Utils', () => {
+const mocked = sonnerToast as unknown as Record<keyof typeof sonnerToast, jest.Mock>;
+
+describe('toast utils (sonner)', () => {
   beforeEach(() => {
-    // Mock document.createElement
-    document.createElement = jest.fn().mockReturnValue(mockElement);
-    document.body.appendChild = jest.fn();
-
-    // Reset mocks
     jest.clearAllMocks();
-    mockElement.textContent = '';
-    mockElement.style = {};
   });
 
   describe('showToast', () => {
-    it('creates and displays a toast message', () => {
-      showToast('Test message');
-
-      expect(document.createElement).toHaveBeenCalledWith('div');
-      expect(mockElement.textContent).toBe('Test message');
-      expect(mockElement.className).toBe('toast');
-      expect(document.body.appendChild).toHaveBeenCalledWith(mockElement);
+    it('shows an info toast with the default duration', () => {
+      expect(showToast('Test message')).toBe('info-id');
+      expect(mocked.info).toHaveBeenCalledWith('Test message', {
+        duration: TOAST_DURATION_MS.info,
+      });
     });
 
-    it('applies custom type class', () => {
+    it('routes the type to the matching sonner call', () => {
       showToast('Error message', 'error');
-
-      expect(mockElement.className).toBe('toast');
-      expect(mockElement.classList.add).toHaveBeenCalledWith('toast-error');
+      expect(mocked.error).toHaveBeenCalledWith('Error message', {
+        duration: TOAST_DURATION_MS.error,
+      });
     });
 
-    it('auto-removes toast after duration', () => {
-      jest.useFakeTimers();
-
-      showToast('Test message', 'info', 3000);
-
-      expect(mockElement.remove).not.toHaveBeenCalled();
-
-      jest.advanceTimersByTime(3000);
-
-      expect(mockElement.remove).toHaveBeenCalled();
-
-      jest.useRealTimers();
-    });
-
-    it('applies fade-out animation before removal', () => {
-      jest.useFakeTimers();
-
-      showToast('Test message', 'info', 2000);
-
-      jest.advanceTimersByTime(1500); // 2000 - 500ms for fade
-
-      expect(mockElement.classList.add).toHaveBeenCalledWith('fade-out');
-
-      jest.advanceTimersByTime(500);
-
-      expect(mockElement.remove).toHaveBeenCalled();
-
-      jest.useRealTimers();
+    it('passes a custom duration through', () => {
+      showToast('Short', 'info', 1500);
+      expect(mocked.info).toHaveBeenCalledWith('Short', { duration: 1500 });
     });
   });
 
-  describe('showSuccessToast', () => {
-    it('shows a success toast with default duration', () => {
+  describe('typed helpers', () => {
+    it('showSuccessToast uses the success duration', () => {
       showSuccessToast('Success!');
-
-      expect(mockElement.classList.add).toHaveBeenCalledWith('toast-success');
-      expect(mockElement.textContent).toBe('Success!');
+      expect(mocked.success).toHaveBeenCalledWith('Success!', { duration: 3000 });
     });
 
-    it('accepts custom duration', () => {
-      jest.useFakeTimers();
-
-      showSuccessToast('Success!', 5000);
-
-      jest.advanceTimersByTime(4999);
-      expect(mockElement.remove).not.toHaveBeenCalled();
-
-      jest.advanceTimersByTime(1);
-      expect(mockElement.remove).toHaveBeenCalled();
-
-      jest.useRealTimers();
-    });
-  });
-
-  describe('showErrorToast', () => {
-    it('shows an error toast', () => {
+    it('showErrorToast stays visible longer by default', () => {
       showErrorToast('Error occurred');
-
-      expect(mockElement.classList.add).toHaveBeenCalledWith('toast-error');
-      expect(mockElement.textContent).toBe('Error occurred');
+      expect(mocked.error).toHaveBeenCalledWith('Error occurred', { duration: 5000 });
     });
 
-    it('has longer default duration for errors', () => {
-      jest.useFakeTimers();
-
-      showErrorToast('Error message');
-
-      // Error toasts typically show longer
-      jest.advanceTimersByTime(4999);
-      expect(mockElement.remove).not.toHaveBeenCalled();
-
-      jest.advanceTimersByTime(1);
-      expect(mockElement.remove).toHaveBeenCalled();
-
-      jest.useRealTimers();
+    it('showWarningToast uses the warning duration', () => {
+      showWarningToast('Warning message', 2000);
+      expect(mocked.warning).toHaveBeenCalledWith('Warning message', { duration: 2000 });
     });
   });
 
-  describe('showWarningToast', () => {
-    it('shows a warning toast', () => {
-      showWarningToast('Warning message');
-
-      expect(mockElement.classList.add).toHaveBeenCalledWith('toast-warning');
-      expect(mockElement.textContent).toBe('Warning message');
-    });
-  });
-
-  describe('Toast positioning', () => {
-    it('positions toast at the top of viewport', () => {
-      showToast('Test');
-
-      expect(mockElement.style.position).toBe('fixed');
-      expect(mockElement.style.top).toBeDefined();
-      expect(mockElement.style.left).toBe('50%');
-      expect(mockElement.style.transform).toContain('translateX(-50%)');
+  describe('toast object', () => {
+    it('delegates each type with the default duration', () => {
+      toast.success('saved');
+      toast.error('failed');
+      toast.info('note');
+      toast.warning('careful');
+      expect(mocked.success).toHaveBeenCalledWith('saved', { duration: 3000 });
+      expect(mocked.error).toHaveBeenCalledWith('failed', { duration: 5000 });
+      expect(mocked.info).toHaveBeenCalledWith('note', { duration: 3000 });
+      expect(mocked.warning).toHaveBeenCalledWith('careful', { duration: 4000 });
     });
 
-    it('applies z-index for layering', () => {
-      showToast('Test');
-
-      expect(mockElement.style.zIndex).toBeDefined();
-      expect(parseInt(mockElement.style.zIndex)).toBeGreaterThan(1000);
+    it('accepts a duration option and forwards dismiss', () => {
+      toast.success('saved', { duration: 800 });
+      expect(mocked.success).toHaveBeenCalledWith('saved', { duration: 800 });
+      toast.dismiss('success-id');
+      expect(mocked.dismiss).toHaveBeenCalledWith('success-id');
     });
   });
 });

@@ -24,8 +24,15 @@ function readLocale(): Locale {
   }
 }
 
+function messagesFor(locale: Locale) {
+  return locale === 'en' ? enMessages : koMessages;
+}
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = React.useState<Locale>('ko');
+  // Screen readers hear the language change only when the user changes it, not on first paint
+  // or when the stored locale is restored after hydration.
+  const [announcement, setAnnouncement] = React.useState('');
 
   React.useEffect(() => {
     setLocaleState(readLocale());
@@ -37,6 +44,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = React.useCallback((nextLocale: Locale) => {
     setLocaleState(nextLocale);
+    setAnnouncement(messagesFor(nextLocale)['language.changed']);
     try {
       window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
     } catch {
@@ -47,7 +55,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const t = React.useCallback(
     (key: MessageKey, values: Record<string, string | number> = {}) => {
-      const messages = locale === 'en' ? enMessages : koMessages;
+      const messages = messagesFor(locale);
       return Object.entries(values).reduce(
         (message, [name, value]) => message.replaceAll(`{${name}}`, String(value)),
         messages[key]
@@ -60,7 +68,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     <I18nContext.Provider value={{ locale, setLocale, t }}>
       {children}
       <span className='sr-only' role='status' aria-live='polite'>
-        {t('language.changed')}
+        {announcement}
       </span>
     </I18nContext.Provider>
   );
