@@ -19,6 +19,7 @@ import { MapControls } from './MapControls';
 import { MapStatusChip } from './MapStatusChip';
 import { MapFallback } from './MapFallback';
 import { LiveNowPanel } from './LiveNowPanel';
+import { WelcomeCard } from './WelcomeCard';
 
 interface MapViewProps {
   onMapTap?: () => void;
@@ -60,6 +61,7 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
     locateMe,
     geolocationBanner,
     dismissGeolocationBanner,
+    setPreset,
   } = useExploreContext();
   const [liveOpen, setLiveOpen] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -265,6 +267,12 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
             }
             onClose={() => setLiveOpen(false)}
           />
+        </div>
+      )}
+
+      {ready && (
+        <div className='pointer-events-none absolute left-3 z-map-status w-[min(100%-5rem,24rem)] bottom-[calc(var(--sheet-visible)+0.75rem)] md:bottom-6'>
+          <WelcomeCard onPreset={setPreset} />
         </div>
       )}
 
