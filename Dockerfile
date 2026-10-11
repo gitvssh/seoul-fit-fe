@@ -74,6 +74,9 @@ CMD ["node", "server.js"]
 # streams share one descriptor so framework stderr can never precede the
 # platform's first-record receipt unnoticed.
 FROM runner AS runtime-contract
+# The readiness probe's first request can be served before instrumentation has
+# subscribed to the HTTP diagnostics channel, so the access-record wait below
+# keeps issuing requests instead of relying on that single early one.
 
 RUN set -eu; \
     contract_log=/tmp/seoul-fit-runtime-contract.log; \
@@ -109,6 +112,7 @@ RUN set -eu; \
     until grep -q '"event_name":"http.server.request"' "${contract_log}"; do \
       kill -0 "${runtime_pid}" 2>/dev/null \
         || { echo 'seoul-fit runtime contract exited before access logging' >&2; exit 1; }; \
+      wget -q -O /dev/null http://127.0.0.1:3000/ || true; \
       attempt=$((attempt + 1)); \
       test "${attempt}" -lt 100 \
         || { echo 'seoul-fit runtime contract did not emit an access record' >&2; exit 1; }; \
