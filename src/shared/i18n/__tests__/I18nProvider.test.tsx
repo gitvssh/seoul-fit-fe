@@ -16,7 +16,7 @@ describe('I18nProvider', () => {
     document.documentElement.lang = 'ko';
   });
 
-  it('restores English and updates the document language', async () => {
+  it('restores English and updates the document language without announcing', async () => {
     window.localStorage.setItem(LOCALE_STORAGE_KEY, 'en');
     render(
       <I18nProvider>
@@ -28,6 +28,7 @@ describe('I18nProvider', () => {
       expect(screen.getByRole('button')).toHaveTextContent('No places match this map and filters.')
     );
     expect(document.documentElement.lang).toBe('en');
+    expect(screen.getByRole('status').textContent).toBe('');
   });
 
   it('persists a user language change', () => {
@@ -41,5 +42,22 @@ describe('I18nProvider', () => {
 
     expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('en');
     expect(screen.getByRole('button')).toHaveTextContent('No places match this map and filters.');
+  });
+
+  it('announces the language only after the user changes it', () => {
+    render(
+      <I18nProvider>
+        <Harness />
+      </I18nProvider>
+    );
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status.textContent).toBe('');
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(status).toHaveTextContent('Language changed to English.');
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(status).toHaveTextContent('언어가 한국어로 변경되었습니다.');
   });
 });
