@@ -79,3 +79,5 @@ Thumbs.db
 *.ttf
 *.eot
 *.pdf
+# Generated decision index (scripts/gen_decisions_index.py)
+docs/decisions/README.md

@@ -7,6 +7,8 @@
 
 import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { kakaoLogin } from '@/shared/api/login';
+import { trackEvent } from '@/shared/lib/analytics/analytics';
 import { useOAuthCallback } from '../model/oauth-flow';
 import { LoadingStates } from './LoadingStates';
 
@@ -26,16 +28,21 @@ function AuthContent() {
     });
   }, [searchParams, handleCallback]);
 
+  const retry = () => {
+    trackEvent('login_started', { entry_point: 'auth_callback' });
+    kakaoLogin();
+  };
+
   if (status === 'loading') {
     return <LoadingStates.Loading />;
   }
 
   if (status === 'success') {
-    return <LoadingStates.Success message='로그인 성공!' />;
+    return <LoadingStates.Success />;
   }
 
   if (status === 'error') {
-    return <LoadingStates.Error message={errorMessage} />;
+    return <LoadingStates.Error message={errorMessage} onRetry={retry} />;
   }
 
   return null;
@@ -43,13 +50,7 @@ function AuthContent() {
 
 export const AuthCallback = () => {
   return (
-    <Suspense
-      fallback={
-        <div className='min-h-screen flex items-center justify-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600' />
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingStates.Loading />}>
       <AuthContent />
     </Suspense>
   );

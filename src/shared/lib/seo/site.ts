@@ -11,9 +11,16 @@
 
 export const SITE_ORIGIN = 'https://seoulfit.damecasol.com';
 export const SITE_NAME = 'Seoul Fit';
-export const SITE_TITLE = `${SITE_NAME} | 서울 공공시설 지도`;
-export const SITE_DESCRIPTION =
-  '서울의 공원, 도서관, 문화행사와 공공시설을 한곳에서 탐색하는 지도 서비스';
+/** Short descriptor that follows the brand in titles and the manifest name. */
+export const SITE_TAGLINE = '서울 공공시설 지도';
+/** Every page title ends with the brand: "<page> | Seoul Fit". */
+export const SITE_TITLE = `${SITE_TAGLINE} | ${SITE_NAME}`;
+/** One-sentence value proposition shared by the Open Graph card, /about and the README. */
+export const SITE_VALUE_PROPOSITION =
+  '지금 서울에서 갈 만한 곳을 실시간 공공데이터와 근거로 고르는 지도';
+export const SITE_DESCRIPTION = `${SITE_VALUE_PROPOSITION}. 공원·도서관·문화행사·무더위쉼터·따릉이·지하철과 지금의 날씨·혼잡도를 한 화면에서 봅니다.`;
+/** Public source repository of this portfolio project. */
+export const SITE_REPOSITORY_URL = 'https://github.com/gitvssh/seoul-fit-fe';
 export const SITE_LOCALE = 'ko-KR';
 export const SITE_OG_LOCALE = 'ko_KR';
 export const INDEXABLE_HOSTNAME = new URL(SITE_ORIGIN).hostname;
