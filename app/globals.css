@@ -260,3 +260,44 @@
     forced-color-adjust: auto;
   }
 }
+
+/*
+ * Cloudflare Zaraz 쿠키 동의창(.cf_modal_container, shadow DOM).
+ * 존 공통 custom CSS가 아래 --cf-* 변수를 읽어 모달을 그린다. 변수가 없으면 Zaraz 기본
+ * 모양이므로 이 블록이 Seoul Fit 전용 테마가 된다. 색은 디자인 토큰을 그대로 참조해
+ * 라이트·다크가 함께 따라온다.
+ */
+.cf_modal_container {
+  --cf-font-family: var(--font-sans);
+  --cf-radius: 1rem;
+  --cf-padding: 24px;
+  --cf-surface: hsl(var(--card));
+  --cf-text: hsl(var(--card-foreground));
+  --cf-muted: hsl(var(--muted-foreground));
+  --cf-text-align: left;
+  --cf-heading-size: 1.25rem;
+  --cf-heading-weight: 700;
+  --cf-divider: hsl(var(--border));
+  --cf-accent: hsl(var(--primary));
+  --cf-footer-bg: hsl(var(--card));
+  --cf-footer-border: 1px solid hsl(var(--border));
+  --cf-button-gap: 0.25rem;
+  --cf-button-radius: 0.625rem;
+  --cf-button-height: 40px;
+  --cf-button-weight: 600;
+  --cf-button-bg: hsl(var(--primary));
+  --cf-button-bg-hover: hsl(207 92% 32%);
+  --cf-button-text: hsl(var(--primary-foreground));
+  --cf-button-secondary-bg: transparent;
+  --cf-button-secondary-bg-hover: hsl(var(--accent));
+  --cf-button-secondary-text: hsl(var(--foreground));
+  --cf-button-secondary-border: 1px solid hsl(var(--input) / 0.6);
+  --cf-focus: hsl(var(--ring));
+  --cf-shadow: var(--shadow-float-lg);
+  --cf-backdrop: hsl(218 28% 12% / 0.45);
+}
+
+.dark .cf_modal_container {
+  --cf-button-bg-hover: hsl(207 92% 52%);
+  --cf-backdrop: hsl(220 24% 4% / 0.6);
+}
