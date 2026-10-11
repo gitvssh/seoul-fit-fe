@@ -40,15 +40,12 @@ export const useOAuthCallback = () => {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleError = useCallback(
-    (message: string) => {
-      setStatus('error');
-      setErrorMessage(message);
-      trackEvent('login_failed', { reason_code: 'oauth_callback' });
-      window.setTimeout(() => router.push('/'), 3000);
-    },
-    [router]
-  );
+  const handleError = useCallback((message: string) => {
+    setStatus('error');
+    setErrorMessage(message);
+    trackEvent('login_failed', { reason_code: 'oauth_callback' });
+    // The error screen offers retry/home actions; no timed redirect so the message can be read.
+  }, []);
 
   const handleCallback = useCallback(
     async ({ code, error, state }: OAuthCallbackParams) => {

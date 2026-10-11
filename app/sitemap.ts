@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const indexedCategories = PUBLIC_PLACE_CATEGORIES.filter(category => category.indexable);
   const staticPages: MetadataRoute.Sitemap = [
     { url: absoluteSiteUrl('/'), changeFrequency: 'weekly', priority: 1 },
+    { url: absoluteSiteUrl('/about'), changeFrequency: 'monthly', priority: 0.6 },
     { url: absoluteSiteUrl('/places'), changeFrequency: 'weekly', priority: 0.8 },
     ...indexedCategories.map(category => ({
       url: absoluteSiteUrl(`/places/${category.slug}`),

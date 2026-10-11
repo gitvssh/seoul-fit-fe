@@ -41,6 +41,7 @@ describe('sitemap.xml route', () => {
 
     expect(urls).toEqual([
       'https://seoulfit.damecasol.com/',
+      'https://seoulfit.damecasol.com/about',
       'https://seoulfit.damecasol.com/places',
       'https://seoulfit.damecasol.com/places/park',
       'https://seoulfit.damecasol.com/places/library',

@@ -1,48 +1,87 @@
 /**
- * @fileoverview Auth Loading States UI
- * @description 인증 과정의 다양한 상태 UI 컴포넌트들
+ * @fileoverview Auth state screens: loading, success and failure of the Kakao callback.
+ * Real states with actions instead of emoji and timers; copy comes from the i18n dictionary.
  */
+
+'use client';
+
+import Link from 'next/link';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { KakaoLoginButton } from '@/shared/ui/kakao-login-button';
+import { LogoMark } from '@/shared/ui/brand/Logo';
+import { useI18n } from '@/shared/i18n/I18nProvider';
 
 interface LoadingProps {
   message?: string;
 }
 
 interface SuccessProps {
-  message: string;
+  message?: string;
 }
 
 interface ErrorProps {
   message: string;
+  onRetry: () => void;
+}
+
+function AuthShell({ children, busy }: { children: React.ReactNode; busy?: boolean }) {
+  return (
+    <main
+      className='flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12'
+      aria-busy={busy ? 'true' : undefined}
+    >
+      <div className='w-full max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-float-sm'>
+        <LogoMark size={44} className='mx-auto' />
+        {children}
+      </div>
+    </main>
+  );
 }
 
 export const LoadingStates = {
-  Loading: ({ message = '로그인 처리 중...' }: LoadingProps) => (
-    <div className='min-h-screen flex items-center justify-center'>
-      <div className='text-center'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4' />
-        <p className='text-lg text-gray-600'>{message}</p>
-      </div>
-    </div>
-  ),
+  Loading: ({ message }: LoadingProps) => {
+    const { t } = useI18n();
+    return (
+      <AuthShell busy>
+        <div role='status' aria-live='polite'>
+          <Loader2 aria-hidden='true' className='mx-auto mt-6 size-8 animate-spin text-primary' />
+          <h1 className='mt-4 text-title text-foreground'>{message ?? t('auth.loading')}</h1>
+          <p className='mt-2 text-body text-muted-foreground'>{t('auth.loadingHint')}</p>
+        </div>
+      </AuthShell>
+    );
+  },
 
-  Success: ({ message }: SuccessProps) => (
-    <div className='min-h-screen flex items-center justify-center'>
-      <div className='text-center'>
-        <div className='text-6xl mb-4'>✅</div>
-        <h2 className='text-2xl font-bold text-green-600 mb-2'>{message}</h2>
-        <p className='text-gray-600'>메인 페이지로 이동합니다...</p>
-      </div>
-    </div>
-  ),
+  Success: ({ message }: SuccessProps) => {
+    const { t } = useI18n();
+    return (
+      <AuthShell>
+        <div role='status' aria-live='polite'>
+          <CheckCircle2 aria-hidden='true' className='mx-auto mt-6 size-8 text-success' />
+          <h1 className='mt-4 text-title text-foreground'>{message ?? t('auth.success')}</h1>
+          <p className='mt-2 text-body text-muted-foreground'>{t('auth.successHint')}</p>
+        </div>
+      </AuthShell>
+    );
+  },
 
-  Error: ({ message }: ErrorProps) => (
-    <div className='min-h-screen flex items-center justify-center'>
-      <div className='text-center'>
-        <div className='text-6xl mb-4'>❌</div>
-        <h2 className='text-2xl font-bold text-red-600 mb-2'>오류 발생</h2>
-        <p className='text-gray-600 mb-4'>{message}</p>
-        <p className='text-sm text-gray-500'>잠시 후 메인 페이지로 이동합니다...</p>
-      </div>
-    </div>
-  ),
+  Error: ({ message, onRetry }: ErrorProps) => {
+    const { t } = useI18n();
+    return (
+      <AuthShell>
+        <div role='alert'>
+          <AlertCircle aria-hidden='true' className='mx-auto mt-6 size-8 text-destructive' />
+          <h1 className='mt-4 text-title text-foreground'>{t('auth.errorTitle')}</h1>
+          <p className='mt-2 text-body text-muted-foreground'>{message}</p>
+        </div>
+        <div className='mt-8 flex flex-col gap-3'>
+          <KakaoLoginButton onClick={onRetry} label={t('auth.retry')} />
+          <Button asChild variant='outline' size='lg'>
+            <Link href='/'>{t('auth.home')}</Link>
+          </Button>
+        </div>
+      </AuthShell>
+    );
+  },
 };

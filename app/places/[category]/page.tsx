@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Button } from '@/shared/ui/button';
+import { SiteFooter } from '@/shared/ui/layout/SiteFooter';
+import { SiteBreadcrumb, SiteHeader } from '@/shared/ui/layout/SiteHeader';
 import {
+  formatPlaceCount,
   getPublicPlaceCategory,
   getPublicPlacePage,
-  getPublicPlacePath,
   isPublicPlaceCategory,
 } from '@/shared/lib/seo/public-places';
+import { CategoryGlyph } from '../_components/CategoryGlyph';
+import { PlaceCard } from '../_components/PlaceCard';
+import { PlacePagination } from '../_components/PlacePagination';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +36,10 @@ export async function generateMetadata({
   const currentPage = parsePage((await searchParams).page);
 
   return {
-    title: `서울 ${placeCategory.label}`,
+    title:
+      currentPage > 1
+        ? `서울 ${placeCategory.label} ${currentPage}페이지`
+        : `서울 ${placeCategory.label}`,
     description: placeCategory.description,
     alternates: { canonical: `/places/${placeCategory.slug}` },
     robots: {
@@ -44,83 +53,79 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const { category } = await params;
   if (!isPublicPlaceCategory(category)) notFound();
 
+  const categoryInfo = getPublicPlaceCategory(category);
+  if (!categoryInfo) notFound();
+
   const currentPage = parsePage((await searchParams).page);
   const result = await getPublicPlacePage(category, currentPage - 1);
   if (!result) notFound();
 
-  const categoryInfo = getPublicPlaceCategory(category);
-  if (!categoryInfo) notFound();
+  // The backend total counts index rows; once duplicates were seen it is inflated, so only the page count is honest.
+  const countLabel =
+    result.removed.duplicates > 0
+      ? `이 페이지 ${formatPlaceCount(result.content.length)}곳`
+      : `총 ${formatPlaceCount(result.totalElements)}곳`;
 
   return (
-    <main className='min-h-screen bg-slate-50 px-4 py-12 text-slate-900 sm:px-6'>
-      <div className='mx-auto max-w-5xl'>
-        <nav className='text-sm font-medium text-blue-700' aria-label='경로'>
-          <Link href='/'>지도</Link> <span className='text-slate-400'>/</span>{' '}
-          <Link href='/places'>장소 둘러보기</Link>
-        </nav>
-        <h1 className='mt-6 text-3xl font-bold tracking-tight'>서울 {categoryInfo.label}</h1>
-        <p className='mt-3 text-slate-600'>{categoryInfo.description}</p>
-        <p className='mt-2 text-sm text-slate-500'>
-          총 {result.totalElements.toLocaleString('ko-KR')}곳
-        </p>
+    <div className='flex min-h-screen flex-col bg-background'>
+      <SiteHeader />
+      <main className='mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10'>
+        <SiteBreadcrumb
+          items={[
+            { label: '지도', href: '/' },
+            { label: '장소 둘러보기', href: '/places' },
+            { label: categoryInfo.label },
+          ]}
+        />
+        <div className='mt-4 flex items-start gap-4'>
+          <CategoryGlyph category={categoryInfo.facilityCategory} size='lg' className='mt-1' />
+          <div className='min-w-0'>
+            <h1 className='text-display text-foreground'>서울 {categoryInfo.label}</h1>
+            <p className='mt-2 text-body text-muted-foreground'>{categoryInfo.description}</p>
+            <p className='mt-2 text-body-sm text-muted-foreground tabular-nums'>
+              {countLabel} · {currentPage} / {Math.max(result.totalPages, 1)} 페이지
+            </p>
+          </div>
+        </div>
 
-        <section
-          className='mt-8 grid gap-4 sm:grid-cols-2'
-          aria-label={`${categoryInfo.label} 목록`}
-        >
-          {result.content.map(place => (
-            <article
-              key={place.id}
-              className='rounded-xl border border-slate-200 bg-white p-5 shadow-sm'
-            >
-              <p className='text-xs font-medium text-blue-700'>{place.categoryLabel}</p>
-              <h2 className='mt-1 text-lg font-semibold'>
-                <Link
-                  href={getPublicPlacePath(place.category, place.id)}
-                  className='hover:underline'
-                >
-                  {place.name}
-                </Link>
-              </h2>
-              {place.address && <p className='mt-2 text-sm text-slate-600'>{place.address}</p>}
-              {place.description && (
-                <p className='mt-2 line-clamp-2 text-sm leading-6 text-slate-500'>
-                  {place.description}
-                </p>
-              )}
-            </article>
-          ))}
-        </section>
-
-        {result.content.length === 0 && (
-          <p className='mt-8 rounded-lg bg-white p-6 text-slate-600'>
-            표시할 장소 정보가 아직 없습니다.
-          </p>
+        {result.content.length > 0 ? (
+          <section
+            className='mt-8 grid gap-4 sm:grid-cols-2'
+            aria-label={`${categoryInfo.label} 목록`}
+          >
+            {result.content.map(place => (
+              <PlaceCard
+                key={`${place.category}:${place.id}`}
+                place={place}
+                facilityCategory={categoryInfo.facilityCategory}
+              />
+            ))}
+          </section>
+        ) : (
+          <div className='mt-8 rounded-lg border border-border bg-card p-6 text-center shadow-float-sm'>
+            <p className='text-body text-foreground'>이 페이지에는 표시할 장소가 없어요.</p>
+            <p className='mt-1 text-body-sm text-muted-foreground'>
+              첫 페이지로 돌아가거나 지도에서 찾아보세요.
+            </p>
+            <div className='mt-4 flex flex-wrap justify-center gap-3'>
+              <Button asChild variant='outline' size='lg'>
+                <Link href={`/places/${category}`}>첫 페이지로</Link>
+              </Button>
+              <Button asChild size='lg'>
+                <Link href='/'>지도로 보기</Link>
+              </Button>
+            </div>
+          </div>
         )}
 
-        <nav className='mt-10 flex items-center justify-between' aria-label='페이지 이동'>
-          {currentPage > 1 ? (
-            <Link
-              href={`/places/${category}?page=${currentPage - 1}`}
-              className='rounded-md border bg-white px-4 py-2 text-sm font-medium'
-            >
-              이전
-            </Link>
-          ) : (
-            <span />
-          )}
-          {result.hasNext ? (
-            <Link
-              href={`/places/${category}?page=${currentPage + 1}`}
-              className='rounded-md border bg-white px-4 py-2 text-sm font-medium'
-            >
-              다음
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      </div>
-    </main>
+        <PlacePagination
+          category={category}
+          page={currentPage}
+          totalPages={result.totalPages}
+          hasNext={result.hasNext}
+        />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
