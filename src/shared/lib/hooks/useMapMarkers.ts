@@ -4,8 +4,7 @@
  * - 벌크 계층: 시설마다 CustomOverlay 1개(같은 좌표 묶음은 스택 1개) → 공식 MarkerClusterer.
  *   key로 diff 해서 추가·삭제·이동분만 반영한다.
  * - 포커스 계층: 선택 시설은 클러스터러 밖 별도 오버레이(z 20)로 항상 보이게 하고,
- *   벌크 계층의 원본은 `data-hidden`으로 숨긴다. 클러스터에 묻히거나 뷰포트 필터에서
- *   빠져도 선택 마커는 남는다.
+ *   벌크 계층의 원본은 `data-hidden`으로 숨긴다. 클러스터에 묻혀도 선택 마커는 남는다.
  *
  * z-order는 `overlay.setZIndex()`(MARKER_Z)로만 바꾼다.
  */
@@ -57,7 +56,10 @@ export type FacilitySelectSource = 'marker' | 'cluster';
 export interface UseMapMarkersProps {
   mapInstance: KakaoMap | null | undefined;
   mapStatus: { success: boolean; loading: boolean; error: string | null } | undefined;
-  /** 통합자가 이미 카테고리·뷰포트로 거른 시설 */
+  /**
+   * 카테고리로 거른 전체 시설. 뷰포트 컬링은 클러스터러가 idle마다 스스로 하므로 호출자가
+   * 화면 범위로 다시 거르면 줌마다 두 번(SDK 재클러스터 + 앱 reconcile) 그려진다.
+   */
   visibleFacilities: Facility[];
   onFacilitySelect: (facility: Facility, source: FacilitySelectSource) => void;
   /** 작은 클러스터·같은 좌표 스택 → 목록 시트. 없으면 첫 시설을 'cluster' 소스로 선택한다. */
@@ -271,6 +273,7 @@ export const useMapMarkers = ({
   }, []);
 
   return {
+    /** 벌크 계층에 올린 마커 수(같은 좌표 스택은 1개). 화면 안 개수가 아니다. */
     markersCount: ready ? descriptors.length : 0,
     clustersCount,
     clearMarkers,

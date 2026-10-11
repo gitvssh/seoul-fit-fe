@@ -139,6 +139,9 @@ export const createClusterLayer = (
       const element = marker.getContent();
       if (!(element instanceof HTMLElement)) continue;
       decorateClusterElement(element, countFacilities(cluster, handlers), { labels });
+      // SDK는 content를 걸 때 크기를 재서 앵커(음수 margin)를 정한다. decorate가 시설 수 기준으로
+      // 크기를 바꾸므로 같은 요소를 다시 걸어 재측정시킨다(setPosition은 재지 않는다).
+      marker.setContent(element);
       marker.setZIndex(MARKER_Z.cluster);
       if (!boundElements.has(element)) {
         boundElements.add(element);

@@ -118,13 +118,36 @@ export interface FacilityMarkerOptions {
   labels?: MarkerLabels;
 }
 
+const SELECT_ENTER_ANIMATION = 'sf-marker-select-in';
+
+/**
+ * 선택 진입 팝(`sf-marker-select-in`)을 한 번만 재생한다. CSS는 `data-enter`가 있을 때만
+ * 애니메이션을 붙이고, 끝나면 여기서 속성을 뗀다. 지도 SDK는 줌 중 오버레이 계층을
+ * display:none으로 숨겼다가 다시 보이는데, 규칙에 묶인 애니메이션은 그때마다 재시작하므로
+ * 속성으로 수명을 끊는다.
+ */
+const playSelectEnter = (root: HTMLElement): void => {
+  root.dataset.enter = '';
+  const finish = (event: Event) => {
+    if ((event as AnimationEvent).animationName !== SELECT_ENTER_ANIMATION) return;
+    root.removeEventListener('animationend', finish);
+    root.removeEventListener('animationcancel', finish);
+    delete root.dataset.enter;
+  };
+  root.addEventListener('animationend', finish);
+  root.addEventListener('animationcancel', finish);
+};
+
 export const setFacilityMarkerSelected = (root: HTMLElement, selected: boolean): void => {
   if (selected) {
+    // 이미 선택된 요소의 데이터 갱신(syncFocusEntry)에서는 다시 재생하지 않는다.
+    if (!('selected' in root.dataset)) playSelectEnter(root);
     root.dataset.selected = '';
     root.setAttribute('aria-current', 'true');
     root.tabIndex = 0;
   } else {
     delete root.dataset.selected;
+    delete root.dataset.enter;
     root.removeAttribute('aria-current');
     root.tabIndex = -1;
   }

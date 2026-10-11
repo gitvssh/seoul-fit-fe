@@ -90,6 +90,35 @@ describe('createFacilityMarkerElement', () => {
     expect(element.dataset.hidden).toBe('');
   });
 
+  it('plays the select-in pop once per selection, not on data refresh or re-show', () => {
+    const element = createFacilityMarkerElement(createFacility(), { selected: true });
+    const pin = element.querySelector('.sf-marker__pin') as HTMLElement;
+    expect(element.dataset.enter).toBe('');
+
+    // 다른 애니메이션의 종료는 무시한다.
+    const other = new Event('animationend', { bubbles: true });
+    Object.defineProperty(other, 'animationName', { value: 'sf-loc-pulse' });
+    pin.dispatchEvent(other);
+    expect(element.dataset.enter).toBe('');
+
+    const end = new Event('animationend', { bubbles: true });
+    Object.defineProperty(end, 'animationName', { value: 'sf-marker-select-in' });
+    pin.dispatchEvent(end);
+    expect(element.dataset.enter).toBeUndefined();
+
+    // 같은 시설의 데이터 갱신(syncFocusEntry)은 팝을 되풀이하지 않는다.
+    updateFacilityMarkerElement(element, createFacility({ name: '서울숲 (갱신)' }), {
+      selected: true,
+    });
+    expect(element.dataset.enter).toBeUndefined();
+
+    // 선택을 풀었다가 다시 고르면 다시 한 번 재생한다.
+    setFacilityMarkerSelected(element, false);
+    expect(element.dataset.enter).toBeUndefined();
+    setFacilityMarkerSelected(element, true);
+    expect(element.dataset.enter).toBe('');
+  });
+
   it('draws the crowd ring only where the level is a real signal (bike availability)', () => {
     const park = createFacilityMarkerElement(createFacility({ congestionLevel: 'high' }));
     expect(park.dataset.crowd).toBeUndefined();

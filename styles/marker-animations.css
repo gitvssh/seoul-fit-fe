@@ -85,6 +85,10 @@
 .sf-marker[data-selected] .sf-marker__pin {
   width: 36px;
   height: 36px;
+}
+
+/* 선택 진입 팝은 한 번만: `data-enter`는 marker.ts가 animationend에서 뗀다 */
+.sf-marker[data-selected][data-enter] .sf-marker__pin {
   animation: sf-marker-select-in 150ms var(--ease-enter);
 }
 
@@ -190,6 +194,10 @@
   .sf-marker__pin,
   .sf-cluster {
     transition: none;
+    animation: none;
+  }
+
+  .sf-marker[data-selected][data-enter] .sf-marker__pin {
     animation: none;
   }
 

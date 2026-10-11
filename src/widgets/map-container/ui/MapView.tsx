@@ -192,10 +192,13 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
     [t]
   );
 
-  const { markersCount } = useMapMarkers({
+  // 클러스터러는 idle마다 화면 범위만 스스로 골라 그린다. 뷰포트로 거른 목록(categoryVisible)을
+  // 넘기면 줌이 끝난 뒤 SDK가 먼저 이전 화면 기준으로 그리고, 60ms 뒤 뷰포트 재계산이 다시
+  // 전체를 지웠다 그려 말풍선이 두 번 자리 잡았다. 카테고리로만 거른 전체 목록을 넘긴다.
+  useMapMarkers({
     mapInstance,
     mapStatus: { success: mapStatus.success, loading: mapStatus.loading, error: mapStatus.error },
-    visibleFacilities: categoryVisible,
+    visibleFacilities: activeFacilities,
     onFacilitySelect: handleFacilitySelect,
     onClusterSelect: handleClusterSelect,
     selectedFacilityId: selectedFacility ? getFacilityMarkerId(selectedFacility) : null,
@@ -328,7 +331,7 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
       )}
 
       <p className='sr-only' role='status' aria-live='polite'>
-        {t('map.facilityCount', { count: markersCount })}
+        {t('map.facilityCount', { count: ready ? categoryVisible.length : 0 })}
       </p>
     </div>
   );
