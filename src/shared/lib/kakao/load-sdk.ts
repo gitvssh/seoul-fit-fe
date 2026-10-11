@@ -43,6 +43,47 @@ export const buildKakaoSdkUrl = (
   return `https://dapi.kakao.com/v2/maps/sdk.js?${params.toString()}`;
 };
 
+const LIBRARY_POLL_INTERVAL_MS = 50;
+/** 라이브러리 스크립트가 core 뒤에 붙을 때까지 기다리는 상한. 넘기면 라이브러리 없이 진행한다. */
+export const LIBRARY_GRACE_MS = 2000;
+
+/** 라이브러리 이름 → 로드 완료를 뜻하는 `kakao.maps` 전역 */
+const LIBRARY_GLOBALS: Record<string, string> = {
+  clusterer: 'MarkerClusterer',
+  services: 'services',
+  drawing: 'drawing',
+};
+
+/** 요청한 라이브러리의 전역이 전부 있는지 */
+export const hasLibraries = (maps: KakaoMapsAPI, libraries: readonly string[]): boolean =>
+  libraries.every(library => {
+    const globalName = LIBRARY_GLOBALS[library];
+    return !globalName || Boolean((maps as unknown as Record<string, unknown>)[globalName]);
+  });
+
+/**
+ * 요청한 라이브러리 전역이 생길 때까지 짧게 기다린다. 카카오 SDK는 `load()` 콜백 뒤에
+ * 라이브러리 스크립트를 붙이는 경우가 있어, 바로 resolve 하면 clusterer가 없는 채로 지도가 만들어진다.
+ * 상한을 넘기면 라이브러리 없이 계속한다(호출부가 비클러스터 폴백을 가진다).
+ */
+const waitForLibraries = (
+  maps: KakaoMapsAPI,
+  libraries: readonly string[],
+  onReady: () => void,
+  isCancelled: () => boolean = () => false
+) => {
+  const deadline = Date.now() + LIBRARY_GRACE_MS;
+  const poll = () => {
+    if (isCancelled()) return;
+    if (hasLibraries(maps, libraries) || Date.now() >= deadline) {
+      onReady();
+      return;
+    }
+    setTimeout(poll, LIBRARY_POLL_INTERVAL_MS);
+  };
+  poll();
+};
+
 /** 지도 생성이 가능한 상태의 `kakao.maps`, 아니면 null */
 export const getLoadedKakaoMaps = (): KakaoMapsAPI | null => {
   if (typeof window === 'undefined') return null;
@@ -77,7 +118,7 @@ export const loadKakaoSdk = ({
   new Promise<KakaoMapsAPI>((resolve, reject) => {
     const ready = getLoadedKakaoMaps();
     if (ready) {
-      resolve(ready);
+      waitForLibraries(ready, libraries, () => resolve(ready));
       return;
     }
 
@@ -125,8 +166,16 @@ export const loadKakaoSdk = ({
       if (script) setScriptState(script, 'loaded');
       maps.load(() => {
         const loaded = getLoadedKakaoMaps();
-        if (loaded) succeed(loaded);
-        else fail('sdk_load_failed');
+        if (!loaded) {
+          fail('sdk_load_failed');
+          return;
+        }
+        waitForLibraries(
+          loaded,
+          libraries,
+          () => succeed(loaded),
+          () => settled
+        );
       });
     };
 

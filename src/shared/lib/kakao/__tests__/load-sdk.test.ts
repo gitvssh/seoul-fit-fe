@@ -1,5 +1,6 @@
 import {
   KAKAO_SDK_SCRIPT_ATTRIBUTE,
+  LIBRARY_GRACE_MS,
   KakaoSdkLoadError,
   buildKakaoSdkUrl,
   loadKakaoSdk,
@@ -7,12 +8,13 @@ import {
 
 type KakaoWindow = Window & { kakao?: unknown };
 
-const installKakao = () => {
-  const maps = {
+const installKakao = ({ clusterer = true }: { clusterer?: boolean } = {}) => {
+  const maps: Record<string, unknown> = {
     Map: jest.fn(),
     LatLng: jest.fn(),
     load: jest.fn((callback: () => void) => callback()),
   };
+  if (clusterer) maps.MarkerClusterer = jest.fn();
   (window as KakaoWindow).kakao = { maps };
   return maps;
 };
@@ -51,6 +53,28 @@ describe('loadKakaoSdk', () => {
     const maps = installKakao();
     await expect(loadKakaoSdk({ appKey: 'key-1' })).resolves.toBe(maps);
     expect(findScript()).toBeNull();
+  });
+
+  it('waits for the clusterer library to attach before resolving', async () => {
+    const maps = installKakao({ clusterer: false });
+    const resolved = jest.fn();
+    void loadKakaoSdk({ appKey: 'key-1' }).then(resolved);
+    await flush();
+    expect(resolved).not.toHaveBeenCalled();
+    maps.MarkerClusterer = jest.fn();
+    jest.advanceTimersByTime(100);
+    await flush();
+    expect(resolved).toHaveBeenCalledWith(maps);
+    expect(findScript()).toBeNull();
+  });
+
+  it('gives up waiting for a library after the grace period and resolves anyway', async () => {
+    const maps = installKakao({ clusterer: false });
+    const resolved = jest.fn();
+    void loadKakaoSdk({ appKey: 'key-1' }).then(resolved);
+    jest.advanceTimersByTime(LIBRARY_GRACE_MS + 100);
+    await flush();
+    expect(resolved).toHaveBeenCalledWith(maps);
   });
 
   it('rejects without inserting a script when the app key is missing', async () => {

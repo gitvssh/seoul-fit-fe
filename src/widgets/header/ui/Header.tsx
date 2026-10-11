@@ -41,7 +41,7 @@ const Header = React.forwardRef<HeaderRef, HeaderProps>(function Header(
   }));
 
   return (
-    <header className='flex h-[var(--header-height)] items-center gap-2 px-3 surface-glass border-b border-border/60 md:bg-background md:px-4 md:[backdrop-filter:none] md:[background-color:hsl(var(--background))]'>
+    <header className='grid h-[var(--header-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 surface-glass border-b border-border/60 md:h-auto md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-3 md:gap-y-2 md:px-4 md:pb-3 md:pt-2 md:[backdrop-filter:none] md:[background-color:hsl(var(--background))]'>
       <Button
         type='button'
         variant='ghost'
@@ -54,22 +54,13 @@ const Header = React.forwardRef<HeaderRef, HeaderProps>(function Header(
       </Button>
       <Link
         href='/'
-        className='hidden shrink-0 items-center gap-2 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:inline-flex'
+        className='hidden h-10 shrink-0 items-center gap-2 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:inline-flex'
         aria-label={t('header.home')}
       >
         <LogoMark size={32} />
-        <Wordmark className='hidden lg:inline' />
+        <Wordmark />
       </Link>
-      <SearchBox
-        ref={searchRef}
-        className='min-w-0 flex-1'
-        variant='pill'
-        query={searchQuery}
-        onQueryChange={onSearchChange}
-        onSelect={item => onSearchSelect?.(item)}
-        onClear={() => onSearchClear?.()}
-      />
-      <div className='flex shrink-0 items-center gap-0.5'>
+      <div className='col-start-3 row-start-1 flex shrink-0 items-center gap-0.5 md:col-start-2'>
         <NotificationsMenu />
         <ThemeToggle variant='icon' className='hidden md:inline-flex' />
         <Button
@@ -93,6 +84,15 @@ const Header = React.forwardRef<HeaderRef, HeaderProps>(function Header(
           <Menu aria-hidden='true' />
         </Button>
       </div>
+      <SearchBox
+        ref={searchRef}
+        className='col-start-2 row-start-1 min-w-0 md:col-span-2 md:col-start-1 md:row-start-2'
+        variant='pill'
+        query={searchQuery}
+        onQueryChange={onSearchChange}
+        onSelect={item => onSearchSelect?.(item)}
+        onClear={() => onSearchClear?.()}
+      />
     </header>
   );
 });

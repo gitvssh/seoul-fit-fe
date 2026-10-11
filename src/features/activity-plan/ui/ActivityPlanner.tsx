@@ -147,7 +147,7 @@ export function ActivityPlanner({
         <div
           role='group'
           aria-label={t('activity.budget')}
-          className='flex min-w-0 flex-1 gap-1 overflow-x-auto scrollbar-none'
+          className='flex min-w-0 flex-1 flex-wrap gap-1'
         >
           {BUDGETS.map(minutes => {
             const selected = budget === minutes;

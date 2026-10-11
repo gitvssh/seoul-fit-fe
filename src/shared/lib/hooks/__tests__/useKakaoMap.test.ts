@@ -18,6 +18,7 @@ const createMapMock = () => ({
 const installKakao = (mapMock = createMapMock()) => {
   const maps = {
     Map: jest.fn(() => mapMock),
+    MarkerClusterer: jest.fn(),
     LatLng: jest.fn((lat: number, lng: number) => ({ lat, lng })),
     CopyrightPosition: { BOTTOMLEFT: 0, BOTTOMRIGHT: 1 },
     load: jest.fn((callback: () => void) => callback()),
@@ -186,6 +187,7 @@ describe('useKakaoMap', () => {
     const script = findScript();
     (window as KakaoWindow).kakao = {
       maps: {
+        MarkerClusterer: jest.fn(),
         Map: jest.fn(() => {
           throw new Error('boom');
         }),
