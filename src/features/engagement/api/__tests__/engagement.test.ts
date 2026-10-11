@@ -1,4 +1,9 @@
-import { createSavedZone, deleteFavoritePlace, getFavoritePlaces } from '../engagement';
+import {
+  EngagementApiError,
+  createSavedZone,
+  deleteFavoritePlace,
+  getFavoritePlaces,
+} from '../engagement';
 
 global.fetch = jest.fn();
 
@@ -44,6 +49,24 @@ describe('engagement API', () => {
     const request = (fetch as jest.Mock).mock.calls[0][1];
     expect(JSON.parse(request.body)).toEqual(zone);
     expect(request.body).not.toContain('userId');
+  });
+
+  it('maps HTTP failures to typed error codes the UI can translate', async () => {
+    (fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 401 });
+    await expect(getFavoritePlaces(token)).rejects.toMatchObject({
+      name: 'EngagementApiError',
+      code: 'unauthorized',
+      status: 401,
+    });
+
+    (fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 403 });
+    await expect(getFavoritePlaces(token)).rejects.toMatchObject({ code: 'forbidden' });
+
+    (fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 500 });
+    const failure = await getFavoritePlaces(token).catch(error => error);
+    expect(failure).toBeInstanceOf(EngagementApiError);
+    expect(failure.code).toBe('request_failed');
+    expect(failure.message).toContain('500');
   });
 
   it('uses a scoped delete endpoint', async () => {
