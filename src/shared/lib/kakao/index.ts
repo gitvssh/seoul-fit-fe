@@ -2,6 +2,11 @@
 // 카카오맵 API 완전한 타입 정의 (any 타입 제거)
 
 import type { FacilityCategory } from '@/lib/types';
+import type {
+  ClustererEventType,
+  KakaoMarkerClusterer,
+  KakaoMarkerClustererOptions,
+} from './clusterer';
 
 // 카카오맵 열거형 타입들
 export const enum KakaoMapTypeId {
@@ -45,9 +50,10 @@ export interface KakaoSize {
   getHeight(): number;
 }
 
+/** 화면 픽셀 좌표. SDK의 `Point`는 `x`/`y` 공개 속성을 가진다. */
 export interface KakaoPoint {
-  getX(): number;
-  getY(): number;
+  x: number;
+  y: number;
 }
 
 export interface KakaoBounds {
@@ -56,6 +62,14 @@ export interface KakaoBounds {
   getNorthEast(): KakaoLatLng;
   isEmpty(): boolean;
   contain(latlng: KakaoLatLng): boolean;
+}
+
+/** `map.getProjection()`이 돌려주는 좌표 변환 객체 */
+export interface KakaoMapProjection {
+  containerPointFromCoords(latlng: KakaoLatLng): KakaoPoint;
+  coordsFromContainerPoint(point: KakaoPoint): KakaoLatLng;
+  pointFromCoords(latlng: KakaoLatLng): KakaoPoint;
+  coordsFromPoint(point: KakaoPoint): KakaoLatLng;
 }
 
 // 지도 컨트롤 타입들
@@ -85,19 +99,32 @@ export interface KakaoMarkerImageOptions {
   spriteSize?: KakaoSize;
 }
 
+export interface KakaoSetLevelOptions {
+  animate?: boolean | { duration: number };
+  anchor?: KakaoLatLng;
+}
+
 // 메인 지도 인터페이스
 export interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void;
   getCenter(): KakaoLatLng;
   getLevel(): number;
-  setLevel(level: number): void;
+  setLevel(level: number, options?: KakaoSetLevelOptions): void;
   relayout(): void;
   addOverlayMapTypeId(mapTypeId: KakaoMapTypeId): void;
   removeOverlayMapTypeId(mapTypeId: KakaoMapTypeId): void;
   setMapTypeId(mapTypeId: KakaoMapTypeId): void;
   getMapTypeId(): KakaoMapTypeId;
-  setBounds(bounds: KakaoBounds): void;
+  /** 영역이 화면에 들어오도록 이동·확대한다. padding은 px 단위(기본 32). */
+  setBounds(
+    bounds: KakaoBounds,
+    paddingTop?: number,
+    paddingRight?: number,
+    paddingBottom?: number,
+    paddingLeft?: number
+  ): void;
   getBounds(): KakaoBounds;
+  getProjection(): KakaoMapProjection;
   addControl(control: KakaoMapTypeControl | KakaoZoomControl, position: KakaoControlPosition): void;
   removeControl(control: KakaoMapTypeControl | KakaoZoomControl): void;
   setDraggable(draggable: boolean): void;
@@ -107,7 +134,9 @@ export interface KakaoMap {
   setKeyboardShortcuts(active: boolean): void;
   getKeyboardShortcuts(): boolean;
   panBy(deltaX: number, deltaY: number): void;
-  panTo(latlng: KakaoLatLng): void;
+  panTo(target: KakaoLatLng | KakaoBounds, padding?: number): void;
+  /** 로고·저작권 위치. 구버전 SDK에는 없을 수 있어 호출 전에 존재를 확인한다. */
+  setCopyrightPosition?(position: number, reversed?: boolean): void;
 }
 
 // 마커 인터페이스
@@ -161,7 +190,8 @@ export interface KakaoMapOptions {
   disableDoubleClickZoom?: boolean;
   projectionId?: string;
   tileAnimation?: boolean;
-  keyboardShortcuts?: boolean;
+  /** 방향키·+/- 키 조작. 생성자 옵션으로만 동작한다(생성 후 setter는 무반응, 실측). */
+  keyboardShortcuts?: boolean | { speed: number };
 }
 
 export interface KakaoMarkerOptions {
@@ -185,25 +215,40 @@ export interface KakaoCustomOverlayOptions {
   clickable?: boolean;
   altitude?: number;
   range?: number;
+  map?: KakaoMap;
 }
+
+// 마커 클러스터러 타입은 ./clusterer.ts
+export type {
+  ClustererEventType,
+  KakaoClusterable,
+  KakaoCluster,
+  KakaoClusterStyle,
+  KakaoMarkerClustererOptions,
+  KakaoMarkerClusterer,
+} from './clusterer';
+
+export type KakaoEventTarget = KakaoMap | KakaoMarker | KakaoCustomOverlay | KakaoMarkerClusterer;
 
 // 이벤트 관리
 export interface KakaoEventManager {
   addListener<T = unknown>(
-    target: KakaoMap | KakaoMarker | KakaoCustomOverlay,
-    type: MapEventType | MarkerEventType,
+    target: KakaoEventTarget,
+    type: MapEventType | MarkerEventType | ClustererEventType,
     handler: (event: T) => void
   ): void;
   removeListener<T = unknown>(
-    target: KakaoMap | KakaoMarker | KakaoCustomOverlay,
-    type: MapEventType | MarkerEventType,
+    target: KakaoEventTarget,
+    type: MapEventType | MarkerEventType | ClustererEventType,
     handler: (event: T) => void
   ): void;
   trigger<T = unknown>(
-    target: KakaoMap | KakaoMarker | KakaoCustomOverlay,
-    type: MapEventType | MarkerEventType,
+    target: KakaoEventTarget,
+    type: MapEventType | MarkerEventType | ClustererEventType,
     data?: T
   ): void;
+  /** CustomOverlay 콘텐츠의 이벤트가 지도까지 전달되지 않게 막는다 */
+  preventMap?(): void;
 }
 
 // 지오코딩 서비스
@@ -308,8 +353,11 @@ export interface KakaoPagination {
 export interface KakaoMapConstructors {
   Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
   LatLng: new (lat: number, lng: number) => KakaoLatLng;
+  LatLngBounds: new (sw?: KakaoLatLng, ne?: KakaoLatLng) => KakaoBounds;
   Marker: new (options: KakaoMarkerOptions) => KakaoMarker;
   CustomOverlay: new (options: KakaoCustomOverlayOptions) => KakaoCustomOverlay;
+  /** `libraries=clusterer`를 요청했을 때만 존재한다 */
+  MarkerClusterer?: new (options: KakaoMarkerClustererOptions) => KakaoMarkerClusterer;
   MarkerImage: new (
     src: string,
     size: KakaoSize,
@@ -333,6 +381,7 @@ export interface KakaoMapsAPI extends KakaoMapConstructors {
   };
   MapTypeId: typeof KakaoMapTypeId;
   ControlPosition: typeof KakaoControlPosition;
+  CopyrightPosition?: { BOTTOMLEFT: number; BOTTOMRIGHT: number };
 }
 
 // Window 객체 확장

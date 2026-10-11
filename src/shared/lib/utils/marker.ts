@@ -1,394 +1,287 @@
-// utils/marker.ts
-import type { FacilityCategory, Facility } from '@/lib/types';
-import { getFacilityIcon } from '@/shared/lib/icons/facility';
+/**
+ * 지도 오버레이 DOM 빌더.
+ *
+ * 외부 데이터(시설명 등)는 `textContent`로만 넣는다. innerHTML에는 우리 상수 SVG만 들어간다.
+ * 색은 CSS 변수(`FACILITY_CONFIGS[c].fill`, 상태 토큰)만 쓰고 모양·상태는
+ * `styles/marker-animations.css`의 `.sf-marker*`, `.sf-cluster`, `.sf-me*` 규칙이 맡는다.
+ */
+import type { CongestionLevel, Facility, FacilityCategory } from '@/lib/types';
+import { FACILITY_CONFIGS, MARKER_GLYPH_COLOR, getCrowdColor } from '@/shared/lib/icons/facility';
+import { getSubwayLineColor } from '@/shared/lib/icons/subway-colors';
 
-const escapeHtml = (value: string): string =>
-  value.replace(
-    /[&<>"']/g,
-    character =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-      })[character]!
+export interface MarkerLabels {
+  /** 시설 마커 접근성 이름. `category`는 카테고리 코드(`park` 등)다. */
+  facility: (name: string, category: string) => string;
+  /** 클러스터 버튼 접근성 이름 */
+  cluster: (count: number) => string;
+  /** 현재 위치 점 접근성 이름 */
+  currentLocation: string;
+}
+
+export const DEFAULT_MARKER_LABELS: MarkerLabels = {
+  facility: (name, category) => {
+    const label = FACILITY_CONFIGS[category as FacilityCategory]?.label;
+    return label ? `${name}, ${label}` : name;
+  },
+  cluster: count => `장소 ${count}곳 모음`,
+  currentLocation: '현재 위치',
+};
+
+export const resolveMarkerLabels = (labels?: Partial<MarkerLabels>): MarkerLabels => ({
+  facility: labels?.facility ?? DEFAULT_MARKER_LABELS.facility,
+  cluster: labels?.cluster ?? DEFAULT_MARKER_LABELS.cluster,
+  currentLocation: labels?.currentLocation ?? DEFAULT_MARKER_LABELS.currentLocation,
+});
+
+/** 오버레이 래퍼 z-order. `overlay.setZIndex()`로만 적용한다(콘텐츠 내부 z-index는 무효). */
+export const MARKER_Z = {
+  cluster: 0,
+  marker: 1,
+  hover: 10,
+  selected: 20,
+  me: 30,
+} as const;
+
+export const MARKER_SIZE = {
+  /** 기본 원 지름 */
+  default: 28,
+  /** 선택 원 지름 */
+  selected: 36,
+  /** 투명 터치 타깃 */
+  hit: 44,
+  /** 현재 위치 헤일로 */
+  halo: 40,
+} as const;
+
+export interface ClusterTier {
+  name: 'sm' | 'md' | 'lg';
+  size: number;
+  fontSize: number;
+}
+
+/** 건수 <10 / <100 / ≥100 → 36 / 44 / 52px (디자인 시스템 §6) */
+export const CLUSTER_TIERS: readonly ClusterTier[] = [
+  { name: 'sm', size: 36, fontSize: 13 },
+  { name: 'md', size: 44, fontSize: 14 },
+  { name: 'lg', size: 52, fontSize: 15 },
+];
+export const CLUSTER_TIER_THRESHOLDS: readonly number[] = [10, 100];
+export const CLUSTER_COUNT_CAP = 99;
+
+export const getClusterTierIndex = (count: number): number =>
+  Math.min(
+    CLUSTER_TIER_THRESHOLDS.filter(threshold => count >= threshold).length,
+    CLUSTER_TIERS.length - 1
   );
 
-const safeExternalUrl = (value?: string): string | null => {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
-  } catch {
-    return null;
-  }
+export const getClusterTier = (count: number): ClusterTier =>
+  CLUSTER_TIERS[getClusterTierIndex(count)];
+
+export const formatClusterCount = (count: number): string => {
+  const safe = Math.max(0, Math.trunc(Number.isFinite(count) ? count : 0));
+  return safe > CLUSTER_COUNT_CAP ? `${CLUSTER_COUNT_CAP}+` : String(safe);
 };
+
+/** `selectedFacilityId`·`revealFacility()`가 쓰는 시설 식별자: `${category}:${id}` */
+export const getFacilityMarkerId = (facility: Pick<Facility, 'category' | 'id'>): string =>
+  `${facility.category}:${String(facility.id)}`;
 
 /**
- * POI 마커 HTML 콘텐츠 생성
- * @param poiName POI 이름
- * @param poiCode POI 코드
- * @returns HTML 문자열
+ * 링 색으로 표시할 혼잡도. 공공데이터 변환기는 값이 없을 때 'low'를 기본값으로 넣으므로
+ * 실제 신호가 있는 따릉이(대여 가능 대수 기반)만 링을 그린다.
  */
-export const createPOIMarkerContent = (poiName: string, poiCode: string): string => {
-  const safeName = escapeHtml(poiName);
-  const safeCode = escapeHtml(poiCode);
-  return `
-    <div
-      id="poi-marker-${safeCode}"
-      class="poi-marker"
-      data-poi-code="${safeCode}"
-      data-poi-name="${safeName}"
-      style="
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        border: 2px solid white;
-        border-radius: 50%;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        z-index: 999;
-        user-select: none;
-      "
-      title="${safeName}"
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>
-      <div style="
-        position: absolute;
-        bottom: -6px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 6px solid #1d4ed8;
-        pointer-events: none;
-      "></div>
-    </div>
-  `;
+export const getMarkerCrowdLevel = (facility: Facility): CongestionLevel | null =>
+  facility.category === 'bike' && facility.bikeFacility ? (facility.congestionLevel ?? null) : null;
+
+export const getFacilityMarkerFill = (facility: Facility): string => {
+  const route = facility.category === 'subway' ? facility.subwayStation?.route : undefined;
+  if (route) return getSubwayLineColor(route);
+  return FACILITY_CONFIGS[facility.category]?.fill ?? 'hsl(var(--muted-foreground))';
 };
 
-/**
- * 시설 마커 HTML 콘텐츠 생성
- * @param facilityCategory - 시설 카테고리
- * @param crowdLevel - 혼잡도 레벨
- * @param facilityId - 시설 ID (DOM 요소 식별용)
- * @param facility - 시설 정보 (따릉이 상태 표시용)
- * @returns HTML 문자열
- */
-export const createCustomMarkerContent = (
-  facilityCategory: FacilityCategory,
-  crowdLevel: 'low' | 'medium' | 'high',
-  facilityId: string,
-  facility?: Facility
-): string => {
-  // 지하철역인 경우 호선별 색상 적용, 그 외에는 기본 색상 사용
-  const facilityIcon = getFacilityIcon(facilityCategory, facility);
-  const categoryBgColor = facilityIcon.color;
-  const iconSVG = facilityIcon.svg;
-  const safeFacilityId = escapeHtml(String(facilityId));
+const glyphTemplates = new Map<FacilityCategory, SVGElement | null>();
 
-  // 따릉이 마커의 경우 상태 뱃지 추가
-  let statusBadge = '';
-  if (facilityCategory === 'bike' && facility?.bikeFacility) {
-    const availableBikes =
-      (facility.bikeFacility as any).availableBikes || facility.bikeFacility.parkingBikeTotCnt || 0;
-
-    // 이용 가능한 자전거 수에 따른 색상 결정
-    let badgeColor = '#EF4444'; // 빨간색: 이용불가 (0대)
-    if (availableBikes > 5) {
-      badgeColor = '#10B981'; // 초록색: 여유있음 (6대 이상)
-    } else if (availableBikes > 2) {
-      badgeColor = '#F59E0B'; // 주황색: 보통 (3-5대)
-    } else if (availableBikes > 0) {
-      badgeColor = '#EF4444'; // 빨간색: 부족 (1-2대)
-    }
-
-    statusBadge = `
-      <div style="
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 12px;
-        height: 12px;
-        background-color: ${badgeColor};
-        border: 2px solid white;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 1001;
-      "></div>
-    `;
+const createGlyph = (category: FacilityCategory): SVGElement | null => {
+  if (!glyphTemplates.has(category)) {
+    const template = document.createElement('template');
+    // 신뢰 상수(FACILITY_CONFIGS.svgIcon)만 넣는다. 외부 문자열은 절대 여기로 오지 않는다.
+    template.innerHTML = FACILITY_CONFIGS[category]?.svgIcon ?? '';
+    const svg = template.content.firstElementChild;
+    glyphTemplates.set(category, svg instanceof SVGElement ? svg : null);
   }
-
-  return `
-    <div
-      id="marker-${safeFacilityId}"
-      class="custom-marker" 
-      data-facility-id="${safeFacilityId}"
-      data-category="${facilityCategory}"
-      data-crowd-level="${crowdLevel}"
-      style="
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        background-color: ${categoryBgColor};
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        z-index: 1000;
-        user-select: none;
-      "
-    >
-      <div style="
-        color: white; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        pointer-events: none;
-      ">
-        ${iconSVG}
-      </div>
-      <div style="
-        position: absolute;
-        bottom: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-top: 8px solid ${categoryBgColor};
-        pointer-events: none;
-      "></div>
-      ${statusBadge}
-    </div>
-  `;
+  const svg = glyphTemplates.get(category);
+  return svg ? (svg.cloneNode(true) as SVGElement) : null;
 };
 
-/**
- * 혼잡도에 따른 마커 스타일 클래스 반환
- * @param crowdLevel - 혼잡도 레벨
- * @returns CSS 클래스명
- */
-export const getCrowdLevelClass = (crowdLevel: 'low' | 'medium' | 'high'): string => {
-  const classMap = {
-    low: 'marker-crowd-low',
-    medium: 'marker-crowd-medium',
-    high: 'marker-crowd-high',
-  };
-  return classMap[crowdLevel];
-};
-
-/**
- * 마커 애니메이션 효과 적용
- * @param markerId - 마커 DOM 요소 ID
- * @param animation - 적용할 애니메이션 타입
- */
-export const applyMarkerAnimation = (
-  markerId: string,
-  animation: 'bounce' | 'pulse' | 'shake' | 'none'
-): void => {
-  const markerElement = document.getElementById(`marker-${markerId}`);
-  if (!markerElement) return;
-
-  // 기존 애니메이션 클래스 제거
-  markerElement.classList.remove('marker-bounce', 'marker-pulse', 'marker-shake');
-
-  // 새 애니메이션 적용
-  if (animation !== 'none') {
-    markerElement.classList.add(`marker-${animation}`);
-
-    // 일정 시간 후 애니메이션 제거 (bounce, shake의 경우)
-    if (animation === 'bounce' || animation === 'shake') {
-      setTimeout(() => {
-        markerElement.classList.remove(`marker-${animation}`);
-      }, 1000);
-    }
-  }
-};
-
-/**
- * 마커 툴팁 표시
- * @param markerId - 마커 DOM 요소 ID
- * @param content - 툴팁 내용
- * @param show - 표시 여부
- */
-export const toggleMarkerTooltip = (
-  markerId: string,
-  content: string,
-  show: boolean = true
-): void => {
-  const markerElement = document.getElementById(`marker-${markerId}`);
-  if (!markerElement) return;
-
-  const existingTooltip = markerElement.querySelector('.marker-tooltip');
-
-  if (!show && existingTooltip) {
-    existingTooltip.remove();
-    return;
-  }
-
-  if (show && !existingTooltip) {
-    const tooltip = document.createElement('div');
-    tooltip.className = 'marker-tooltip';
-    tooltip.textContent = content;
-    tooltip.style.cssText = `
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      margin-bottom: 8px;
-      pointer-events: none;
-      z-index: 1001;
-    `;
-
-    markerElement.appendChild(tooltip);
-  }
-};
-
-export interface MarkerInfo {
-  name: string;
-  address?: string;
-  description?: string;
-  type?: string;
-  phone?: string;
-  website?: string;
+export interface FacilityMarkerOptions {
+  selected?: boolean;
+  labels?: MarkerLabels;
 }
 
-export function createMarkerElement(info: MarkerInfo): HTMLElement {
+export const setFacilityMarkerSelected = (root: HTMLElement, selected: boolean): void => {
+  if (selected) {
+    root.dataset.selected = '';
+    root.setAttribute('aria-current', 'true');
+    root.tabIndex = 0;
+  } else {
+    delete root.dataset.selected;
+    root.removeAttribute('aria-current');
+    root.tabIndex = -1;
+  }
+};
+
+export const setFacilityMarkerHover = (root: HTMLElement, hover: boolean): void => {
+  if (hover) root.dataset.hover = '';
+  else delete root.dataset.hover;
+};
+
+/** 선택 시설은 포커스 계층 오버레이가 대신 그리므로 벌크 계층의 원본은 숨긴다. */
+export const setFacilityMarkerHidden = (root: HTMLElement, hidden: boolean): void => {
+  if (hidden) root.dataset.hidden = '';
+  else delete root.dataset.hidden;
+};
+
+/** 시설 데이터가 바뀌었을 때 요소를 다시 만들지 않고 속성만 갱신한다. */
+export const updateFacilityMarkerElement = (
+  root: HTMLElement,
+  facility: Facility,
+  { selected, labels = DEFAULT_MARKER_LABELS }: FacilityMarkerOptions = {}
+): void => {
+  const config = FACILITY_CONFIGS[facility.category];
+  root.dataset.category = facility.category;
+  root.dataset.facilityId = String(facility.id);
+  root.dataset.markerId = getFacilityMarkerId(facility);
+  root.setAttribute('aria-label', labels.facility(facility.name, facility.category));
+  root.style.setProperty('--sf-marker-fill', getFacilityMarkerFill(facility));
+  root.style.setProperty('--sf-marker-glyph', MARKER_GLYPH_COLOR[config?.glyph ?? 'white']);
+
+  const crowd = getMarkerCrowdLevel(facility);
+  if (crowd) {
+    root.dataset.crowd = crowd;
+    root.style.setProperty('--sf-marker-crowd', getCrowdColor(crowd));
+  } else {
+    delete root.dataset.crowd;
+    root.style.removeProperty('--sf-marker-crowd');
+  }
+
+  const glyph = root.querySelector('.sf-marker__glyph');
+  if (glyph && glyph.getAttribute('data-category') !== facility.category) {
+    glyph.replaceChildren();
+    const svg = createGlyph(facility.category);
+    if (svg) glyph.appendChild(svg);
+    glyph.setAttribute('data-category', facility.category);
+  }
+
+  const label = root.querySelector('.sf-marker__label');
+  if (label) label.textContent = facility.name;
+
+  if (selected !== undefined) setFacilityMarkerSelected(root, selected);
+};
+
+/**
+ * 시설 마커: 44×44 투명 터치 타깃 안에 28px 원(선택 36px) + 글리프, 아래에 이름 라벨 칩.
+ * 앵커는 원 중심(xAnchor 0.5 / yAnchor 0.5)이며 라벨은 absolute라 박스 크기에 영향이 없다.
+ */
+export const createFacilityMarkerElement = (
+  facility: Facility,
+  options: FacilityMarkerOptions = {}
+): HTMLElement => {
+  const root = document.createElement('div');
+  root.className = 'sf-marker';
+  root.setAttribute('role', 'button');
+
+  const pin = document.createElement('span');
+  pin.className = 'sf-marker__pin';
+  const glyph = document.createElement('span');
+  glyph.className = 'sf-marker__glyph';
+  glyph.setAttribute('aria-hidden', 'true');
+  pin.appendChild(glyph);
+
+  const label = document.createElement('span');
+  label.className = 'sf-marker__label';
+  label.setAttribute('aria-hidden', 'true');
+
+  root.append(pin, label);
+  updateFacilityMarkerElement(root, facility, { selected: options.selected ?? false, ...options });
+  return root;
+};
+
+export interface ClusterElementOptions {
+  labels?: MarkerLabels;
+}
+
+/**
+ * 클러스터 요소를 꾸민다. 공식 MarkerClusterer가 만든 `div`에도 `clustered` 이벤트에서
+ * 그대로 적용한다(줌 후 재생성되는 요소에 매번 다시 적용해야 한다).
+ */
+export const decorateClusterElement = (
+  element: HTMLElement,
+  count: number,
+  { labels = DEFAULT_MARKER_LABELS }: ClusterElementOptions = {}
+): void => {
+  const tier = getClusterTier(count);
+  element.classList.add('sf-cluster');
+  element.setAttribute('role', 'button');
+  element.tabIndex = -1;
+  element.setAttribute('aria-label', labels.cluster(count));
+  element.dataset.size = tier.name;
+  element.dataset.count = String(count);
+  element.style.width = `${tier.size}px`;
+  element.style.height = `${tier.size}px`;
+  element.style.lineHeight = `${tier.size}px`;
+  element.style.fontSize = `${tier.fontSize}px`;
+  element.textContent = formatClusterCount(count);
+};
+
+const CLUSTER_STYLE_BASE: Record<string, string> = {
+  boxSizing: 'border-box',
+  borderRadius: '9999px',
+  background: 'hsl(var(--surface-elevated))',
+  color: 'hsl(var(--surface-elevated-foreground))',
+  textAlign: 'center',
+  fontFamily: 'var(--font-sans)',
+  fontWeight: '600',
+  boxShadow:
+    '0 0 0 2px hsl(var(--primary)), 0 0 0 8px hsl(var(--primary) / 0.15), var(--shadow-float-md)',
+  cursor: 'pointer',
+  userSelect: 'none',
+};
+
+/** MarkerClusterer `styles` 옵션. `calculator`는 `CLUSTER_TIER_THRESHOLDS`를 쓴다. */
+export const CLUSTER_OVERLAY_STYLES: Record<string, string>[] = CLUSTER_TIERS.map(tier => ({
+  ...CLUSTER_STYLE_BASE,
+  width: `${tier.size}px`,
+  height: `${tier.size}px`,
+  lineHeight: `${tier.size}px`,
+  fontSize: `${tier.fontSize}px`,
+}));
+
+/** 같은 좌표에 겹친 시설 묶음(스택)·클러스터러 폴백에 쓰는 클러스터 원 */
+export const createClusterElement = (
+  count: number,
+  options: ClusterElementOptions = {}
+): HTMLElement => {
   const element = document.createElement('div');
-  element.className = 'custom-marker';
-  element.style.cssText = `
-    width: 32px;
-    height: 32px;
-    background-color: #3b82f6;
-    border: 2px solid white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    cursor: pointer;
-  `;
-
-  const icon = document.createElement('span');
-  icon.textContent =
-    info.type === 'restaurant'
-      ? '🍽️'
-      : info.type === 'park'
-        ? '🌳'
-        : info.type === 'library'
-          ? '📚'
-          : info.type === 'bike'
-            ? '🚲'
-            : info.type === 'cultural'
-              ? '🎭'
-              : info.type === 'sports'
-                ? '⚽'
-                : info.type === 'shelter'
-                  ? '🏠'
-                  : '📍';
-
-  element.appendChild(icon);
-  return element;
-}
-
-export function getMarkerImage(type: string): string {
-  const baseUrl = '/images/markers';
-
-  switch (type) {
-    case 'restaurant':
-      return `${baseUrl}/restaurant.png`;
-    case 'park':
-      return `${baseUrl}/park.png`;
-    case 'library':
-      return `${baseUrl}/library.png`;
-    case 'bike':
-      return `${baseUrl}/bike.png`;
-    case 'cultural':
-      return `${baseUrl}/cultural.png`;
-    case 'sports':
-      return `${baseUrl}/sports.png`;
-    case 'shelter':
-      return `${baseUrl}/shelter.png`;
-    default:
-      return `${baseUrl}/default.png`;
+  for (const [property, value] of Object.entries(CLUSTER_STYLE_BASE)) {
+    element.style.setProperty(property.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`), value);
   }
-}
+  decorateClusterElement(element, count, options);
+  return element;
+};
 
-export function formatInfoWindowContent(info: MarkerInfo): string {
-  const safeName = escapeHtml(info.name);
-  const safeAddress = info.address ? escapeHtml(info.address) : null;
-  const safeDescription = info.description ? escapeHtml(info.description) : null;
-  const safePhone = info.phone ? escapeHtml(info.phone) : null;
-  const safeWebsite = safeExternalUrl(info.website);
+/** 현재 위치: 16px primary 점 + 흰 링, 40px 헤일로(펄스, 모션 감소 시 정지). 포인터 이벤트 없음. */
+export const createCurrentLocationElement = (
+  label: string = DEFAULT_MARKER_LABELS.currentLocation
+): HTMLElement => {
+  const root = document.createElement('div');
+  root.className = 'sf-me';
+  root.setAttribute('role', 'img');
+  root.setAttribute('aria-label', label);
 
-  return `
-    <div class="info-window" style="padding: 12px; min-width: 200px;">
-      <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #333;">
-        ${safeName}
-      </h3>
-      ${
-        safeAddress
-          ? `
-        <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          📍 ${safeAddress}
-        </p>
-      `
-          : ''
-      }
-      ${
-        safeDescription
-          ? `
-        <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          ${safeDescription}
-        </p>
-      `
-          : ''
-      }
-      ${
-        safePhone
-          ? `
-        <p style="margin: 4px 0; font-size: 14px; color: #666;">
-          📞 ${safePhone}
-        </p>
-      `
-          : ''
-      }
-      ${
-        safeWebsite
-          ? `
-        <p style="margin: 4px 0; font-size: 14px;">
-          <a href="${escapeHtml(safeWebsite)}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none;">
-            🌐 웹사이트 방문
-          </a>
-        </p>
-      `
-          : ''
-      }
-    </div>
-  `;
-}
+  const halo = document.createElement('span');
+  halo.className = 'sf-me__halo';
+  const dot = document.createElement('span');
+  dot.className = 'sf-me__dot';
+  root.append(halo, dot);
+  return root;
+};

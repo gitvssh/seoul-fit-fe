@@ -9,7 +9,7 @@ export interface ZoomLevelInfo {
 }
 
 interface UseZoomLevelProps {
-  mapInstance: any;
+  mapInstance: KakaoMap | null | undefined;
   mapStatus?: { success: boolean; loading: boolean; error: string | null };
 }
 
@@ -38,8 +38,11 @@ export const getSearchRadius = (zoomRange: ZoomRange): number => {
   }
 };
 
+const ZOOM_DEBOUNCE_MS = 300;
+
 /**
- * 카카오 지도의 줌 레벨을 감지하고 범위별로 분류하는 Hook
+ * 카카오 지도의 줌 레벨을 감지하고 범위별로 분류하는 Hook.
+ * 리스너는 등록한 핸들러 참조 그대로 `removeListener(map, type, handler)`로 해제한다(코어 감사 D-22).
  */
 export const useZoomLevel = ({ mapInstance, mapStatus }: UseZoomLevelProps) => {
   const [zoomInfo, setZoomInfo] = useState<ZoomLevelInfo>({
@@ -48,100 +51,63 @@ export const useZoomLevel = ({ mapInstance, mapStatus }: UseZoomLevelProps) => {
   });
 
   const [isZooming, setIsZooming] = useState(false);
-  const zoomStartListener = useRef<any>(null);
-  const zoomChangedListener = useRef<any>(null);
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 줌 레벨 업데이트 함수
   const updateZoomLevel = useCallback((level: number) => {
-    const range = getZoomRange(level);
-    setZoomInfo({ level, range });
+    setZoomInfo({ level, range: getZoomRange(level) });
   }, []);
 
-  // 디바운스된 줌 변경 핸들러
-  const debouncedZoomUpdate = useCallback(
-    (level: number) => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-
-      debounceTimeout.current = setTimeout(() => {
-        updateZoomLevel(level);
-        setIsZooming(false);
-      }, 300);
-    },
-    [updateZoomLevel]
-  );
-
-  // 줌 시작 핸들러
-  const handleZoomStart = useCallback(() => {
-    setIsZooming(true);
-  }, []);
-
-  // 줌 변경 핸들러
-  const handleZoomChanged = useCallback(() => {
-    if (!mapInstance) return;
-
-    try {
-      const currentLevel = mapInstance.getLevel();
-      debouncedZoomUpdate(currentLevel);
-    } catch (error) {
-      console.error('줌 레벨 조회 실패:', error);
-    }
-  }, [mapInstance, debouncedZoomUpdate]);
-
-  // 이벤트 리스너 설정
   useEffect(() => {
     if (!mapInstance || !mapStatus?.success) return;
 
-    const windowWithKakao = window as WindowWithKakao;
-    if (!windowWithKakao.kakao?.maps?.event) return;
+    const kakaoMaps = (window as WindowWithKakao).kakao?.maps;
+    if (!kakaoMaps?.event) return;
 
-    const kakaoMaps = windowWithKakao.kakao.maps;
+    const handleZoomStart = () => {
+      setIsZooming(true);
+    };
+
+    const handleZoomChanged = () => {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+      debounceTimeout.current = setTimeout(() => {
+        debounceTimeout.current = null;
+        try {
+          updateZoomLevel(mapInstance.getLevel());
+        } catch (error) {
+          console.error('줌 레벨 조회 실패:', error);
+        }
+        setIsZooming(false);
+      }, ZOOM_DEBOUNCE_MS);
+    };
 
     try {
-      // 초기 줌 레벨 설정
-      const initialLevel = mapInstance.getLevel();
-      updateZoomLevel(initialLevel);
-
-      // 줌 이벤트 리스너 등록
-      zoomStartListener.current = kakaoMaps.event.addListener(
-        mapInstance,
-        'zoom_start',
-        handleZoomStart
-      );
-
-      zoomChangedListener.current = kakaoMaps.event.addListener(
-        mapInstance,
-        'zoom_changed',
-        handleZoomChanged
-      );
+      updateZoomLevel(mapInstance.getLevel());
+      kakaoMaps.event.addListener(mapInstance, 'zoom_start', handleZoomStart);
+      kakaoMaps.event.addListener(mapInstance, 'zoom_changed', handleZoomChanged);
     } catch (error) {
       console.error('줌 이벤트 리스너 등록 실패:', error);
     }
 
     return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = null;
+      }
       try {
-        if (kakaoMaps.event && zoomStartListener.current && zoomChangedListener.current) {
-          (kakaoMaps.event as any).removeListener?.(zoomStartListener.current);
-          (kakaoMaps.event as any).removeListener?.(zoomChangedListener.current);
-        }
-        if (debounceTimeout.current) {
-          clearTimeout(debounceTimeout.current);
-        }
+        kakaoMaps.event.removeListener(mapInstance, 'zoom_start', handleZoomStart);
+        kakaoMaps.event.removeListener(mapInstance, 'zoom_changed', handleZoomChanged);
       } catch (error) {
         console.warn('줌 이벤트 리스너 제거 실패:', error);
       }
     };
-  }, [mapInstance, mapStatus?.success, updateZoomLevel, handleZoomStart, handleZoomChanged]);
+  }, [mapInstance, mapStatus?.success, updateZoomLevel]);
 
   // 수동으로 줌 레벨 새로고침
   const refreshZoomLevel = useCallback(() => {
     if (!mapInstance) return;
 
     try {
-      const currentLevel = mapInstance.getLevel();
-      updateZoomLevel(currentLevel);
+      updateZoomLevel(mapInstance.getLevel());
     } catch (error) {
       console.error('줌 레벨 새로고침 실패:', error);
     }

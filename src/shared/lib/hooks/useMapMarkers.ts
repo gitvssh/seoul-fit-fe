@@ -1,390 +1,266 @@
+/**
+ * 지도 마커 2계층.
+ *
+ * - 벌크 계층: 시설마다 CustomOverlay 1개(같은 좌표 묶음은 스택 1개) → 공식 MarkerClusterer.
+ *   key로 diff 해서 추가·삭제·이동분만 반영한다.
+ * - 포커스 계층: 선택 시설은 클러스터러 밖 별도 오버레이(z 20)로 항상 보이게 하고,
+ *   벌크 계층의 원본은 `data-hidden`으로 숨긴다. 클러스터에 묻히거나 뷰포트 필터에서
+ *   빠져도 선택 마커는 남는다.
+ *
+ * z-order는 `overlay.setZIndex()`(MARKER_Z)로만 바꾼다.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KakaoCustomOverlay, KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
-import { createCustomMarkerContent } from '@/shared/lib/utils/marker';
-import type { ClusteredFacility, Facility, FacilityCategory } from '@/lib/types';
-import { getFacilityIcon } from '@/shared/lib/icons/facility';
+import type { Facility } from '@/lib/types';
+import type { KakaoCluster, KakaoCustomOverlay, KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
+import { resolveMarkerLabels, type MarkerLabels } from '@/shared/lib/utils/marker';
+import {
+  applyHiddenSelection,
+  disposeBulkEntries,
+  reconcileBulk,
+  type BulkEntry,
+  type LayerHandle,
+  type SelectionState,
+} from './map-markers/bulk-layer';
+import { createClusterLayer, decideClusterAction, zoomToCluster } from './map-markers/cluster-layer';
+import {
+  DEFAULT_CLUSTER_LIST_THRESHOLD,
+  DEFAULT_VIEWPORT_PADDING,
+  type ViewportPadding,
+} from './map-markers/constants';
+import {
+  clearFocus,
+  findKnownFacility,
+  panToReveal,
+  syncSelection,
+  type FocusState,
+} from './map-markers/focus-layer';
+import {
+  buildMarkerDescriptors,
+  indexFacilities,
+  type MarkerDescriptor,
+} from './map-markers/reconcile';
 
-interface UseMapMarkersProps {
+export type { ViewportPadding } from './map-markers/constants';
+export { getFacilityMarkerId } from '@/shared/lib/utils/marker';
+
+export type FacilitySelectSource = 'marker' | 'cluster';
+
+export interface UseMapMarkersProps {
   mapInstance: KakaoMap | null | undefined;
   mapStatus: { success: boolean; loading: boolean; error: string | null } | undefined;
+  /** 통합자가 이미 카테고리·뷰포트로 거른 시설 */
   visibleFacilities: Facility[];
-  onFacilitySelect: (facility: Facility) => void;
-  onClusterSelect?: (cluster: ClusteredFacility) => void;
+  onFacilitySelect: (facility: Facility, source: FacilitySelectSource) => void;
+  /** 작은 클러스터·같은 좌표 스택 → 목록 시트. 없으면 첫 시설을 'cluster' 소스로 선택한다. */
+  onClusterSelect?: (facilities: Facility[], center: { lat: number; lng: number }) => void;
+  /** `getFacilityMarkerId(facility)` = `${category}:${id}` */
+  selectedFacilityId?: string | null;
+  /** 데스크톱(hover: hover)에서만 true. hover z-order 상승을 켠다. */
+  hoverEnabled?: boolean;
+  /** 번역된 접근성 이름 */
+  labels?: Partial<MarkerLabels>;
+  /** 헤더·시트가 가리는 px. 클러스터 확대와 revealFacility가 쓴다. */
+  viewportPadding?: ViewportPadding;
+  /** 이 건수 이하 클러스터는 확대 대신 목록 (기본 6) */
+  clusterListThreshold?: number;
 }
 
-type MarkerItem = Facility | ClusteredFacility;
-
-interface MarkerDescriptor {
-  key: string;
-  item: MarkerItem;
-  isCluster: boolean;
-  content: string;
-  positionSignature: string;
-  zIndex: number;
+interface LatestProps {
+  onFacilitySelect: UseMapMarkersProps['onFacilitySelect'];
+  onClusterSelect: UseMapMarkersProps['onClusterSelect'];
+  hoverEnabled: boolean;
+  viewportPadding: ViewportPadding;
+  clusterListThreshold: number;
+  labels: MarkerLabels;
+  selectedFacilityId: string | null;
+  facilityIndex: Map<string, Facility>;
 }
 
-interface MarkerEntry {
-  overlay: KakaoCustomOverlay;
-  item: MarkerItem;
-  isCluster: boolean;
-  content: string;
-  positionSignature: string;
-  element: HTMLElement;
-  cleanupEvents: () => void;
+interface MarkerState {
+  entries: Map<string, BulkEntry>;
+  facilitiesOf: WeakMap<KakaoCustomOverlay, Facility[]>;
+  selection: SelectionState;
+  focus: FocusState;
+  appliedLabels: MarkerLabels | null;
 }
 
-const isClusteredFacility = (item: MarkerItem): item is ClusteredFacility => 'facilities' in item;
+const createMarkerState = (): MarkerState => ({
+  entries: new Map(),
+  facilitiesOf: new WeakMap(),
+  selection: { hiddenKey: null },
+  focus: { entry: null, lastSelected: null },
+  appliedLabels: null,
+});
 
-const createClusterContent = (cluster: ClusteredFacility): string => {
-  const representativeFacility =
-    cluster.facilities.find(facility => facility.category === cluster.primaryCategory) ||
-    cluster.facilities[0];
-  const primaryIcon = getFacilityIcon(cluster.primaryCategory, representativeFacility);
-
-  return `
-    <div id="marker-${cluster.id}" style="
-      width: 40px;
-      height: 40px;
-      background: ${primaryIcon.color};
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid white;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-      position: relative;
-      cursor: pointer;
-    ">
-      <div style="pointer-events: none;">
-        ${primaryIcon.svg}
-      </div>
-      <div style="
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #ff4444;
-        color: white;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        font-weight: bold;
-        border: 2px solid white;
-        pointer-events: none;
-      ">
-        ${cluster.count}
-      </div>
-    </div>
-  `;
-};
-
-const createMarkerElement = (content: string): HTMLElement => {
-  const template = document.createElement('template');
-  template.innerHTML = content.trim();
-  const element = template.content.firstElementChild;
-
-  if (!(element instanceof HTMLElement)) {
-    throw new Error('마커 콘텐츠를 DOM 요소로 변환하지 못했습니다.');
-  }
-
-  return element;
-};
-
-const getMarkerAriaLabel = (item: MarkerItem): string =>
-  isClusteredFacility(item) ? `${item.count}개 시설 모음` : item.name;
-
-/**
- * 화면에 남아 있는 마커 오버레이를 재사용하고 추가·삭제된 마커만 반영합니다.
- * 지도 이동마다 전체 오버레이를 해제하던 기존 방식의 깜빡임을 방지합니다.
- */
 export const useMapMarkers = ({
   mapInstance,
   mapStatus,
   visibleFacilities,
   onFacilitySelect,
   onClusterSelect,
+  selectedFacilityId = null,
+  hoverEnabled = false,
+  labels: labelsProp,
+  viewportPadding = DEFAULT_VIEWPORT_PADDING,
+  clusterListThreshold = DEFAULT_CLUSTER_LIST_THRESHOLD,
 }: UseMapMarkersProps) => {
-  const markerEntriesRef = useRef<Map<string, MarkerEntry>>(new Map());
-  const activeMapRef = useRef<KakaoMap | null>(null);
-  const onFacilitySelectRef = useRef(onFacilitySelect);
-  const onClusterSelectRef = useRef(onClusterSelect);
-  const [markersCount, setMarkersCount] = useState(0);
+  const ready = Boolean(mapInstance && mapStatus?.success);
+  const labelFacility = labelsProp?.facility;
+  const labelCluster = labelsProp?.cluster;
+  const labelCurrentLocation = labelsProp?.currentLocation;
+  const labels = useMemo(
+    () =>
+      resolveMarkerLabels({
+        facility: labelFacility,
+        cluster: labelCluster,
+        currentLocation: labelCurrentLocation,
+      }),
+    [labelFacility, labelCluster, labelCurrentLocation]
+  );
+  const descriptors = useMemo(() => buildMarkerDescriptors(visibleFacilities), [visibleFacilities]);
+  const facilityIndex = useMemo(() => indexFacilities(descriptors), [descriptors]);
 
-  onFacilitySelectRef.current = onFacilitySelect;
-  onClusterSelectRef.current = onClusterSelect;
-
-  const clusteredData = useMemo(() => {
-    const locationGroups = new Map<string, Facility[]>();
-
-    visibleFacilities.forEach(facility => {
-      if (
-        !facility.position ||
-        !Number.isFinite(facility.position.lat) ||
-        !Number.isFinite(facility.position.lng) ||
-        facility.position.lat === 0 ||
-        facility.position.lng === 0
-      ) {
-        return;
-      }
-
-      const key = `${facility.position.lat.toFixed(6)},${facility.position.lng.toFixed(6)}`;
-      const group = locationGroups.get(key);
-      if (group) {
-        group.push(facility);
-      } else {
-        locationGroups.set(key, [facility]);
-      }
-    });
-
-    const clusters: ClusteredFacility[] = [];
-    const singleFacilities: Facility[] = [];
-
-    locationGroups.forEach((facilities, locationKey) => {
-      if (facilities.length === 1) {
-        singleFacilities.push(facilities[0]);
-        return;
-      }
-
-      const categoryCounts = new Map<FacilityCategory, number>();
-      facilities.forEach(facility => {
-        categoryCounts.set(facility.category, (categoryCounts.get(facility.category) ?? 0) + 1);
-      });
-      const primaryCategory = [...categoryCounts.entries()].sort(([, a], [, b]) => b - a)[0][0];
-
-      clusters.push({
-        id: `cluster-${locationKey}`,
-        position: facilities[0].position,
-        facilities,
-        count: facilities.length,
-        radius: 0.01,
-        primaryCategory,
-      });
-    });
-
-    return { clusters, singleFacilities };
-  }, [visibleFacilities]);
-
-  const descriptors = useMemo<MarkerDescriptor[]>(() => {
-    const singleMarkers = clusteredData.singleFacilities.map<MarkerDescriptor>(facility => {
-      // 일부 공공데이터 응답은 타입 계약과 달리 숫자 ID를 반환하므로 DOM ID 생성 전에 정규화합니다.
-      const facilityId = String(facility.id);
-      return {
-        key: `facility:${facility.category}:${facilityId}`,
-        item: facility,
-        isCluster: false,
-        content: createCustomMarkerContent(
-          facility.category,
-          facility.congestionLevel,
-          facilityId,
-          facility
-        ),
-        positionSignature: `${facility.position.lat},${facility.position.lng}`,
-        zIndex: 1000,
-      };
-    });
-    const clusterMarkers = clusteredData.clusters.map<MarkerDescriptor>(cluster => ({
-      key: `cluster:${cluster.id}`,
-      item: cluster,
-      isCluster: true,
-      content: createClusterContent(cluster),
-      positionSignature: `${cluster.position.lat},${cluster.position.lng}`,
-      zIndex: 1001,
-    }));
-
-    return [...singleMarkers, ...clusterMarkers];
-  }, [clusteredData]);
-
-  const bindMarkerEvents = useCallback((element: HTMLElement, key: string): (() => void) => {
-    const activate = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const currentEntry = markerEntriesRef.current.get(key);
-      if (!currentEntry) return;
-
-      if (currentEntry.isCluster) {
-        onClusterSelectRef.current?.(currentEntry.item as ClusteredFacility);
-      } else {
-        onFacilitySelectRef.current(currentEntry.item as Facility);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        activate(event);
-      }
-    };
-    const handleMouseEnter = () => {
-      element.style.transform = 'scale(1.1)';
-      element.style.zIndex = '1001';
-    };
-    const handleMouseLeave = () => {
-      element.style.transform = 'scale(1)';
-      element.style.zIndex = '1000';
-    };
-
-    element.setAttribute('role', 'button');
-    element.tabIndex = 0;
-    element.addEventListener('click', activate);
-    element.addEventListener('keydown', handleKeyDown);
-    element.addEventListener('mouseenter', handleMouseEnter);
-    element.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      element.removeEventListener('click', activate);
-      element.removeEventListener('keydown', handleKeyDown);
-      element.removeEventListener('mouseenter', handleMouseEnter);
-      element.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
-  const disposeAllMarkers = useCallback(() => {
-    markerEntriesRef.current.forEach(entry => {
-      entry.cleanupEvents();
-      entry.overlay.setMap(null);
-    });
-    markerEntriesRef.current.clear();
-  }, []);
-
-  const clearMarkers = useCallback(() => {
-    disposeAllMarkers();
-    setMarkersCount(0);
-  }, [disposeAllMarkers]);
-
-  const reconcileMarkers = useCallback(() => {
-    if (!mapInstance || !mapStatus?.success) return;
-
-    const windowWithKakao = window as WindowWithKakao;
-    const kakaoMaps = windowWithKakao.kakao?.maps;
-    if (!kakaoMaps) return;
-
-    const desiredKeys = new Set(descriptors.map(descriptor => descriptor.key));
-
-    markerEntriesRef.current.forEach((entry, key) => {
-      if (desiredKeys.has(key)) return;
-
-      entry.cleanupEvents();
-      entry.overlay.setMap(null);
-      markerEntriesRef.current.delete(key);
-    });
-
-    descriptors.forEach(descriptor => {
-      const existing = markerEntriesRef.current.get(descriptor.key);
-      const position = descriptor.item.position;
-
-      if (existing) {
-        existing.item = descriptor.item;
-        existing.isCluster = descriptor.isCluster;
-        existing.element.setAttribute('aria-label', getMarkerAriaLabel(descriptor.item));
-
-        if (existing.positionSignature !== descriptor.positionSignature) {
-          existing.overlay.setPosition(new kakaoMaps.LatLng(position.lat, position.lng));
-          existing.positionSignature = descriptor.positionSignature;
-        }
-
-        if (existing.content !== descriptor.content) {
-          existing.cleanupEvents();
-          const element = createMarkerElement(descriptor.content);
-          element.setAttribute('aria-label', getMarkerAriaLabel(descriptor.item));
-          const cleanupEvents = bindMarkerEvents(element, descriptor.key);
-          existing.overlay.setContent(element);
-          existing.content = descriptor.content;
-          existing.element = element;
-          existing.cleanupEvents = cleanupEvents;
-        }
-        return;
-      }
-
-      try {
-        const element = createMarkerElement(descriptor.content);
-        element.setAttribute('aria-label', getMarkerAriaLabel(descriptor.item));
-        const cleanupEvents = bindMarkerEvents(element, descriptor.key);
-        const overlay = new kakaoMaps.CustomOverlay({
-          position: new kakaoMaps.LatLng(position.lat, position.lng),
-          content: element,
-          xAnchor: 0.5,
-          yAnchor: 1,
-          zIndex: descriptor.zIndex,
-        });
-        const entry: MarkerEntry = {
-          overlay,
-          item: descriptor.item,
-          isCluster: descriptor.isCluster,
-          content: descriptor.content,
-          positionSignature: descriptor.positionSignature,
-          element,
-          cleanupEvents,
-        };
-
-        markerEntriesRef.current.set(descriptor.key, entry);
-        overlay.setMap(mapInstance);
-      } catch (error) {
-        console.error(`마커 생성 실패 (${descriptor.key}):`, error);
-      }
-    });
-
-    const nextCount = markerEntriesRef.current.size;
-    setMarkersCount(current => (current === nextCount ? current : nextCount));
-  }, [bindMarkerEvents, descriptors, mapInstance, mapStatus?.success]);
+  const stateRef = useRef<MarkerState>(createMarkerState());
+  const layerRef = useRef<LayerHandle | null>(null);
+  const latestRef = useRef<LatestProps>({
+    onFacilitySelect,
+    onClusterSelect,
+    hoverEnabled,
+    viewportPadding,
+    clusterListThreshold,
+    labels,
+    selectedFacilityId,
+    facilityIndex,
+  });
+  const [clustersCount, setClustersCount] = useState(0);
 
   useEffect(() => {
-    if (activeMapRef.current && activeMapRef.current !== mapInstance) {
-      clearMarkers();
+    latestRef.current = {
+      onFacilitySelect,
+      onClusterSelect,
+      hoverEnabled,
+      viewportPadding,
+      clusterListThreshold,
+      labels,
+      selectedFacilityId,
+      facilityIndex,
+    };
+  });
+
+  const activateDescriptor = useCallback((descriptor: MarkerDescriptor) => {
+    const { onFacilitySelect: select, onClusterSelect: selectCluster } = latestRef.current;
+    if (descriptor.kind === 'facility') {
+      select(descriptor.facilities[0], 'marker');
+    } else if (selectCluster) {
+      selectCluster(descriptor.facilities, descriptor.position);
+    } else {
+      select(descriptor.facilities[0], 'cluster');
     }
-    activeMapRef.current = mapInstance ?? null;
-  }, [clearMarkers, mapInstance]);
+  }, []);
 
-  useEffect(() => {
-    reconcileMarkers();
-  }, [reconcileMarkers]);
-
-  useEffect(
-    () => () => {
-      disposeAllMarkers();
+  const handleClusterActivate = useCallback(
+    (map: KakaoMap, cluster: KakaoCluster, facilities: Facility[]) => {
+      const latest = latestRef.current;
+      const action = decideClusterAction({
+        level: map.getLevel(),
+        size: facilities.length,
+        listThreshold: latest.clusterListThreshold,
+      });
+      if (action === 'zoom') {
+        zoomToCluster(map, cluster, latest.viewportPadding);
+        return;
+      }
+      const center = cluster.getCenter();
+      if (latest.onClusterSelect) {
+        latest.onClusterSelect(facilities, { lat: center.getLat(), lng: center.getLng() });
+      } else if (facilities[0]) {
+        latest.onFacilitySelect(facilities[0], 'cluster');
+      }
     },
-    [disposeAllMarkers]
+    []
   );
 
-  const highlightMarker = useCallback((facilityId: string, highlight = true) => {
-    markerEntriesRef.current.forEach(entry => {
-      if (entry.isCluster || String(entry.item.id) !== facilityId) return;
+  // 벌크 계층(클러스터러) 생성·폐기. 지도 인스턴스가 바뀌면 전부 다시 만든다.
+  useEffect(() => {
+    if (!ready || !mapInstance) return;
+    const maps = (window as WindowWithKakao).kakao?.maps;
+    if (!maps) return;
 
-      entry.element.style.transform = highlight ? 'scale(1.2)' : 'scale(1)';
-      entry.element.style.zIndex = highlight ? '1002' : '1000';
-      entry.element.style.filter = highlight ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' : 'none';
+    const map = mapInstance;
+    const state = stateRef.current;
+    const layer = createClusterLayer(maps, map, {
+      getFacilities: overlay => state.facilitiesOf.get(overlay) ?? [],
+      getLabels: () => latestRef.current.labels,
+      onClustered: count => setClustersCount(current => (current === count ? current : count)),
+      onClusterActivate: (cluster, facilities) => handleClusterActivate(map, cluster, facilities),
     });
+    layerRef.current = { layer, map, maps };
+
+    return () => {
+      disposeBulkEntries(state.entries);
+      state.selection.hiddenKey = null;
+      clearFocus(state.focus);
+      state.appliedLabels = null;
+      layer.dispose();
+      layerRef.current = null;
+      setClustersCount(0);
+    };
+  }, [ready, mapInstance, handleClusterActivate]);
+
+  // 벌크 계층 reconcile (key 기반 diff)
+  useEffect(() => {
+    const handle = layerRef.current;
+    if (!handle || !ready) return;
+    const state = stateRef.current;
+    const relabel = state.appliedLabels !== labels;
+    state.appliedLabels = labels;
+    reconcileBulk(
+      handle,
+      {
+        entries: state.entries,
+        facilitiesOf: state.facilitiesOf,
+        getLabels: () => latestRef.current.labels,
+        isHoverEnabled: () => latestRef.current.hoverEnabled,
+        activate: activateDescriptor,
+      },
+      descriptors,
+      { relabel }
+    );
+    applyHiddenSelection(state.entries, state.selection, latestRef.current.selectedFacilityId);
+  }, [ready, mapInstance, descriptors, labels, activateDescriptor]);
+
+  // 포커스 계층: 선택 시설
+  useEffect(() => {
+    const handle = layerRef.current;
+    if (!handle || !ready) return;
+    const state = stateRef.current;
+    syncSelection(handle, state.focus, selectedFacilityId, facilityIndex, labels, facility =>
+      latestRef.current.onFacilitySelect(facility, 'marker')
+    );
+    applyHiddenSelection(state.entries, state.selection, selectedFacilityId);
+  }, [ready, mapInstance, selectedFacilityId, facilityIndex, labels]);
+
+  const clearMarkers = useCallback(() => {
+    const state = stateRef.current;
+    disposeBulkEntries(state.entries);
+    state.selection.hiddenKey = null;
+    clearFocus(state.focus);
+    layerRef.current?.layer.clear();
+    setClustersCount(0);
   }, []);
 
-  const clearAllHighlights = useCallback(() => {
-    markerEntriesRef.current.forEach(entry => {
-      if (!entry.isCluster) {
-        entry.element.style.transform = 'scale(1)';
-        entry.element.style.zIndex = '1000';
-        entry.element.style.filter = 'none';
-      }
-    });
-  }, []);
-
-  const toggleCategoryMarkers = useCallback((category: FacilityCategory, visible: boolean) => {
-    markerEntriesRef.current.forEach(entry => {
-      const markerCategory = isClusteredFacility(entry.item)
-        ? entry.item.primaryCategory
-        : entry.item.category;
-      if (markerCategory === category) {
-        entry.overlay.setVisible(visible);
-      }
-    });
+  /** 마커가 헤더·시트에 가려져 있으면 보이는 영역 안으로 최소 거리만 이동한다. */
+  const revealFacility = useCallback((facilityId: string) => {
+    const handle = layerRef.current;
+    if (!handle) return;
+    const facility = findKnownFacility(stateRef.current.focus, latestRef.current.facilityIndex, facilityId);
+    if (facility) panToReveal(handle, facility.position, latestRef.current.viewportPadding);
   }, []);
 
   return {
+    markersCount: ready ? descriptors.length : 0,
+    clustersCount,
     clearMarkers,
-    createMarkers: reconcileMarkers,
-    highlightMarker,
-    clearAllHighlights,
-    toggleCategoryMarkers,
-    rebindAllMarkerEvents: reconcileMarkers,
-    markersCount,
+    revealFacility,
   };
 };
