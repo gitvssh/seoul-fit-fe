@@ -1,8 +1,18 @@
 import type { Facility, FacilityCategory, Position } from '@/lib/types';
 import { calculateDistanceKm } from '@/features/place-filter/lib/place-filter';
-import { recommendFacilities } from '@/features/recommendation/lib/recommendation-engine';
+import {
+  DUPLICATE_MERGE_RADIUS_METERS,
+  normalizePlaceName,
+  recommendFacilities,
+} from '@/features/recommendation/lib/recommendation-engine';
+import { ko as activityMessages } from '@/shared/i18n/messages/activity';
 import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
-import type { ActivityPlan, ActivityPlanContext, ActivityPlanStop } from '../model/types';
+import type {
+  ActivityPlan,
+  ActivityPlanContext,
+  ActivityPlanStop,
+  ActivityPlanWarningCode,
+} from '../model/types';
 
 const BASE_STAY_MINUTES: Record<FacilityCategory, number> = {
   subway: 10,
@@ -15,6 +25,18 @@ const BASE_STAY_MINUTES: Record<FacilityCategory, number> = {
   culture: 50,
   cultural_event: 60,
   cultural_reservation: 60,
+};
+
+/** 후보 수. 10개 중 3개 순열 720개 → 12개면 1,320개로 여전히 즉시 계산된다. */
+const CANDIDATE_LIMIT = 12;
+const SEARCH_RADIUS_KM = 6;
+/** 같은 카테고리가 겹치면 다양성이 떨어지므로 겹치는 정거장마다 뺀다. */
+const DIVERSITY_BONUS = 12;
+const REPEATED_CATEGORY_PENALTY = 10;
+
+const WARNING_LABELS: Record<ActivityPlanWarningCode, string> = {
+  straight_line_estimate: activityMessages['activity.warning'],
+  hours_unknown: activityMessages['activity.warningHours'],
 };
 
 function travelMinutes(from: Position, to: Position): number {
@@ -36,6 +58,20 @@ function permutations<T>(values: T[], length: number): T[][] {
   };
   walk([], values);
   return result;
+}
+
+/** 같은 이름이 150m 안에 두 번 들어가면(환승역·중복 레코드) 같은 곳을 두 번 가는 계획이다. */
+export function hasRepeatedPlace(facilities: Facility[]): boolean {
+  return facilities.some((facility, index) =>
+    facilities
+      .slice(index + 1)
+      .some(
+        other =>
+          normalizePlaceName(other.name) === normalizePlaceName(facility.name) &&
+          calculateDistanceKm(other.position, facility.position) * 1000 <=
+            DUPLICATE_MERGE_RADIUS_METERS
+      )
+  );
 }
 
 function allocateStayMinutes(
@@ -82,27 +118,40 @@ interface CandidatePlan {
   score: number;
 }
 
+function sequenceScore(scores: number[], categories: FacilityCategory[], totalTravel: number) {
+  const distinct = new Set(categories).size;
+  const repeated = categories.length - distinct;
+  return (
+    scores.reduce((sum, value) => sum + value, 0) +
+    distinct * DIVERSITY_BONUS -
+    repeated * REPEATED_CATEGORY_PENALTY -
+    totalTravel * 0.8
+  );
+}
+
 export function createActivityPlan(
   facilities: Facility[],
   context: ActivityPlanContext
 ): ActivityPlan | null {
   if (!isValidSeoulCoordinate(context.origin.lat, context.origin.lng)) return null;
 
+  // recommendFacilities가 교통 카테고리 제외와 같은 이름·150m 병합을 처리한다.
   const ranked = recommendFacilities(
     facilities.filter(
       facility =>
         isValidSeoulCoordinate(facility.position.lat, facility.position.lng) &&
-        calculateDistanceKm(context.origin, facility.position) <= 6
+        calculateDistanceKm(context.origin, facility.position) <= SEARCH_RADIUS_KM
     ),
     {
       origin: context.origin,
+      originKind: 'map_center',
       now: context.now,
       preset: 'available_now',
       preferredCategories: context.preferredCategories,
       weather: context.weather,
       congestion: context.congestion,
     },
-    10
+    CANDIDATE_LIMIT
   );
   if (ranked.length < 2) return null;
 
@@ -112,58 +161,51 @@ export function createActivityPlan(
 
   for (let stopCount = desiredStopCount; stopCount >= 2 && !best; stopCount -= 1) {
     for (const sequence of permutations(ranked, stopCount)) {
+      const stops = sequence.map(item => item.facility);
+      if (hasRepeatedPlace(stops)) continue;
+
       const travel: number[] = [];
       let previous = context.origin;
-      for (const recommendation of sequence) {
-        travel.push(travelMinutes(previous, recommendation.facility.position));
-        previous = recommendation.facility.position;
+      for (const facility of stops) {
+        travel.push(travelMinutes(previous, facility.position));
+        previous = facility.position;
       }
       const totalTravel = travel.reduce((sum, minutes) => sum + minutes, 0);
-      const stay = allocateStayMinutes(
-        sequence.map(item => item.facility),
-        context.budgetMinutes - totalTravel,
-        minimumStay
-      );
+      const stay = allocateStayMinutes(stops, context.budgetMinutes - totalTravel, minimumStay);
       if (!stay) continue;
 
-      const diversity = new Set(sequence.map(item => item.facility.category)).size;
-      const score =
-        sequence.reduce((sum, item) => sum + item.score, 0) + diversity * 8 - totalTravel * 0.8;
-      if (!best || score > best.score) {
-        best = {
-          facilities: sequence.map(item => item.facility),
-          travel,
-          stay,
-          score,
-        };
-      }
+      const score = sequenceScore(
+        sequence.map(item => item.score),
+        stops.map(facility => facility.category),
+        totalTravel
+      );
+      if (!best || score > best.score) best = { facilities: stops, travel, stay, score };
     }
   }
   if (!best) return null;
+  const chosen: CandidatePlan = best;
 
   let elapsed = 0;
-  const stops: ActivityPlanStop[] = best.facilities.map((facility, index) => {
-    elapsed += best!.travel[index];
+  const stops: ActivityPlanStop[] = chosen.facilities.map((facility, index) => {
+    elapsed += chosen.travel[index];
     const stop: ActivityPlanStop = {
       facility,
       order: index + 1,
-      travelMinutes: best!.travel[index],
-      stayMinutes: best!.stay[index],
+      travelMinutes: chosen.travel[index],
+      stayMinutes: chosen.stay[index],
       arrivalOffsetMinutes: elapsed,
       reason:
         index === 0
-          ? `현재 위치에서 약 ${best!.travel[index]}분 이동`
-          : `이전 장소에서 약 ${best!.travel[index]}분 이동`,
+          ? `출발점에서 약 ${chosen.travel[index]}분 이동`
+          : `이전 장소에서 약 ${chosen.travel[index]}분 이동`,
     };
-    elapsed += best!.stay[index];
+    elapsed += chosen.stay[index];
     return stop;
   });
-  const totalTravel = best.travel.reduce((sum, minutes) => sum + minutes, 0);
-  const totalStay = best.stay.reduce((sum, minutes) => sum + minutes, 0);
-  const warnings = ['이동 시간은 직선거리 기반 보행 추정치이며 실제 길찾기와 다를 수 있습니다.'];
-  if (stops.some(stop => !stop.facility.operatingHours)) {
-    warnings.push('운영시간을 확인할 수 없는 장소는 방문 전에 공식 정보를 확인하세요.');
-  }
+  const totalTravel = chosen.travel.reduce((sum, minutes) => sum + minutes, 0);
+  const totalStay = chosen.stay.reduce((sum, minutes) => sum + minutes, 0);
+  const warningCodes: ActivityPlanWarningCode[] = ['straight_line_estimate'];
+  if (stops.some(stop => !stop.facility.operatingHours)) warningCodes.push('hours_unknown');
 
   return {
     budgetMinutes: context.budgetMinutes,
@@ -172,6 +214,7 @@ export function createActivityPlan(
     stayMinutes: totalStay,
     stops,
     summary: `${context.budgetMinutes}분 안에 ${stops.length}곳 · 이동 ${totalTravel}분 · 체류 ${totalStay}분`,
-    warnings,
+    warningCodes,
+    warnings: warningCodes.map(code => WARNING_LABELS[code]),
   };
 }

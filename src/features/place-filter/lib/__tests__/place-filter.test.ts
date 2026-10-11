@@ -34,6 +34,26 @@ describe('place filter', () => {
     expect(isFacilityIndoor({ ...baseFacility, isIndoor: false })).toBe(false);
   });
 
+  it('실내 판정은 카테고리 기반이며 지하철역은 실내 목적지로 치지 않는다', () => {
+    const byCategory = (category: Facility['category']) =>
+      isFacilityIndoor({ ...baseFacility, category, operatingHours: undefined });
+    expect(byCategory('library')).toBe(true);
+    expect(byCategory('culture')).toBe(true);
+    expect(byCategory('cooling_shelter')).toBe(true);
+    expect(byCategory('restaurant')).toBe(true);
+    expect(byCategory('sports')).toBe(true);
+    expect(byCategory('subway')).toBe(false);
+    expect(byCategory('park')).toBe(false);
+    expect(byCategory('bike')).toBe(false);
+    expect(
+      isFacilityIndoor({
+        ...baseFacility,
+        category: 'sports',
+        sportsFacility: { facilityType: '축구장', isIndoor: false },
+      })
+    ).toBe(false);
+  });
+
   it('거리를 계산하고 복합 조건으로 필터링한다', () => {
     const outdoorPark: Facility = {
       ...baseFacility,

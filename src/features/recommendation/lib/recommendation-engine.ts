@@ -6,15 +6,19 @@ import {
   isFacilityIndoor,
   isFacilityReservable,
 } from '@/features/place-filter/lib/place-filter';
+import { ko as recommendationMessages } from '@/shared/i18n/messages/recommendation';
+import { isCategoryAllowedForPreset } from './presets';
 import type {
   FacilityRecommendation,
   RecommendationContext,
+  RecommendationFacility,
   RecommendationFactorScores,
   RecommendationPresetDefinition,
   RecommendationReasonCode,
   RecommendationWarningCode,
 } from '../model/types';
 
+/** 화면 칩에 노출하는 프리셋. 라벨은 i18n `preset.*` 키를 우선한다. */
 export const RECOMMENDATION_PRESETS: RecommendationPresetDefinition[] = [
   {
     id: 'available_now',
@@ -28,31 +32,21 @@ export const RECOMMENDATION_PRESETS: RecommendationPresetDefinition[] = [
   { id: 'cool_down', label: '더위 피하기', description: '무더위를 피할 수 있는 실내 공간' },
 ];
 
-const REASON_LABELS: Record<RecommendationReasonCode, string> = {
-  interest_match: '관심 시설과 일치해요',
-  nearby: '현재 위치에서 가까워요',
-  open_now: '현재 운영 중이에요',
-  reservable: '예약 또는 예매가 가능해요',
-  fresh_data: '최근 갱신 정보가 있어요',
-  preset_match: '선택한 상황에 잘 맞아요',
-  indoor: '실내에서 이용할 수 있어요',
-  quiet_context: '주변 혼잡 위험이 낮아요',
-  weather_safe: '현재 날씨 위험을 피하기 좋아요',
-};
+/** 같은 이름의 레코드를 하나로 합치는 반경. 환승역의 호선별 출구 좌표 차이를 덮는다. */
+export const DUPLICATE_MERGE_RADIUS_METERS = 150;
 
-const WARNING_LABELS: Record<RecommendationWarningCode, string> = {
-  closed_now: '현재 운영이 종료된 것으로 보여요',
-  hours_unknown: '운영시간을 확인할 수 없어요',
-  stale_data: '데이터 갱신이 지연됐어요',
-  freshness_unknown: '데이터 기준 시각을 확인할 수 없어요',
-  rain_risk: '비가 올 때 야외 이용이 불편할 수 있어요',
-  heat_risk: '더운 날씨에 야외 이용 주의가 필요해요',
-  air_quality_risk: '대기질이 좋지 않아 야외 활동에 주의가 필요해요',
-  crowded_context: '주변 주요 지역이 붐비고 있어요',
-};
+const reasonLabel = (code: RecommendationReasonCode): string =>
+  recommendationMessages[`reason.${code}`];
+const warningLabel = (code: RecommendationWarningCode): string =>
+  recommendationMessages[`warning.${code}`];
 
 function normalize(value: string | undefined): string {
   return value?.toLocaleLowerCase('ko-KR').replace(/\s+/g, '') || '';
+}
+
+/** "시청 (2호선)" → "시청" 처럼 괄호·공백을 뺀 비교용 이름 */
+export function normalizePlaceName(name: string): string {
+  return normalize(name.replace(/\([^)]*\)/g, ''));
 }
 
 export function isRainyWeather(weather: WeatherData | null | undefined): boolean {
@@ -73,6 +67,44 @@ export function isPoorAirQuality(weather: WeatherData | null | undefined): boole
 
 export function isCrowded(congestion: CongestionData | null | undefined): boolean {
   return /붐빔|혼잡/.test(congestion?.AREA_CONGEST_LVL || '');
+}
+
+function routeLabel(facility: Facility): string | undefined {
+  return facility.subwayStation?.route || facility.subwayStation?.line || undefined;
+}
+
+/**
+ * 같은 카테고리·같은 이름이 반경 안에 여러 레코드로 있으면(환승역이 호선별 레코드로
+ * 오는 경우) 첫 레코드만 남기고 노선 라벨을 `routes`로 합친다. 입력 순서를 지킨다.
+ */
+export function mergeDuplicatePlaces(
+  facilities: Facility[],
+  radiusMeters = DUPLICATE_MERGE_RADIUS_METERS
+): RecommendationFacility[] {
+  const kept: RecommendationFacility[] = [];
+  const buckets = new Map<string, RecommendationFacility[]>();
+
+  for (const facility of facilities) {
+    const key = `${facility.category}:${normalizePlaceName(facility.name)}`;
+    const bucket = buckets.get(key) ?? [];
+    const route = routeLabel(facility);
+    const match = bucket.find(
+      candidate => calculateDistanceKm(candidate.position, facility.position) * 1000 <= radiusMeters
+    );
+
+    if (match) {
+      if (route && !match.routes?.includes(route)) match.routes = [...(match.routes ?? []), route];
+      match.mergedIds = [...(match.mergedIds ?? []), facility.id];
+      continue;
+    }
+
+    const record: RecommendationFacility = route ? { ...facility, routes: [route] } : { ...facility };
+    bucket.push(record);
+    buckets.set(key, bucket);
+    kept.push(record);
+  }
+
+  return kept;
 }
 
 function isEventActiveToday(facility: Facility, now: Date): boolean {
@@ -113,50 +145,74 @@ function freshnessScore(
   return { score: 5, warning: 'freshness_unknown' };
 }
 
+interface PresetPoints {
+  score: number;
+  reasons: RecommendationReasonCode[];
+}
+
+type PresetScorer = (
+  facility: Facility,
+  context: RecommendationContext,
+  openState: ReturnType<typeof getFacilityOpenState>
+) => PresetPoints;
+
+const QUIET_CATEGORIES = new Set<Facility['category']>([
+  'library',
+  'park',
+  'cooling_shelter',
+  'culture',
+]);
+
+const indoorPoints = (facility: Facility, score: number): PresetPoints =>
+  // 실내 판정은 카테고리 기반(도서관·문화·쉼터·맛집·체육)이며 지하철역은 포함하지 않는다.
+  isFacilityIndoor(facility)
+    ? { score, reasons: ['indoor', 'weather_safe'] }
+    : { score: 0, reasons: [] };
+
+const PRESET_SCORERS: Record<RecommendationContext['preset'], PresetScorer> = {
+  none: () => ({ score: 0, reasons: [] }),
+  available_now: (_facility, _context, openState) => ({
+    score: openState === 'open' ? 20 : openState === 'unknown' ? 8 : 0,
+    reasons: [],
+  }),
+  quiet: (facility, context) => {
+    const reasons: RecommendationReasonCode[] = [];
+    let score = QUIET_CATEGORIES.has(facility.category) ? 12 : 0;
+    if (!isCrowded(context.congestion)) {
+      score += context.congestion ? 8 : 4;
+      if (context.congestion) reasons.push('quiet_context');
+    }
+    return { score, reasons };
+  },
+  rainy_day: facility => indoorPoints(facility, 20),
+  today_event: (facility, context) => ({
+    score: isEventActiveToday(facility, context.now)
+      ? 20
+      : facility.category === 'cultural_reservation'
+        ? 10
+        : 0,
+    reasons: [],
+  }),
+  bike_trip: facility => ({
+    score: facility.category === 'bike' ? 20 : facility.category === 'park' ? 16 : 0,
+    reasons: [],
+  }),
+  cool_down: facility =>
+    facility.category === 'cooling_shelter'
+      ? { score: 20, reasons: [] }
+      : indoorPoints(facility, 14),
+};
+
 function presetScore(
   facility: Facility,
   context: RecommendationContext,
   openState: ReturnType<typeof getFacilityOpenState>
-): { score: number; reasons: RecommendationReasonCode[] } {
-  const reasons: RecommendationReasonCode[] = [];
-  let score = 0;
-
-  switch (context.preset) {
-    case 'available_now':
-      if (openState === 'open') score = 20;
-      else if (openState === 'unknown') score = 8;
-      break;
-    case 'quiet':
-      if (['library', 'park', 'cooling_shelter', 'culture'].includes(facility.category))
-        score += 12;
-      if (!isCrowded(context.congestion)) {
-        score += context.congestion ? 8 : 4;
-        if (context.congestion) reasons.push('quiet_context');
-      }
-      break;
-    case 'rainy_day':
-      if (isFacilityIndoor(facility)) {
-        score = 20;
-        reasons.push('indoor', 'weather_safe');
-      }
-      break;
-    case 'today_event':
-      if (isEventActiveToday(facility, context.now)) score = 20;
-      break;
-    case 'bike_trip':
-      if (facility.category === 'bike') score = 20;
-      else if (facility.category === 'park') score = 16;
-      break;
-    case 'cool_down':
-      if (facility.category === 'cooling_shelter') score = 20;
-      else if (isFacilityIndoor(facility)) {
-        score = 14;
-        reasons.push('indoor', 'weather_safe');
-      }
-      break;
-  }
-  if (score >= 14) reasons.unshift('preset_match');
-  return { score: Math.min(20, score), reasons };
+): PresetPoints {
+  const { score, reasons } = PRESET_SCORERS[context.preset](facility, context, openState);
+  return {
+    score: Math.min(20, score),
+    reasons: score >= 14 ? ['preset_match', ...reasons] : reasons,
+  };
 }
 
 function riskScore(
@@ -184,11 +240,15 @@ function riskScore(
     warnings.push('crowded_context');
   }
 
-  return { score: -Math.min(30, penalty), warnings };
+  return { score: penalty === 0 ? 0 : -Math.min(30, penalty), warnings };
 }
 
+/**
+ * 0~100 적합도. 거리는 `context.origin`(지도 중심·사용자 위치·선택 장소)을 기준으로 잰다.
+ * 데이터가 없으면 중립 점수와 `*_unknown` 경고를 함께 돌려준다.
+ */
 export function scoreFacility(
-  facility: Facility,
+  facility: Facility | RecommendationFacility,
   context: RecommendationContext
 ): FacilityRecommendation {
   const distance = calculateDistanceKm(context.origin, facility.position);
@@ -244,10 +304,18 @@ export function scoreFacility(
     score,
     factors,
     reasonCodes: uniqueReasons,
-    reasons: uniqueReasons.map(code => REASON_LABELS[code]),
+    reasons: uniqueReasons.map(reasonLabel),
     warningCodes: uniqueWarnings,
-    warnings: uniqueWarnings.map(code => WARNING_LABELS[code]),
+    warnings: uniqueWarnings.map(warningLabel),
   };
+}
+
+/** 프리셋에서 목적지가 될 수 없는 교통 카테고리를 뺀다. */
+export function filterPresetCandidates(
+  facilities: Facility[],
+  preset: RecommendationContext['preset']
+): Facility[] {
+  return facilities.filter(facility => isCategoryAllowedForPreset(facility.category, preset));
 }
 
 export function recommendFacilities(
@@ -255,7 +323,7 @@ export function recommendFacilities(
   context: RecommendationContext,
   limit = 10
 ): FacilityRecommendation[] {
-  return facilities
+  return mergeDuplicatePlaces(filterPresetCandidates(facilities, context.preset))
     .map(facility => scoreFacility(facility, context))
     .sort((first, second) => {
       if (second.score !== first.score) return second.score - first.score;
@@ -267,14 +335,22 @@ export function recommendFacilities(
 export function getNearbyAlternatives(
   selected: Facility,
   facilities: Facility[],
-  context: Omit<RecommendationContext, 'origin'>,
+  context: Omit<RecommendationContext, 'origin' | 'originKind'>,
   limit = 3
 ): FacilityRecommendation[] {
+  const selectedName = normalizePlaceName(selected.name);
   return recommendFacilities(
     facilities.filter(
-      facility => !(facility.id === selected.id && facility.category === selected.category)
+      facility =>
+        !(facility.id === selected.id && facility.category === selected.category) &&
+        !(
+          facility.category === selected.category &&
+          normalizePlaceName(facility.name) === selectedName &&
+          calculateDistanceKm(selected.position, facility.position) * 1000 <=
+            DUPLICATE_MERGE_RADIUS_METERS
+        )
     ),
-    { ...context, origin: selected.position },
+    { ...context, origin: selected.position, originKind: 'place' },
     Math.max(limit * 4, limit)
   )
     .filter(recommendation => (recommendation.facility.distance || 0) <= 5)

@@ -4,14 +4,14 @@ import type { PlaceFilterState } from '../model/types';
 export type FacilityOpenState = 'open' | 'closed' | 'unknown';
 
 const ALWAYS_OPEN_PATTERNS = ['24시간', '24시', '연중무휴', '상시개방', '상시 운영'];
-const INDOOR_CATEGORIES = new Set<Facility['category']>([
-  'library',
-  'culture',
-  'cultural_reservation',
-  'cooling_shelter',
-  'subway',
-  'restaurant',
-]);
+/**
+ * 명시값이 없을 때 카테고리로 실내 여부를 판정한다. 지하철역은 이동 수단이지
+ * 비를 피해 머무는 목적지가 아니므로 실내로 치지 않고, 공원·따릉이·문화행사는
+ * 야외이거나 알 수 없으므로 제외한다.
+ */
+export const INDOOR_CATEGORIES: ReadonlySet<Facility['category']> = new Set<Facility['category']>(
+  ['library', 'culture', 'cultural_reservation', 'cooling_shelter', 'restaurant', 'sports']
+);
 
 function minutesOfDay(hours: string, minutes: string): number {
   return Number(hours) * 60 + Number(minutes);

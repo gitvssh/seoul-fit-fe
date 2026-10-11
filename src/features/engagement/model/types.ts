@@ -103,3 +103,44 @@ export function toEngagementPlaceRequest(
 export function isSafeAppDeepLink(value: string | null | undefined): value is string {
   return Boolean(value?.startsWith('/') && !value.startsWith('//'));
 }
+
+/**
+ * 패널 목록이 쓰는 장소 요약. 서버 저장 장소와 이 기기 저장 장소를 같은 모양으로 다룬다.
+ * `key`는 목록 키이자 삭제 대상 식별자(서버는 `favorite:<id>`, 로컬은 즐겨찾기 키)다.
+ */
+export interface EngagementPlaceSummary {
+  key: string;
+  name: string;
+  address: string;
+  category: string;
+  latitude: number;
+  longitude: number;
+}
+
+export function toPlaceSummary(place: SavedPlace): EngagementPlaceSummary {
+  return {
+    key: `favorite:${place.id}`,
+    name: place.name,
+    address: place.address,
+    category: place.category,
+    latitude: place.latitude,
+    longitude: place.longitude,
+  };
+}
+
+export function localFavoriteToSummary(favorite: {
+  key: string;
+  name: string;
+  address: string;
+  category: string;
+  position: { lat: number; lng: number };
+}): EngagementPlaceSummary {
+  return {
+    key: favorite.key,
+    name: favorite.name,
+    address: favorite.address,
+    category: favorite.category,
+    latitude: favorite.position.lat,
+    longitude: favorite.position.lng,
+  };
+}

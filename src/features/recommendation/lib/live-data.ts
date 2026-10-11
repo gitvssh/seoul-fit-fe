@@ -1,49 +1,45 @@
 import type { CongestionData, WeatherData } from '@/lib/types';
+import { ko as mapMessages } from '@/shared/i18n/messages/map';
+import {
+  formatClockTime,
+  getFreshness,
+  getOldestFreshness,
+  type FreshnessStatus,
+} from '@/shared/lib/freshness';
 
-export type LiveDataFreshness = 'live' | 'recent' | 'stale' | 'unknown';
+/** @deprecated `FreshnessStatus`(`@/shared/lib/freshness`)와 같다. 이름 호환용 */
+export type LiveDataFreshness = FreshnessStatus;
+
+export type LiveDataLabelKey = `freshness.${FreshnessStatus}`;
 
 export interface LiveDataStatus {
   freshness: LiveDataFreshness;
+  /** i18n 키. 화면에서는 `t(labelKey)` 또는 `FreshnessBadge`를 쓴다 */
+  labelKey: LiveDataLabelKey;
+  /** 한국어 라벨(공통 사전 `freshness.*`의 ko 값). 레거시 호출부 호환용 */
   label: string;
+  /** "오후 11:50" 같은 조회 시각. 모르면 "확인되지 않음" */
   referenceTimeLabel: string;
+  /** ISO 기준 시각. `<time dateTime>`·`FreshnessBadge`에 넘긴다 */
+  timestamp?: string;
 }
 
-const LABELS: Record<LiveDataFreshness, string> = {
-  live: '정상 갱신',
-  recent: '최근 조회',
-  stale: '갱신 지연',
-  unknown: '기준 시각 미확인',
-};
+const UNKNOWN_TIME_LABEL = '확인되지 않음';
 
+/**
+ * 실시간 도시데이터(날씨·혼잡도)의 신선도. 공통 임계값 15분/60분을 쓴다.
+ */
 export function getLiveDataStatus(timestamp: string | undefined, now = new Date()): LiveDataStatus {
-  if (!timestamp) {
-    return {
-      freshness: 'unknown',
-      label: LABELS.unknown,
-      referenceTimeLabel: '확인되지 않음',
-    };
-  }
-
-  const parsed = new Date(timestamp);
-  if (!Number.isFinite(parsed.getTime())) {
-    return {
-      freshness: 'unknown',
-      label: LABELS.unknown,
-      referenceTimeLabel: '확인되지 않음',
-    };
-  }
-
-  const ageMinutes = Math.max(0, (now.getTime() - parsed.getTime()) / 60_000);
-  const freshness: LiveDataFreshness =
-    ageMinutes <= 15 ? 'live' : ageMinutes <= 60 ? 'recent' : 'stale';
+  const freshness = getFreshness(timestamp, now);
+  const labelKey: LiveDataLabelKey = `freshness.${freshness}`;
+  const referenceTimeLabel = formatClockTime(timestamp) || UNKNOWN_TIME_LABEL;
 
   return {
     freshness,
-    label: LABELS[freshness],
-    referenceTimeLabel: new Intl.DateTimeFormat('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(parsed),
+    labelKey,
+    label: mapMessages[labelKey],
+    referenceTimeLabel,
+    timestamp: freshness === 'unknown' ? undefined : timestamp,
   };
 }
 
@@ -56,15 +52,6 @@ export function getCombinedLiveDataStatus(
     getLiveDataStatus(weather?.timestamp, now),
     getLiveDataStatus(congestion?.timestamp, now),
   ];
-  const rank: Record<LiveDataFreshness, number> = {
-    unknown: 0,
-    stale: 1,
-    recent: 2,
-    live: 3,
-  };
-  const known = statuses.filter(status => status.freshness !== 'unknown');
-  if (known.length === 0) return statuses[0];
-  return known.reduce((oldest, status) =>
-    rank[status.freshness] < rank[oldest.freshness] ? status : oldest
-  );
+  const oldest = getOldestFreshness(statuses.map(status => status.freshness));
+  return statuses.find(status => status.freshness === oldest) ?? statuses[0];
 }

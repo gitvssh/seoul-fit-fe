@@ -1,7 +1,7 @@
-/** 추천 근거와 주의 문구 */
+/** 추천 근거와 주의 문구. 추천은 규칙 기반이며 거리 기준점은 지도 중심·사용자 위치·선택 장소 중 하나다. */
 export const ko = {
-  'reason.interest_match': '관심 시설과 일치해요',
-  'reason.nearby': '현재 위치에서 가까워요',
+  'reason.interest_match': '관심 카테고리와 일치해요',
+  'reason.nearby': '가까운 거리에 있어요',
   'reason.open_now': '현재 운영 중이에요',
   'reason.reservable': '예약 또는 예매가 가능해요',
   'reason.fresh_data': '최근 갱신 정보가 있어요',
@@ -17,11 +17,14 @@ export const ko = {
   'warning.heat_risk': '더운 날씨에 야외 이용 주의가 필요해요',
   'warning.air_quality_risk': '대기질이 좋지 않아 야외 활동에 주의가 필요해요',
   'warning.crowded_context': '주변 주요 지역이 붐비고 있어요',
+  'preset.none': '상황 선택 안 함',
+  'recommendation.ruleBased': '거리·운영·예약·신선도·상황을 규칙으로 계산한 참고 점수예요.',
+  'recommendation.routes': '{routes} 환승',
 } as const;
 
 export const en: Record<keyof typeof ko, string> = {
-  'reason.interest_match': 'Matches your interests',
-  'reason.nearby': 'Close to your location',
+  'reason.interest_match': 'Matches your categories',
+  'reason.nearby': 'Within a short distance',
   'reason.open_now': 'Currently open',
   'reason.reservable': 'Booking is available',
   'reason.fresh_data': 'Recently updated information',
@@ -37,4 +40,8 @@ export const en: Record<keyof typeof ko, string> = {
   'warning.heat_risk': 'Take care during outdoor activity in hot weather',
   'warning.air_quality_risk': 'Poor air quality may affect outdoor activity',
   'warning.crowded_context': 'Nearby major areas are crowded',
+  'preset.none': 'No situation selected',
+  'recommendation.ruleBased':
+    'A reference score from rules on distance, hours, booking, freshness and situation.',
+  'recommendation.routes': 'Transfer: {routes}',
 };

@@ -9,6 +9,32 @@ import type {
   ZoneRequest,
 } from '../model/types';
 
+export type EngagementApiErrorCode = 'unauthorized' | 'forbidden' | 'request_failed';
+
+/** 화면은 `code`를 i18n 문구로 바꾼다. `message`는 레거시 호출부 호환용 한국어다. */
+export class EngagementApiError extends Error {
+  readonly code: EngagementApiErrorCode;
+  readonly status: number;
+
+  constructor(code: EngagementApiErrorCode, status: number, message: string) {
+    super(message);
+    this.name = 'EngagementApiError';
+    this.code = code;
+    this.status = status;
+  }
+}
+
+function toApiError(status: number): EngagementApiError {
+  if (status === 401) return new EngagementApiError('unauthorized', status, '로그인이 만료되었습니다.');
+  if (status === 403)
+    return new EngagementApiError('forbidden', status, '이 작업을 수행할 권한이 없습니다.');
+  return new EngagementApiError(
+    'request_failed',
+    status,
+    `요청을 처리하지 못했습니다. (${status})`
+  );
+}
+
 async function authenticatedRequest<T>(
   path: string,
   accessToken: string,
@@ -22,11 +48,7 @@ async function authenticatedRequest<T>(
       ...init.headers,
     },
   });
-  if (!response.ok) {
-    if (response.status === 401) throw new Error('로그인이 만료되었습니다.');
-    if (response.status === 403) throw new Error('이 작업을 수행할 권한이 없습니다.');
-    throw new Error(`요청을 처리하지 못했습니다. (${response.status})`);
-  }
+  if (!response.ok) throw toApiError(response.status);
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
