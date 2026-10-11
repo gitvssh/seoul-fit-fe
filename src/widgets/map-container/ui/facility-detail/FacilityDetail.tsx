@@ -10,6 +10,7 @@ import type { FacilityRecommendation } from '@/features/recommendation/model/typ
 import { markRecentlyViewed } from '@/features/engagement/api/engagement';
 import { toEngagementPlaceRequest } from '@/features/engagement/model/types';
 import { useAuthStore } from '@/shared/model/authStore';
+import { categoryHasOperatingHours } from '@/features/place-filter/lib/place-filter';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { MessageKey } from '@/shared/i18n/messages';
 import { useFacilityContext } from '../providers/FacilityProvider';
@@ -49,6 +50,11 @@ export function FacilityDetail({ facility, onBack, compact = false }: FacilityDe
       }),
     [activePreset, facility, live.congestion.data, live.weather.data, origin]
   );
+
+  // 역·대여소에는 운영시간 개념이 없어 '운영시간 미확인' 경고를 빼고 보여준다.
+  const warningCodes = categoryHasOperatingHours(facility.category)
+    ? decision.warningCodes
+    : decision.warningCodes.filter(code => code !== 'hours_unknown');
 
   const alternatives = useMemo(
     () => getNearbyAlternatives(facility, facilities, { now: new Date(), preset: activePreset }, 3),
@@ -96,10 +102,10 @@ export function FacilityDetail({ facility, onBack, compact = false }: FacilityDe
                       .join(' · ')}
                   </p>
                 )}
-                {decision.warningCodes.length > 0 && (
+                {warningCodes.length > 0 && (
                   <p className='mt-1 text-caption text-warning-soft-foreground'>
                     {t('explorer.check', {
-                      warning: decision.warningCodes
+                      warning: warningCodes
                         .map(code => t(`warning.${code}` as MessageKey))
                         .join(' · '),
                     })}

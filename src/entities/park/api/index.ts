@@ -19,8 +19,6 @@ async function fetchParksFromBackend(page: number, size: number): Promise<Park[]
       timeout: 5000, // 타임아웃 5초
     });
 
-    console.log('[Park] 백엔드에서 데이터 로드 성공');
-
     // 다양한 응답 형태 처리
     if (Array.isArray(response.data)) {
       return response.data as Park[];
@@ -46,10 +44,6 @@ async function fetchParksFromSeoulApi(page: number, size: number): Promise<Park[
     const formattedParks = convertParks(parkRows);
     const paginatedParks = paginateParks(formattedParks, page, size);
 
-    console.log(
-      `[Park] 공공데이터에서 직접 로드 성공: ${formattedParks.length}개 (페이지: ${paginatedParks.length}개)`
-    );
-
     return paginatedParks;
   } catch (error) {
     console.error('[Park] 공공데이터 호출 실패:', error);
@@ -71,7 +65,6 @@ export async function fetchAllParks(params: ParkSearchParams): Promise<Park[]> {
   }
 
   // 2. 백엔드 실패시 서울 공공데이터 직접 호출
-  console.log('[Park] 백엔드 실패, 공공데이터 직접 호출로 전환');
   return fetchParksFromSeoulApi(page, size);
 }
 

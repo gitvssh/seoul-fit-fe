@@ -282,8 +282,6 @@ interface ParkApiResponse {
 // 공원 데이터 직접 호출
 export async function loadAllParks(): Promise<ParkRow[]> {
   try {
-    console.log('[서울API] 공원 전체 데이터 로드 시작...');
-
     // 서울 공원 정보 API 호출
     const apiUrl = `${BASE_URL}/${API_KEY}/json/SearchParkInfoService/1/1000/`;
     const response = await fetch(apiUrl, {
@@ -304,7 +302,6 @@ export async function loadAllParks(): Promise<ParkRow[]> {
     }
 
     const parks = data.SearchParkInfoService.row || [];
-    console.log(`[서울API] 공원 데이터 로드 완료: ${parks.length}개`);
 
     return parks;
   } catch (error) {
@@ -339,8 +336,6 @@ interface LibraryApiResponse {
 // 도서관 데이터 직접 호출
 export async function loadAllLibraries(): Promise<LibraryRow[]> {
   try {
-    console.log('[서울API] 도서관 전체 데이터 로드 시작...');
-
     const apiUrl = `${BASE_URL}/${API_KEY}/json/SeoulPublicLibraryInfo/1/300/`;
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -360,7 +355,6 @@ export async function loadAllLibraries(): Promise<LibraryRow[]> {
     }
 
     const libraries = data.SeoulPublicLibraryInfo.row || [];
-    console.log(`[서울API] 도서관 데이터 로드 완료: ${libraries.length}개`);
 
     return libraries;
   } catch (error) {
@@ -513,8 +507,6 @@ export const SEOUL_LOCATIONS = [
 // 혼잡도 데이터 직접 호출
 export async function getCongestionData(lat: number, lng: number): Promise<CongestionData | null> {
   try {
-    console.log(`[서울API] 혼잡도 데이터 API 호출: lat=${lat}, lng=${lng}`);
-
     // 가장 가까운 장소 코드 찾기
     let minDistance = Infinity;
     let nearestCode = 'POI001';

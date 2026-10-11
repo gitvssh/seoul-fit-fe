@@ -122,6 +122,34 @@ describe('rankSearchEntries', () => {
     ]);
   });
 
+  it('lifts the category named by the query above other categories that merely contain the word', () => {
+    const mixed: SearchItem[] = [
+      { id: 'ev-1', name: '도서관의 날 기념행사', category: 'cultural_event', address: '' },
+      { id: 'ev-2', name: '도서관 북페스티벌', category: 'cultural_event', address: '' },
+      { id: 'lib-9', name: '강남구립못골도서관', category: 'library', address: '' },
+      { id: 'bike-9', name: '1679. 삼육대 도서관', category: 'bike', address: '' },
+    ];
+    const results = rankSearchEntries(mixed.map(prepareSearchEntry), '도서관', { hangul });
+    expect(results[0].category).toBe('library');
+  });
+
+  it('caps how many results one category may take so other categories stay visible', () => {
+    const many: SearchItem[] = Array.from({ length: 12 }, (_, index) => ({
+      id: `ev-${index}`,
+      name: `도서관 행사 ${index}`,
+      category: 'cultural_event',
+    }));
+    many.push({ id: 'park-9', name: '도서관 옆 공원', category: 'park' });
+    const results = rankSearchEntries(many.map(prepareSearchEntry), '도서관', {
+      hangul,
+      limit: 10,
+      maxPerCategory: 4,
+    });
+    expect(results).toHaveLength(10);
+    expect(results.filter(item => item.category === 'park')).toHaveLength(1);
+    expect(results.slice(0, 5).some(item => item.category === 'park')).toBe(true);
+  });
+
   it('finds 서울도서관 by 초성 and by an incomplete last syllable', () => {
     expect(rank('ㅅㅇㄷㅅㄱ')).toEqual(['서울도서관']);
     expect(rank('서울ㄷ')).toEqual(['서울도서관']);

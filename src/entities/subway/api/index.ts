@@ -72,7 +72,20 @@ export function validateApiResponse(response: SubwayArrivalApiResponse): boolean
   if (response.errorMessage) {
     return response.errorMessage.code === 'INFO-000';
   }
+  // 인증키 권한 오류(ERROR-338 등)는 errorMessage 없이 최상위 code/status로 온다.
+  const flat = response as { code?: unknown; status?: unknown };
+  if (typeof flat.code === 'string' && flat.code.startsWith('ERROR')) return false;
+  if (typeof flat.status === 'number' && flat.status >= 400) return false;
   return true;
+}
+
+/** 응답에서 상위 오류 코드를 꺼낸다(없으면 null). 사용자에게는 코드만 전달하고 문구는 노출하지 않는다. */
+export function getUpstreamErrorCode(response: SubwayArrivalApiResponse): string | null {
+  if (response.errorMessage?.code && response.errorMessage.code !== 'INFO-000') {
+    return response.errorMessage.code;
+  }
+  const flat = response as { code?: unknown };
+  return typeof flat.code === 'string' ? flat.code : null;
 }
 
 /**
@@ -80,7 +93,6 @@ export function validateApiResponse(response: SubwayArrivalApiResponse): boolean
  */
 export async function ensureSubwayStationCache(): Promise<void> {
   if (!serverCache.has('subway_stations')) {
-    console.log('[Subway] 캐시 없음, 초기화 대기...');
     // instrumentation 초기화 완료 대기
     await new Promise(resolve => setTimeout(resolve, 2000));
 

@@ -60,7 +60,6 @@ export const kakaoLogout = async () => {
     } else {
       const result = await response.json();
       if (process.env.NODE_ENV === 'development') {
-        console.log('로그아웃 성공');
       }
     }
   } catch (error) {

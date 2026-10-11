@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[POI API] 백엔드 조회: radius=${radius}`);
     }
 
     // 백엔드 API 호출 - 전체 POI 인덱스 가져오기 (페이징 처리)
@@ -72,7 +71,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[POI API] 백엔드에서 ${allPOIs.length}개 POI 조회 완료`);
     }
 
     // 거리 계산 및 필터링

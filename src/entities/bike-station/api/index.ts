@@ -18,7 +18,6 @@ import { calculateDistance } from '@/entities/restaurant/api';
  */
 export async function ensureBikeStationCache(): Promise<void> {
   if (!serverCache.has('bike_stations')) {
-    console.log('[BikeStation] 캐시 없음, 초기화 대기...');
     // instrumentation 초기화 완료 대기
     await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -85,8 +84,6 @@ export async function searchNearbyBikeStations(
   if (!stations) {
     throw new Error('따릉이 데이터를 불러올 수 없습니다.');
   }
-
-  console.log(`[BikeStation] 캐시에서 조회: ${stations.length}개 대여소`);
 
   // 반경 내 대여소 필터링 및 변환
   const nearbyStations = stations

@@ -82,7 +82,6 @@ export function getWeatherFromCache(areaCode: string): WeatherData | null {
   const cachedData = weatherCache.get(areaCode);
 
   if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    console.log(`날씨 데이터 캐시 사용: ${areaCode}`);
     return {
       ...cachedData.data,
       cached: true,

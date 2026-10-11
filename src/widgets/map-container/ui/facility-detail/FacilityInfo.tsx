@@ -103,7 +103,7 @@ export function FacilityInfo({ facility }: { facility: Facility }) {
             <Badge variant={FRESHNESS_VARIANT[provenance.freshness]}>
               {t(`freshness.${provenance.freshness}` as MessageKey)}
             </Badge>
-            <span>{updatedLabel}</span>
+            {provenance.freshness !== 'unknown' && <span>{updatedLabel}</span>}
           </span>
           {provenance.freshness === 'stale' && (
             <span className='mt-1 block text-caption text-warning-soft-foreground'>

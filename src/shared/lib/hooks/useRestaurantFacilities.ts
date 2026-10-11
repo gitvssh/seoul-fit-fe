@@ -14,13 +14,11 @@ export function useRestaurantFacilities() {
 
   // 위치 기반 음식점 조회
   const fetchRestaurants = useCallback(async (lat: number, lng: number) => {
-    console.log('[useRestaurantFacilities] 음식점 데이터 조회 시작');
     setLoading(true);
     setError(null);
 
     try {
       const facilities = await getRestaurantsNearby(lat, lng);
-      console.log(`[useRestaurantFacilities] 음식점 ${facilities.length}개 조회 완료`);
       setRestaurants(facilities);
       return facilities;
     } catch (err) {
@@ -35,13 +33,11 @@ export function useRestaurantFacilities() {
 
   // 모든 음식점 조회
   const fetchAllRestaurants = useCallback(async () => {
-    console.log('[useRestaurantFacilities] 모든 음식점 데이터 조회 시작');
     setLoading(true);
     setError(null);
 
     try {
       const facilities = await getAllRestaurants();
-      console.log(`[useRestaurantFacilities] 음식점 ${facilities.length}개 조회 완료`);
       setRestaurants(facilities);
       return facilities;
     } catch (err) {

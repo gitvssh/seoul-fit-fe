@@ -91,7 +91,6 @@ export function getCongestionFromCache(areaCode: string): CongestionData | null 
   const cachedData = congestionCache.get(areaCode);
 
   if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    console.log(`혼잡도 데이터 캐시 사용: ${areaCode}`);
     return {
       ...cachedData.data,
       cached: true,

@@ -6,7 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchSubwayArrivalData, formatArrivalData, validateApiResponse } from '@/entities/subway';
+import {
+  fetchSubwayArrivalData,
+  formatArrivalData,
+  getUpstreamErrorCode,
+  validateApiResponse,
+} from '@/entities/subway';
 
 /**
  * GET 지하철 실시간 도착 정보 API
@@ -31,8 +36,12 @@ export async function GET(request: NextRequest) {
     // 응답 검증
     if (!validateApiResponse(apiResponse)) {
       return NextResponse.json(
-        { error: apiResponse.errorMessage?.message || 'API 오류가 발생했습니다.' },
-        { status: 502 }
+        {
+          success: false,
+          code: 'UPSTREAM_ERROR',
+          upstreamCode: getUpstreamErrorCode(apiResponse),
+        },
+        { status: 503 }
       );
     }
 

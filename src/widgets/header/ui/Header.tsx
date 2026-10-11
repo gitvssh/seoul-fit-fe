@@ -41,7 +41,7 @@ const Header = React.forwardRef<HeaderRef, HeaderProps>(function Header(
   }));
 
   return (
-    <header className='grid h-[var(--header-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 surface-glass border-b border-border/60 md:h-auto md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-3 md:gap-y-2 md:px-4 md:pb-3 md:pt-2 md:[backdrop-filter:none] md:[background-color:hsl(var(--background))]'>
+    <header className='pointer-events-auto grid h-[var(--header-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 surface-glass border-b border-border/60 md:h-auto md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-3 md:gap-y-2 md:px-4 md:pb-3 md:pt-2 md:[backdrop-filter:none] md:[background-color:hsl(var(--background))]'>
       <Button
         type='button'
         variant='ghost'

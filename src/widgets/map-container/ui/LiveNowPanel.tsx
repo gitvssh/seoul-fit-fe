@@ -139,12 +139,18 @@ export function LiveNowPanel({
                     </span>
                   </p>
                   <p className='text-caption text-muted-foreground'>
-                    {t('map.live.feelsLike', {
-                      value: Math.round(Number(weather.data.SENSIBLE_TEMP)),
-                    })}
-                    {weather.data.HUMIDITY
-                      ? ` · ${t('map.live.humidity', { value: weather.data.HUMIDITY })}`
-                      : ''}
+                    {[
+                      Number.isFinite(Number(weather.data.SENSIBLE_TEMP))
+                        ? t('map.live.feelsLike', {
+                            value: Math.round(Number(weather.data.SENSIBLE_TEMP)),
+                          })
+                        : null,
+                      weather.data.HUMIDITY
+                        ? t('map.live.humidity', { value: weather.data.HUMIDITY })
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 </div>
               </div>

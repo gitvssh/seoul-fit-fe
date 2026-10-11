@@ -23,7 +23,7 @@ export function AppShell({ header, panel, map, className }: AppShellProps) {
         className
       )}
     >
-      <div className='col-start-1 row-start-1 row-span-2 min-h-0 md:col-start-2 md:row-start-1'>
+      <div className='isolate col-start-1 row-start-1 row-span-2 min-h-0 md:col-start-2 md:row-start-1'>
         {map}
       </div>
       <div className='pointer-events-none z-header col-start-1 row-start-1 md:pointer-events-auto md:border-b md:border-border md:bg-background'>

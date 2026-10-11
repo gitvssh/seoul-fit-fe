@@ -76,9 +76,7 @@ export async function fetchAllLibraries(
       ? response.data
       : (response.data as any).libraries || (response.data as any).data || [];
 
-    console.log('[fetchAllLibraries] 도서관 데이터 수신:', libraries.length, '개');
     if (libraries.length > 0) {
-      console.log('[fetchAllLibraries] 첫 번째 도서관 데이터:', libraries[0]);
     }
 
     return {

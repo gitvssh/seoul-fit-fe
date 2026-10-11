@@ -22,8 +22,6 @@ async function fetchLibrariesFromBackend(page: number, size: number): Promise<Li
       }
     );
 
-    console.log('[Library] 백엔드에서 데이터 로드 성공');
-
     // 다양한 응답 형태 처리
     if (Array.isArray(response.data)) {
       return response.data as Library[];
@@ -49,10 +47,6 @@ async function fetchLibrariesFromSeoulApi(page: number, size: number): Promise<L
     const formattedLibraries = convertLibraries(libraryRows);
     const paginatedLibraries = paginateLibraries(formattedLibraries, page, size);
 
-    console.log(
-      `[Library] 공공데이터에서 직접 로드 성공: ${formattedLibraries.length}개 (페이지: ${paginatedLibraries.length}개)`
-    );
-
     return paginatedLibraries;
   } catch (error) {
     console.error('[Library] 공공데이터 호출 실패:', error);
@@ -74,7 +68,6 @@ export async function fetchAllLibraries(params: LibrarySearchParams): Promise<Li
   }
 
   // 2. 백엔드 실패시 서울 공공데이터 직접 호출
-  console.log('[Library] 백엔드 실패, 공공데이터 직접 호출로 전환');
   return fetchLibrariesFromSeoulApi(page, size);
 }
 

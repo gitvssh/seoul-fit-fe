@@ -33,6 +33,8 @@ interface MobileSheetProps {
   /** 피크에서 더 내리거나 Escape를 눌렀을 때: 선택 해제 등 */
   onDismissAttempt: (reason: string) => void;
   label: string;
+  /** 현재 패널 내용(explore/detail/cluster). DOM에 `data-panel-mode`로 남겨 검사·스타일 훅으로 쓴다. */
+  mode?: string;
   children: React.ReactNode;
 }
 
@@ -45,6 +47,7 @@ export function MobileSheet({
   onSnapChange,
   onDismissAttempt,
   label,
+  mode,
   children,
 }: MobileSheetProps) {
   const { t } = useI18n();
@@ -80,6 +83,7 @@ export function MobileSheet({
       <Drawer.Portal keepMounted>
         <Drawer.Viewport className='pointer-events-none fixed inset-x-0 bottom-0 top-0 z-sheet'>
           <Drawer.Popup
+            data-panel-mode={mode}
             initialFocus={false}
             finalFocus={false}
             aria-label={label}

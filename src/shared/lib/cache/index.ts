@@ -37,7 +37,6 @@ class ServerCache {
       timestamp: Date.now(),
       isStatic: true,
     });
-    console.log(`[캐시] 정적 데이터 저장: ${key}`);
   }
 
   // 동적 데이터 저장 (따릉이 - 주기적 갱신)
@@ -47,7 +46,6 @@ class ServerCache {
       timestamp: Date.now(),
       isStatic: false,
     });
-    console.log(`[캐시] 동적 데이터 갱신: ${key}`);
   }
 
   // 데이터 조회

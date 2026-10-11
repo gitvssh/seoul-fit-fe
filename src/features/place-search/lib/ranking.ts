@@ -45,6 +45,30 @@ export const CATEGORY_PRIORITY: Record<SearchItem['category'], number> = {
   restaurant: 8,
 };
 
+/** 카테고리 자체를 뜻하는 검색어. 이 말로 검색하면 그 카테고리 항목을 한 단계 올린다(규칙 칩과 별개). */
+export const CATEGORY_KEYWORDS: Record<SearchItem['category'], readonly string[]> = {
+  subway: ['지하철', '지하철역', 'subway'],
+  library: ['도서관', 'library'],
+  park: ['공원', 'park'],
+  cultural_event: ['문화행사', '행사', '공연', '전시', 'event'],
+  cultural_reservation: ['문화예약', '예약', 'reservation'],
+  bike: ['따릉이', '자전거', 'bike'],
+  cooling_center: ['무더위쉼터', '쉼터', 'shelter'],
+  restaurant: ['맛집', '음식점', '식당', 'restaurant'],
+};
+const CATEGORY_BOOST = 1;
+
+/** 정규화된 검색어가 해당 카테고리를 가리키는 말과 정확히 같은지 */
+export function matchesCategoryKeyword(
+  category: SearchItem['category'],
+  normalizedQuery: string
+): boolean {
+  if (normalizedQuery.length < 2) return false;
+  return CATEGORY_KEYWORDS[category].some(
+    keyword => normalizeText(keyword).text === normalizedQuery
+  );
+}
+
 export interface SearchField {
   kind: SearchFieldKind;
   text: string;
@@ -289,6 +313,9 @@ function scoreEntry(
     }
     if (best.tier === MATCH_TIER.EXACT && best.fieldRank === 0) break;
   }
+  if (best && matchesCategoryKeyword(entry.item.category, query.normalized)) {
+    return { ...best, tier: best.tier + CATEGORY_BOOST };
+  }
   return best;
 }
 
@@ -332,6 +359,27 @@ export function prepareSearchEntry(item: SearchItem): SearchEntry {
 export interface RankOptions {
   limit?: number;
   hangul?: HangulModule | null;
+  /** 한 카테고리가 목록을 독점하지 않도록 상위 N건 안에서 카테고리당 허용하는 최대 건수. 기본은 limit의 40%(최소 3). */
+  maxPerCategory?: number;
+}
+
+/** 점수순을 유지하되 카테고리당 상한을 넘긴 항목은 뒤로 미룬다. 자리가 남으면 미룬 항목으로 채운다. */
+function diversify(scored: ScoredEntry[], limit: number, maxPerCategory: number): ScoredEntry[] {
+  const picked: ScoredEntry[] = [];
+  const deferred: ScoredEntry[] = [];
+  const counts = new Map<SearchItem['category'], number>();
+  for (const result of scored) {
+    if (picked.length >= limit) break;
+    const category = result.entry.item.category;
+    const count = counts.get(category) ?? 0;
+    if (count < maxPerCategory) {
+      picked.push(result);
+      counts.set(category, count + 1);
+    } else {
+      deferred.push(result);
+    }
+  }
+  return picked.concat(deferred).slice(0, limit);
 }
 
 /** 검색어에 맞는 항목을 점수순으로 돌려준다. `limit`은 상위 N건 (기본 10). */
@@ -349,5 +397,7 @@ export function rankSearchEntries(
     if (result) scored.push(result);
   }
   scored.sort(compareScored);
-  return scored.slice(0, options.limit ?? 10).map(result => result.entry.item);
+  const limit = options.limit ?? 10;
+  const maxPerCategory = options.maxPerCategory ?? Math.max(3, Math.ceil(limit * 0.4));
+  return diversify(scored, limit, maxPerCategory).map(result => result.entry.item);
 }

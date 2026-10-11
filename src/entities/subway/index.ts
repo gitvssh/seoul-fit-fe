@@ -8,6 +8,7 @@ export {
   fetchSubwayArrivalData,
   formatArrivalData,
   validateApiResponse,
+  getUpstreamErrorCode,
   ensureSubwayStationCache,
   transformSubwayStation,
   fetchAllSubwayStations,

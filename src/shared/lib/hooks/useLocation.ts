@@ -151,7 +151,6 @@ export function useLocation(mapInstanceOrOptions?: any): any {
     if (isSimpleMode || !mapInstance || !navigator.geolocation) return;
 
     if (watchIdRef.current !== null) {
-      console.log('이미 위치 추적 중');
       return;
     }
 
@@ -159,8 +158,6 @@ export function useLocation(mapInstanceOrOptions?: any): any {
     if (!windowWithKakao.kakao?.maps) return;
 
     const kakaoMaps = windowWithKakao.kakao.maps;
-
-    console.log('실시간 위치 추적 시작');
 
     const watchId = navigator.geolocation.watchPosition(
       position => {

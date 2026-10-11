@@ -81,6 +81,7 @@ export function PanelHost({ onReady, onLogin }: PanelHostProps) {
     return (
       <aside
         aria-label={t('map.panelLabel')}
+        data-panel-mode={mode}
         className='flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain border-r border-border bg-background px-4 pb-6'
       >
         {content}
@@ -93,6 +94,7 @@ export function PanelHost({ onReady, onLogin }: PanelHostProps) {
       snap={snap}
       onSnapChange={setSnap}
       label={t('map.panelLabel')}
+      mode={mode}
       onDismissAttempt={() => {
         if (mode !== 'explore') clearSelection();
       }}

@@ -34,10 +34,18 @@ export function FacilityLiveSection({ weather, congestion }: FacilityLiveSection
             </div>
             <p className='mt-1 text-title tabular-nums'>{Math.round(Number(weather.data.TEMP))}°</p>
             <p className='text-caption'>
-              {t('map.live.feelsLike', { value: Math.round(Number(weather.data.SENSIBLE_TEMP)) })}
-              {weather.data.PM10_INDEX
-                ? ` · ${t('map.live.pm10', { value: weather.data.PM10_INDEX })}`
-                : ''}
+              {[
+                Number.isFinite(Number(weather.data.SENSIBLE_TEMP))
+                  ? t('map.live.feelsLike', {
+                      value: Math.round(Number(weather.data.SENSIBLE_TEMP)),
+                    })
+                  : null,
+                weather.data.PM10_INDEX
+                  ? t('map.live.pm10', { value: weather.data.PM10_INDEX })
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           </div>
         )}

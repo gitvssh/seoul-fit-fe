@@ -22,6 +22,13 @@ function minutesOfDay(hours: string, minutes: string): number {
   return Number(hours) * 60 + Number(minutes);
 }
 
+/** 운영시간 개념이 없는 카테고리(역·대여소). 운영 여부 배지와 '운영시간 미확인' 경고를 숨긴다. */
+const HOURLESS_CATEGORIES: ReadonlySet<string> = new Set(['subway', 'bike']);
+
+export function categoryHasOperatingHours(category: string): boolean {
+  return !HOURLESS_CATEGORIES.has(category);
+}
+
 /**
  * 운영시간이 명시된 경우에만 현재 운영 여부를 판정합니다.
  * 휴무일/요일 정보가 불완전하거나 파싱할 수 없으면 안전하게 unknown을 반환합니다.

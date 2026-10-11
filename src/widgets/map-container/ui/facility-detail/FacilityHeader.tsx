@@ -7,7 +7,10 @@ import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { FACILITY_CONFIGS } from '@/shared/lib/icons/facility';
 import { SubwayStationIcon } from '../SubwayStationIcon';
-import { getFacilityOpenState } from '@/features/place-filter/lib/place-filter';
+import {
+  categoryHasOperatingHours,
+  getFacilityOpenState,
+} from '@/features/place-filter/lib/place-filter';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { MessageKey } from '@/shared/i18n/messages';
 import { cn } from '@/shared/lib/utils';
@@ -27,6 +30,7 @@ export function FacilityHeader({ facility, onBack, titleId }: FacilityHeaderProp
   const { t } = useI18n();
   const config = FACILITY_CONFIGS[facility.category];
   const Icon = config.Icon;
+  const showsHours = categoryHasOperatingHours(facility.category);
   const openState = getFacilityOpenState(facility.operatingHours);
   const openBadge =
     openState === 'open'
@@ -71,7 +75,7 @@ export function FacilityHeader({ facility, onBack, titleId }: FacilityHeaderProp
           <span className={config.textColor}>
             {t(`category.${facility.category}` as MessageKey)}
           </span>
-          <Badge variant={openBadge.variant}>{openBadge.label}</Badge>
+          {showsHours && <Badge variant={openBadge.variant}>{openBadge.label}</Badge>}
           {facility.distance !== undefined && (
             <span className='tabular-nums'>
               {t('facility.distanceAway', {
