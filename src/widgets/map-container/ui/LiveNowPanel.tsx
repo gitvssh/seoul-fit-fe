@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Cloud, CloudRain, Droplets, RefreshCw, Sun, Users, Wind, X } from 'lucide-react';
 import type { CongestionData, WeatherData } from '@/lib/types';
 import { Badge } from '@/shared/ui/badge';
@@ -72,6 +72,15 @@ export function LiveNowPanel({
     (weather.status === 'unavailable' || weather.status === 'error');
   const outside = !weather.data && !congestion.data && weather.status === 'outside_area';
   const areaName = weather.data?.AREA_NM || congestion.data?.AREA_NM;
+
+  // 팝오버 관례: Escape로 닫힌다(마운트된 동안만 듣는다).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   return (
     <section

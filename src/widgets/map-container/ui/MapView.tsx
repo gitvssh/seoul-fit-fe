@@ -83,6 +83,21 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
     }
   }, [ready]);
 
+  // 카카오 SDK가 그리는 저작권 링크는 이름이 없어 스크린리더에 빈 링크로 읽힌다. SDK DOM이라 생성 후 보정한다.
+  useEffect(() => {
+    if (!ready) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const label = () => {
+      container
+        .querySelectorAll<HTMLAnchorElement>('a[href*="kakao"]:not([aria-label])')
+        .forEach(anchor => anchor.setAttribute('aria-label', t('map.kakaoAttribution')));
+    };
+    label();
+    const timer = window.setTimeout(label, 1500);
+    return () => window.clearTimeout(timer);
+  }, [containerId, ready, t]);
+
   // /?lat&lng 딥링크 → 초기 중심
   useEffect(() => {
     if (!ready || !mapInstance || hasAppliedDeepLinkRef.current) return;

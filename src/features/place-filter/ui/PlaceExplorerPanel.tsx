@@ -97,14 +97,14 @@ export function PlaceExplorerPanel({
   return (
     <section aria-label={t('explorer.label')} className='flex flex-col gap-3 pt-1'>
       <div className='flex items-center justify-between gap-2'>
-        <p className='flex min-w-0 items-center gap-1.5 text-body font-semibold'>
+        <h2 className='flex min-w-0 items-center gap-1.5 text-body font-semibold'>
           <ListFilter className='size-4 shrink-0 text-primary' aria-hidden='true' />
           <span className='truncate' role='status'>
             {activeFilterCount > 0
               ? t('explorer.summary', { count: facilities.length, filters: activeFilterCount })
               : t('explorer.inView', { count: facilities.length })}
           </span>
-        </p>
+        </h2>
         <div className='flex shrink-0 items-center gap-1'>
           <Button type='button' variant='outline' size='sm' onClick={onEngagementOpen}>
             <Bookmark aria-hidden='true' />
