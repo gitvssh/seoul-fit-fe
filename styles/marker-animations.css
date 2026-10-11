@@ -9,9 +9,7 @@
 
 /* 시설 마커: 44×44 투명 터치 타깃 */
 .sf-marker {
-  --sf-ring:
-    0 0 0 2px hsl(0 0% 100%),
-    0 0 0 3px hsl(var(--marker-ink) / 0.18);
+  --sf-ring: 0 0 0 2px hsl(0 0% 100%), 0 0 0 3px hsl(var(--marker-ink) / 0.18);
   --sf-elevation: var(--shadow-marker);
   position: relative;
   display: flex;
@@ -62,8 +60,7 @@
 /* 혼잡·가용 신호가 있을 때만: 흰 링 바깥에 2px 상태색 링 */
 .sf-marker[data-crowd] {
   --sf-ring:
-    0 0 0 2px hsl(0 0% 100%),
-    0 0 0 4px var(--sf-marker-crowd, hsl(var(--muted-foreground)));
+    0 0 0 2px hsl(0 0% 100%), 0 0 0 4px var(--sf-marker-crowd, hsl(var(--muted-foreground)));
 }
 
 /* hover는 포인터가 있는 기기에서만(터치의 sticky hover 방지) */
@@ -81,9 +78,7 @@
 
 /* 선택: 36px + 3px 흰 링 + 2px primary 링 + 이름 라벨 칩 */
 .sf-marker[data-selected] {
-  --sf-ring:
-    0 0 0 3px hsl(0 0% 100%),
-    0 0 0 5px hsl(var(--primary));
+  --sf-ring: 0 0 0 3px hsl(0 0% 100%), 0 0 0 5px hsl(var(--primary));
   --sf-elevation: var(--shadow-float-lg);
 }
 

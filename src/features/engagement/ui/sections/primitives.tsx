@@ -30,9 +30,17 @@ export function SectionHeading({
   );
 }
 
-export function EmptyState({ children, className }: { children: React.ReactNode; className?: string }) {
+export function EmptyState({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <p className={cn('rounded-lg bg-muted px-3 py-3 text-body-sm text-muted-foreground', className)}>
+    <p
+      className={cn('rounded-lg bg-muted px-3 py-3 text-body-sm text-muted-foreground', className)}
+    >
       {children}
     </p>
   );

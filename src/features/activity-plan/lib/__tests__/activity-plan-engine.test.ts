@@ -89,9 +89,9 @@ describe('activity plan engine', () => {
     const names = plan!.stops.map(stop => stop.facility.name);
     expect(new Set(names).size).toBe(names.length);
     expect(plan!.stops.every(stop => stop.facility.category !== 'subway')).toBe(true);
-    expect(hasRepeatedPlace([cityHall('a', '1호선', 37.5647), cityHall('b', '2호선', 37.5657)])).toBe(
-      true
-    );
+    expect(
+      hasRepeatedPlace([cityHall('a', '1호선', 37.5647), cityHall('b', '2호선', 37.5657)])
+    ).toBe(true);
     expect(hasRepeatedPlace(facilities)).toBe(false);
   });
 

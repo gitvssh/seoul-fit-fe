@@ -25,7 +25,8 @@ export class EngagementApiError extends Error {
 }
 
 function toApiError(status: number): EngagementApiError {
-  if (status === 401) return new EngagementApiError('unauthorized', status, '로그인이 만료되었습니다.');
+  if (status === 401)
+    return new EngagementApiError('unauthorized', status, '로그인이 만료되었습니다.');
   if (status === 403)
     return new EngagementApiError('forbidden', status, '이 작업을 수행할 권한이 없습니다.');
   return new EngagementApiError(

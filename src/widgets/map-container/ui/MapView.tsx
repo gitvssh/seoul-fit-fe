@@ -3,9 +3,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import type { ClusteredFacility, Facility, FacilityCategory } from '@/lib/types';
+import type { ClusteredFacility, Facility, FacilityCategory, Position } from '@/lib/types';
+import type { MessageKey } from '@/shared/i18n/messages';
 import type { WindowWithKakao } from '@/shared/lib/kakao';
-import { useMapMarkers } from '@/shared/lib/hooks/useMapMarkers';
+import { useMapMarkers, getFacilityMarkerId } from '@/shared/lib/hooks/useMapMarkers';
+import { useMediaQuery, DESKTOP_QUERY, HOVER_QUERY } from '@/shared/lib/hooks/useMediaQuery';
 import { useCurrentLocationMarker } from '@/shared/lib/hooks/useCurrentLocationMarker';
 import { isValidSeoulCoordinate } from '@/shared/lib/utils/coordinate-validator';
 import { trackEvent } from '@/shared/lib/analytics/analytics';
@@ -46,6 +48,7 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
     getFilteredFacilities,
     activeCategories,
     toggleCategory,
+    selectedFacility,
     selectFacility,
     selectCluster,
     updateLocation,
@@ -140,16 +143,38 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
   });
 
   const handleFacilitySelect = useCallback(
-    (facility: Facility) => {
-      selectFacility(facility, 'map_marker');
+    (facility: Facility, source: 'marker' | 'cluster' = 'marker') => {
+      selectFacility(facility, source === 'cluster' ? 'cluster' : 'map_marker');
       revealPosition(facility.position);
     },
     [revealPosition, selectFacility]
   );
 
   const handleClusterSelect = useCallback(
-    (cluster: ClusteredFacility) => selectCluster(cluster),
+    (clusterFacilities: Facility[], center: Position) => {
+      const cluster: ClusteredFacility = {
+        id: `cluster-${center.lat.toFixed(6)},${center.lng.toFixed(6)}`,
+        position: center,
+        count: clusterFacilities.length,
+        facilities: clusterFacilities,
+        radius: 0,
+        primaryCategory: clusterFacilities[0]?.category ?? 'park',
+      };
+      selectCluster(cluster);
+    },
     [selectCluster]
+  );
+
+  const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
+  const hoverEnabled = useMediaQuery(HOVER_QUERY, false);
+  const markerLabels = useMemo(
+    () => ({
+      facility: (name: string, category: string) =>
+        `${name}, ${t(`category.${category}` as MessageKey)}`,
+      cluster: (count: number) => t('explorer.clusterTitle', { count }),
+      currentLocation: t('map.currentLocationMarker'),
+    }),
+    [t]
   );
 
   const { markersCount } = useMapMarkers({
@@ -158,12 +183,23 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
     visibleFacilities: categoryVisible,
     onFacilitySelect: handleFacilitySelect,
     onClusterSelect: handleClusterSelect,
+    selectedFacilityId: selectedFacility ? getFacilityMarkerId(selectedFacility) : null,
+    hoverEnabled,
+    labels: markerLabels,
+    viewportPadding: {
+      top: isDesktop ? 56 : 112,
+      right: 64,
+      bottom: bottomInset + 16,
+      left: 16,
+    },
   });
 
   useCurrentLocationMarker({
     mapInstance,
     mapStatus: { success: mapStatus.success, loading: mapStatus.loading, error: mapStatus.error },
-    currentLocation: geolocation.position ? { coords: geolocation.position } : null,
+    lat: geolocation.position?.lat ?? null,
+    lng: geolocation.position?.lng ?? null,
+    label: markerLabels.currentLocation,
   });
 
   const counts = useMemo(() => {

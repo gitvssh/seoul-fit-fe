@@ -11,7 +11,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Facility } from '@/lib/types';
-import type { KakaoCluster, KakaoCustomOverlay, KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
+import type {
+  KakaoCluster,
+  KakaoCustomOverlay,
+  KakaoMap,
+  WindowWithKakao,
+} from '@/shared/lib/kakao';
 import { resolveMarkerLabels, type MarkerLabels } from '@/shared/lib/utils/marker';
 import {
   applyHiddenSelection,
@@ -21,7 +26,11 @@ import {
   type LayerHandle,
   type SelectionState,
 } from './map-markers/bulk-layer';
-import { createClusterLayer, decideClusterAction, zoomToCluster } from './map-markers/cluster-layer';
+import {
+  createClusterLayer,
+  decideClusterAction,
+  zoomToCluster,
+} from './map-markers/cluster-layer';
 import {
   DEFAULT_CLUSTER_LIST_THRESHOLD,
   DEFAULT_VIEWPORT_PADDING,
@@ -253,7 +262,11 @@ export const useMapMarkers = ({
   const revealFacility = useCallback((facilityId: string) => {
     const handle = layerRef.current;
     if (!handle) return;
-    const facility = findKnownFacility(stateRef.current.focus, latestRef.current.facilityIndex, facilityId);
+    const facility = findKnownFacility(
+      stateRef.current.focus,
+      latestRef.current.facilityIndex,
+      facilityId
+    );
     if (facility) panToReveal(handle, facility.position, latestRef.current.viewportPadding);
   }, []);
 

@@ -13,6 +13,7 @@ import { MapView } from './MapView';
 import { AppShell } from './layout/AppShell';
 import { PanelHost, type PanelHostHandle } from './layout/PanelHost';
 import { useSearchReveal } from '../lib/useSearchReveal';
+import { usePreferences } from '@/shared/lib/hooks/usePreferences';
 import { Header } from '@/widgets/header';
 import SideBar from '@/shared/ui/layout/SideBar';
 import type { UserPreferences, Position } from '@/lib/types';

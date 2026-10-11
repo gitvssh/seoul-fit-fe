@@ -9,7 +9,12 @@ import { Label } from '@/shared/ui/label';
 import { Switch } from '@/shared/ui/switch';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { MessageKey } from '@/shared/i18n/messages';
-import type { AlertEvaluation, AlertRuleType, AlertSubscription, SavedZone } from '../../model/types';
+import type {
+  AlertEvaluation,
+  AlertRuleType,
+  AlertSubscription,
+  SavedZone,
+} from '../../model/types';
 import { EmptyState, SectionHeading } from './primitives';
 
 interface AlertRulesProps {
@@ -144,8 +149,7 @@ function SubscriptionRow({
           {typeLabel(subscription.alertType)}
         </p>
         <p className='truncate text-caption tabular-nums text-muted-foreground'>
-          {zones.find(zone => zone.id === subscription.zoneId)?.label ||
-            t('engagement.alertZone')}{' '}
+          {zones.find(zone => zone.id === subscription.zoneId)?.label || t('engagement.alertZone')}{' '}
           · {quiet}
         </p>
       </div>

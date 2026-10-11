@@ -114,9 +114,7 @@ export function Zones({
           </li>
         ))}
       </ul>
-      {zones.length === 0 && (
-        <EmptyState className='mt-2'>{t('engagement.zonesEmpty')}</EmptyState>
-      )}
+      {zones.length === 0 && <EmptyState className='mt-2'>{t('engagement.zonesEmpty')}</EmptyState>}
     </section>
   );
 }

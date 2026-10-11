@@ -142,6 +142,10 @@ const FacilityContext = createContext<FacilityContextValue | null>(null);
 
 interface FacilityProviderProps {
   userPreferences?: UserPreferences;
+  /** 외부(선호 스토어)가 카테고리를 소유할 때: 활성 목록과 변경 콜백 */
+  categories?: FacilityCategory[];
+  onToggleCategory?: (category: FacilityCategory) => void;
+  onSetCategories?: (categories: FacilityCategory[]) => void;
   children: React.ReactNode;
 }
 
@@ -171,7 +175,13 @@ export function calculateDistanceKm(from: Position, to: Position): number {
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function FacilityProvider({ userPreferences, children }: FacilityProviderProps) {
+export function FacilityProvider({
+  userPreferences,
+  categories: controlledCategories,
+  onToggleCategory,
+  onSetCategories,
+  children,
+}: FacilityProviderProps) {
   const { parks, fetchAllParksData } = useParks();
   const { libraries, fetchAllLibrariesData } = useLibraries();
   const { culturalSpaces, fetchCulturalSpaces } = useCulturalSpaces();
@@ -192,11 +202,15 @@ export function FacilityProvider({ userPreferences, children }: FacilityProvider
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [selectedCluster, setSelectedCluster] = useState<ClusteredFacility | null>(null);
   const [transientFacilities, setTransientFacilities] = useState<Facility[]>([]);
-  const [activeCategories, setActiveCategoriesState] = useState<FacilityCategory[]>(() =>
+  const [localCategories, setActiveCategoriesState] = useState<FacilityCategory[]>(() =>
     userPreferences?.preferredCategories && userPreferences.preferredCategories.length > 0
       ? userPreferences.preferredCategories
       : ALL_CATEGORIES
   );
+  const isControlled = controlledCategories !== undefined;
+  const activeCategories = controlledCategories ?? localCategories;
+  const activeCategoriesRef = useRef(activeCategories);
+  activeCategoriesRef.current = activeCategories;
   const lastLoadedRef = useRef<Position | null>(null);
 
   const markSource = useCallback((source: FacilitySource, status: SourceStatus) => {
@@ -377,31 +391,44 @@ export function FacilityProvider({ userPreferences, children }: FacilityProvider
     setSelectedCluster(null);
   }, []);
 
-  const activateCategory = useCallback((category: FacilityCategory) => {
-    setActiveCategoriesState(previous =>
-      previous.includes(category) ? previous : [...previous, category]
-    );
-  }, []);
+  const setActiveCategories = useCallback(
+    (categories: FacilityCategory[]) => {
+      if (isControlled) onSetCategories?.(categories);
+      else setActiveCategoriesState(categories);
+    },
+    [isControlled, onSetCategories]
+  );
 
-  const activateCategories = useCallback((categories: FacilityCategory[]) => {
-    setActiveCategoriesState(previous => {
-      const missing = categories.filter(category => !previous.includes(category));
-      return missing.length === 0 ? previous : [...previous, ...missing];
-    });
-  }, []);
+  const activateCategories = useCallback(
+    (categories: FacilityCategory[]) => {
+      const current = activeCategoriesRef.current;
+      const missing = categories.filter(category => !current.includes(category));
+      if (missing.length === 0) return;
+      setActiveCategories([...current, ...missing]);
+    },
+    [setActiveCategories]
+  );
 
-  const setActiveCategories = useCallback((categories: FacilityCategory[]) => {
-    setActiveCategoriesState(categories);
-  }, []);
+  const activateCategory = useCallback(
+    (category: FacilityCategory) => activateCategories([category]),
+    [activateCategories]
+  );
 
-  const toggleCategory = useCallback((category: FacilityCategory) => {
-    trackEvent('discovery_started', { category, selection_source: 'category_filter' });
-    setActiveCategoriesState(previous =>
-      previous.includes(category)
-        ? previous.filter(item => item !== category)
-        : [...previous, category]
-    );
-  }, []);
+  const toggleCategory = useCallback(
+    (category: FacilityCategory) => {
+      trackEvent('discovery_started', { category, selection_source: 'category_filter' });
+      if (isControlled) {
+        onToggleCategory?.(category);
+        return;
+      }
+      setActiveCategoriesState(previous =>
+        previous.includes(category)
+          ? previous.filter(item => item !== category)
+          : [...previous, category]
+      );
+    },
+    [isControlled, onToggleCategory]
+  );
 
   const addTransientFacility = useCallback((facility: Facility) => {
     setTransientFacilities(previous => {

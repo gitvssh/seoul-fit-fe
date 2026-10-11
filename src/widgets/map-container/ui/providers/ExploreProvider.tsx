@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { Facility, FacilityCategory, Position } from '@/lib/types';
+import type { Facility, Position } from '@/lib/types';
 import { applyPlaceFilters } from '@/features/place-filter/lib/place-filter';
 import {
   DEFAULT_PLACE_FILTERS,
@@ -31,25 +31,13 @@ import type {
   FacilityRecommendation,
   RecommendationPreset,
 } from '@/features/recommendation/model/types';
+import { getPresetRequiredCategories } from '@/features/recommendation/lib/presets';
 import { useNaturalLanguageRuleStore } from '@/features/natural-language-search/model/rule-store';
 import { useLiveData } from '@/shared/lib/hooks/useLiveData';
 import { useGeolocation } from '@/shared/lib/hooks/useGeolocation';
 import { trackEvent } from '@/shared/lib/analytics/analytics';
 import { useFacilityContext } from './FacilityProvider';
 import { useMapContext } from './MapProvider';
-
-/**
- * 프리셋이 필요로 하는 카테고리. 프리셋을 고르면 지도에 해당 카테고리를 켠다.
- * (추천 기능 브랜치의 presets.ts로 대체 예정)
- */
-const PRESET_CATEGORIES: Record<RecommendationPreset, FacilityCategory[]> = {
-  available_now: ['park', 'library', 'culture', 'sports'],
-  quiet: ['park', 'library'],
-  rainy_day: ['library', 'culture', 'cooling_shelter'],
-  today_event: ['cultural_event', 'cultural_reservation', 'culture'],
-  bike_trip: ['bike', 'park'],
-  cool_down: ['cooling_shelter', 'library', 'park'],
-};
 
 const PRESET_IDS = new Set<string>(RECOMMENDATION_PRESETS.map(preset => preset.id));
 
@@ -194,7 +182,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   const setPreset = useCallback(
     (preset: RecommendationPreset) => {
       setActivePreset(preset);
-      activateCategories(PRESET_CATEGORIES[preset] ?? []);
+      activateCategories(getPresetRequiredCategories(preset));
     },
     [activateCategories]
   );

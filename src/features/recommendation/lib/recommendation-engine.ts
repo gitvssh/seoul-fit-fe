@@ -98,7 +98,9 @@ export function mergeDuplicatePlaces(
       continue;
     }
 
-    const record: RecommendationFacility = route ? { ...facility, routes: [route] } : { ...facility };
+    const record: RecommendationFacility = route
+      ? { ...facility, routes: [route] }
+      : { ...facility };
     bucket.push(record);
     buckets.set(key, bucket);
     kept.push(record);

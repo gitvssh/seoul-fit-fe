@@ -263,7 +263,10 @@ export const createClusterElement = (
 ): HTMLElement => {
   const element = document.createElement('div');
   for (const [property, value] of Object.entries(CLUSTER_STYLE_BASE)) {
-    element.style.setProperty(property.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`), value);
+    element.style.setProperty(
+      property.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`),
+      value
+    );
   }
   decorateClusterElement(element, count, options);
   return element;

@@ -68,7 +68,10 @@ function StopItem({
         className='flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-card p-3 text-left shadow-float-sm outline-none transition-colors duration-fast ease-standard hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50'
       >
         <span
-          className={cn('flex size-7 shrink-0 items-center justify-center rounded-full', config.color)}
+          className={cn(
+            'flex size-7 shrink-0 items-center justify-center rounded-full',
+            config.color
+          )}
           style={{ color: MARKER_GLYPH_COLOR[config.glyph] }}
           aria-hidden='true'
         >

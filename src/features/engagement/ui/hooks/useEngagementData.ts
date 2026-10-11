@@ -97,7 +97,8 @@ export function useEngagementData({ accessToken, enabled }: Options) {
         if (!cancelled) setSnapshot(next);
       })
       .catch(error => {
-        if (!cancelled) setNotice({ kind: 'error', key: toErrorKey(error, 'engagement.errorLoad') });
+        if (!cancelled)
+          setNotice({ kind: 'error', key: toErrorKey(error, 'engagement.errorLoad') });
       })
       .finally(() => {
         if (!cancelled) setLoadedRevision(revision);

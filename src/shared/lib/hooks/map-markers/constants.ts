@@ -1,5 +1,9 @@
 import type { KakaoMarkerClustererOptions } from '@/shared/lib/kakao';
-import { CLUSTER_OVERLAY_STYLES, CLUSTER_TIER_THRESHOLDS, formatClusterCount } from '@/shared/lib/utils/marker';
+import {
+  CLUSTER_OVERLAY_STYLES,
+  CLUSTER_TIER_THRESHOLDS,
+  formatClusterCount,
+} from '@/shared/lib/utils/marker';
 
 export interface ViewportPadding {
   top: number;

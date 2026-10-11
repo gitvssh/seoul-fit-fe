@@ -38,7 +38,11 @@ describe('convertLibraryToFacility', () => {
 
   it('returns null without usable coordinates', () => {
     expect(convertLibraryToFacility({ lbrryName: '좌표 없음' }, 1)).toBeNull();
-    expect(convertLibraryToFacility({ lbrryName: '엉뚱한 좌표', xcnts: 0, ydnts: 0 }, 2)).toBeNull();
-    expect(convertLibraryToFacility({ lbrryName: '부산 좌표', xcnts: 35.1, ydnts: 129.0 }, 3)).toBeNull();
+    expect(
+      convertLibraryToFacility({ lbrryName: '엉뚱한 좌표', xcnts: 0, ydnts: 0 }, 2)
+    ).toBeNull();
+    expect(
+      convertLibraryToFacility({ lbrryName: '부산 좌표', xcnts: 35.1, ydnts: 129.0 }, 3)
+    ).toBeNull();
   });
 });

@@ -13,6 +13,7 @@ describe('useZoomLevel', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     handlers.clear();
+    (map.getLevel as jest.Mock).mockReturnValue(5);
     addListener.mockClear();
     removeListener.mockClear();
     const windowWithKakao = window as WindowWithKakao;

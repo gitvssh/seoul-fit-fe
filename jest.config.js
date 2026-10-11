@@ -11,6 +11,7 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
+    '^@/config/kakao$': '<rootDir>/config/kakao',
     '^@/src/(.*)$': '<rootDir>/src/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@entities/(.*)$': '<rootDir>/src/entities/$1',

@@ -168,8 +168,11 @@ describe('useKakaoMap', () => {
     const { result } = renderMap();
     await fireScriptLoad();
 
-    await advance(100 * 10);
-    await settle();
+    // 컨테이너 대기는 한 번에 하나씩 타이머를 건다. 가짜 타이머에서는 시도 횟수만큼 차례로 진행한다.
+    for (let attempt = 0; attempt <= 12; attempt += 1) {
+      await advance(100);
+      await settle();
+    }
 
     expect(result.current.mapStatus).toMatchObject({
       loading: false,

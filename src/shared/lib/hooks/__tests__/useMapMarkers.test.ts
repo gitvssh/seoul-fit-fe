@@ -3,7 +3,12 @@ import type { Facility } from '@/lib/types';
 import type { KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
 import { getFacilityMarkerId, useMapMarkers, type UseMapMarkersProps } from '../useMapMarkers';
 
-const createFacility = (id: string, lat: number, lng: number, category: Facility['category'] = 'park'): Facility => ({
+const createFacility = (
+  id: string,
+  lat: number,
+  lng: number,
+  category: Facility['category'] = 'park'
+): Facility => ({
   id,
   name: `시설 ${id}`,
   category,
@@ -173,7 +178,8 @@ const renderMarkers = (
 
 const bulkOverlays = () =>
   overlayInstances.filter(
-    overlay => overlay.options.content.classList.contains('sf-marker') && overlay.options.zIndex === 1
+    overlay =>
+      overlay.options.content.classList.contains('sf-marker') && overlay.options.zIndex === 1
   );
 
 describe('useMapMarkers', () => {
@@ -195,7 +201,12 @@ describe('useMapMarkers', () => {
 
     const clusterer = clustererInstances[0];
     expect(clusterer.options).toEqual(
-      expect.objectContaining({ minLevel: 4, gridSize: 64, disableClickZoom: true, averageCenter: true })
+      expect.objectContaining({
+        minLevel: 4,
+        gridSize: 64,
+        disableClickZoom: true,
+        averageCenter: true,
+      })
     );
     expect(overlayInstances).toHaveLength(2);
     expect(clusterer.addMarkers).toHaveBeenCalledWith(overlayInstances.slice(0, 2), true);
@@ -358,7 +369,10 @@ describe('useMapMarkers', () => {
     );
     const map = createMapMock(7);
     const { onClusterSelect } = renderMarkers(
-      { visibleFacilities: facilities, viewportPadding: { top: 56, right: 0, bottom: 120, left: 0 } },
+      {
+        visibleFacilities: facilities,
+        viewportPadding: { top: 56, right: 0, bottom: 120, left: 0 },
+      },
       map
     );
     const clusterer = clustererInstances[0];
@@ -435,7 +449,10 @@ describe('useMapMarkers', () => {
     const underSheet = createFacility('under', 37.45, 127);
     const map = createMapMock();
     const { result } = renderMarkers(
-      { visibleFacilities: [inView, underSheet], viewportPadding: { top: 0, right: 0, bottom: 100, left: 0 } },
+      {
+        visibleFacilities: [inView, underSheet],
+        viewportPadding: { top: 0, right: 0, bottom: 100, left: 0 },
+      },
       map
     );
 
@@ -468,7 +485,15 @@ describe('useMapMarkers', () => {
 
     unmount();
     expect(clusterer.setMap).toHaveBeenCalledWith(null);
-    expect(eventMock.removeListener).toHaveBeenCalledWith(clusterer, 'clustered', expect.any(Function));
-    expect(eventMock.removeListener).toHaveBeenCalledWith(clusterer, 'clusterclick', expect.any(Function));
+    expect(eventMock.removeListener).toHaveBeenCalledWith(
+      clusterer,
+      'clustered',
+      expect.any(Function)
+    );
+    expect(eventMock.removeListener).toHaveBeenCalledWith(
+      clusterer,
+      'clusterclick',
+      expect.any(Function)
+    );
   });
 });

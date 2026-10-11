@@ -150,7 +150,11 @@ describe('EngagementPanel', () => {
 
   it('explains a failed load and offers a retry', async () => {
     useAuthStore.setState({ isAuthenticated: true, accessToken: 'token', user: null });
-    (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+    });
     renderPanel();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('로그인이 만료됐어요');

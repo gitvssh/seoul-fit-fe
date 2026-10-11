@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/shared/ui/auth/AuthProvider';
 import { I18nProvider } from '@/shared/i18n/I18nProvider';
 import { ThemeProvider } from '@/shared/lib/theme/ThemeProvider';
+import { AppToaster } from '@/shared/ui/toaster';
 import { THEME_INIT_SCRIPT } from '@/shared/lib/theme/theme';
 import {
   SITE_DESCRIPTION,
@@ -83,7 +84,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <ThemeProvider>
           <I18nProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+              <AppToaster />
+            </AuthProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>
