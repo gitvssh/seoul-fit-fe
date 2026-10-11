@@ -1,176 +1,81 @@
 // hooks/useCurrentLocationMarker.ts
-import { useEffect, useRef, useCallback } from 'react';
-import type { KakaoMap, KakaoMarker, WindowWithKakao } from '@/shared/lib/kakao';
-
-// 디바운싱 유틸리티
-const debounce = <T extends (...args: never[]) => unknown>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout | null = null;
-
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
+import { useEffect, useRef } from 'react';
+import type { KakaoCustomOverlay, KakaoMap, WindowWithKakao } from '@/shared/lib/kakao';
+import {
+  createCurrentLocationElement,
+  DEFAULT_MARKER_LABELS,
+  MARKER_Z,
+} from '@/shared/lib/utils/marker';
 
 interface UseCurrentLocationMarkerProps {
-  mapInstance: KakaoMap | null;
-  mapStatus: { success: boolean; loading?: boolean; error?: string | null };
-  currentLocation: { coords: { lat: number; lng: number } } | null;
-  onLocationChange?: (lat: number, lng: number) => void;
+  mapInstance: KakaoMap | null | undefined;
+  mapStatus: { success: boolean; loading?: boolean; error?: string | null } | undefined;
+  /** 실제 측위 좌표. 없으면(undefined/null/NaN) 아무것도 그리지 않는다. */
+  lat?: number | null;
+  lng?: number | null;
+  /** 접근성 이름(기본 '현재 위치') */
+  label?: string;
 }
 
+interface LocationOverlay {
+  overlay: KakaoCustomOverlay;
+  element: HTMLElement;
+}
+
+const isFiniteCoordinate = (value: number | null | undefined): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+/**
+ * 현재 위치 점. 좌표 primitive만 의존해 재렌더마다 오버레이를 다시 만들지 않고
+ * `setPosition`으로 옮긴다(코어 감사 D-13). 포커스 계층 z-order `MARKER_Z.me`.
+ */
 export const useCurrentLocationMarker = ({
   mapInstance,
   mapStatus,
-  currentLocation,
-  onLocationChange,
-}: UseCurrentLocationMarkerProps) => {
-  const markerRef = useRef<KakaoMarker | null>(null);
+  lat,
+  lng,
+  label = DEFAULT_MARKER_LABELS.currentLocation,
+}: UseCurrentLocationMarkerProps): void => {
+  const overlayRef = useRef<LocationOverlay | null>(null);
+  const ready = Boolean(mapInstance && mapStatus?.success);
+  const hasPosition = isFiniteCoordinate(lat) && isFiniteCoordinate(lng);
 
-  // 마커 생성
-  const createMarker = useCallback(
-    (lat: number, lng: number) => {
-      if (!mapInstance || !mapStatus.success) return;
-
-      const windowWithKakao = window as WindowWithKakao;
-      if (!windowWithKakao.kakao?.maps) return;
-
-      const kakaoMaps = windowWithKakao.kakao.maps;
-
-      // 기존 마커 제거
-      if (markerRef.current) {
-        markerRef.current.setMap(null);
-      }
-
-      // 커스텀 오버레이로 현재 위치 마커 생성 (더 명확한 스타일링)
-      const markerContent = `
-        <div style="
-          position: relative;
-          width: 50px;
-          height: 50px;
-          cursor: move;
-        ">
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            background: #4285F4;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            z-index: 2;
-          "></div>
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: rgba(66, 133, 244, 0.2);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-          "></div>
-          <style>
-            @keyframes pulse {
-              0% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.8;
-              }
-              50% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 0.4;
-              }
-              100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.8;
-              }
-            }
-          </style>
-        </div>
-      `;
-
-      const customOverlay = new kakaoMaps.CustomOverlay({
-        position: new kakaoMaps.LatLng(lat, lng),
-        content: markerContent,
-        xAnchor: 0.5,
-        yAnchor: 0.5,
-        zIndex: 999,
-      });
-
-      customOverlay.setMap(mapInstance);
-
-      // 드래그 기능을 위한 표준 마커 (투명하게 처리)
-      const invisibleMarker = new kakaoMaps.Marker({
-        position: new kakaoMaps.LatLng(lat, lng),
-        draggable: true,
-        opacity: 0,
-        zIndex: 998,
-      });
-
-      invisibleMarker.setMap(mapInstance);
-
-      // 드래그 종료 시 위치 업데이트 (디바운싱 적용)
-      const debouncedLocationChange = debounce((lat: number, lng: number) => {
-        if (onLocationChange) {
-          console.log('마커 드래그로 위치 변경');
-          onLocationChange(lat, lng);
-        }
-      }, 1000); // 1초 디바운싱
-
-      // 드래그 중일 때 커스텀 오버레이도 함께 이동
-      kakaoMaps.event.addListener(invisibleMarker, 'drag', () => {
-        const position = invisibleMarker.getPosition();
-        customOverlay.setPosition(position);
-      });
-
-      kakaoMaps.event.addListener(invisibleMarker, 'dragend', () => {
-        const position = invisibleMarker.getPosition();
-        const newLat = position.getLat();
-        const newLng = position.getLng();
-
-        // 커스텀 오버레이 위치 업데이트
-        customOverlay.setPosition(position);
-
-        // 지도 중심을 마커 위치로 이동
-        mapInstance.setCenter(position);
-
-        // 디바운싱된 위치 변경 콜백 호출
-        debouncedLocationChange(newLat, newLng);
-      });
-
-      // 기존 마커 참조를 커스텀 오버레이와 투명 마커 둘 다 저장
-      markerRef.current = {
-        setMap: (map: any) => {
-          customOverlay.setMap(map);
-          invisibleMarker.setMap(map);
-        },
-      } as KakaoMarker;
-    },
-    [mapInstance, mapStatus.success, onLocationChange]
-  );
-
-  // 현재 위치 있으면 마커 생성
   useEffect(() => {
-    if (currentLocation?.coords) {
-      createMarker(currentLocation.coords.lat, currentLocation.coords.lng);
+    const maps = (window as WindowWithKakao).kakao?.maps;
+
+    if (!ready || !mapInstance || !maps || !hasPosition) {
+      overlayRef.current?.overlay.setMap(null);
+      overlayRef.current = null;
+      return;
     }
-  }, [currentLocation, createMarker]);
 
-  // 정리
-  useEffect(() => {
-    return () => {
-      if (markerRef.current) {
-        markerRef.current.setMap(null);
-      }
-    };
-  }, []);
+    const position = new maps.LatLng(lat as number, lng as number);
+    const current = overlayRef.current;
 
-  return {};
+    if (current) {
+      current.overlay.setPosition(position);
+      current.element.setAttribute('aria-label', label);
+      return;
+    }
+
+    const element = createCurrentLocationElement(label);
+    const overlay = new maps.CustomOverlay({
+      position,
+      content: element,
+      xAnchor: 0.5,
+      yAnchor: 0.5,
+      zIndex: MARKER_Z.me,
+      clickable: false,
+    });
+    overlay.setMap(mapInstance);
+    overlayRef.current = { overlay, element };
+  }, [ready, mapInstance, hasPosition, lat, lng, label]);
+
+  useEffect(
+    () => () => {
+      overlayRef.current?.overlay.setMap(null);
+      overlayRef.current = null;
+    },
+    [mapInstance]
+  );
 };
