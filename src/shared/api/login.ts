@@ -25,7 +25,7 @@ export const consumeOAuthState = (receivedState?: string): boolean => {
   const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
   sessionStorage.removeItem(OAUTH_STATE_KEY);
   return Boolean(
-    expectedState &&
+    expectedState?.length &&
       receivedState &&
       expectedState.length === receivedState.length &&
       expectedState === receivedState
@@ -58,9 +58,7 @@ export const kakaoLogout = async () => {
     if (!response.ok) {
       console.warn('백엔드 로그아웃 요청 실패:', response.status);
     } else {
-      const result = await response.json();
-      if (process.env.NODE_ENV === 'development') {
-      }
+      await response.json();
     }
   } catch (error) {
     console.error('로그아웃 중 오류 발생:', error);

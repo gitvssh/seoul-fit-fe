@@ -115,17 +115,15 @@ export function getLoadedHangul(): HangulModule | null {
 /** es-hangul을 지연 적재한다. 같은 Promise를 재사용하므로 여러 번 불러도 한 번만 내려받는다. */
 export function loadHangul(): Promise<HangulModule> {
   if (hangulModule) return Promise.resolve(hangulModule);
-  if (!hangulPromise) {
-    hangulPromise = import('es-hangul')
-      .then(mod => {
-        hangulModule = { getChoseong: mod.getChoseong, disassemble: mod.disassemble };
-        return hangulModule;
-      })
-      .catch(error => {
-        hangulPromise = null;
-        throw error;
-      });
-  }
+  hangulPromise ??= import('es-hangul')
+    .then(mod => {
+      hangulModule = { getChoseong: mod.getChoseong, disassemble: mod.disassemble };
+      return hangulModule;
+    })
+    .catch(error => {
+      hangulPromise = null;
+      throw error;
+    });
   return hangulPromise;
 }
 
@@ -166,9 +164,9 @@ export function prepareQuery(query: string, hangul: HangulModule | null): Prepar
 /** 글자 단위 초성 문자열. 한글이 아닌 글자는 그대로 두어 길이를 보존한다. */
 function toChoseongText(text: string, hangul: HangulModule): string {
   let out = '';
-  for (let index = 0; index < text.length; index += 1) {
-    const choseong = hangul.getChoseong(text[index], { keepNonHangul: true });
-    out += choseong.length === 1 ? choseong : text[index];
+  for (const char of text.split('')) {
+    const choseong = hangul.getChoseong(char, { keepNonHangul: true });
+    out += choseong.length === 1 ? choseong : char;
   }
   return out;
 }
@@ -177,9 +175,10 @@ function toChoseongText(text: string, hangul: HangulModule): string {
 function toJamoText(text: string, hangul: HangulModule): { jamo: string; offsets: number[] } {
   let jamo = '';
   const offsets: number[] = [];
-  for (let index = 0; index < text.length; index += 1) {
+  // Offsets use UTF-16 units, matching normalizeText and the source index map.
+  for (const char of text.split('')) {
     offsets.push(jamo.length);
-    jamo += hangul.disassemble(text[index]) || text[index];
+    jamo += hangul.disassemble(char) || char;
   }
   return { jamo, offsets };
 }

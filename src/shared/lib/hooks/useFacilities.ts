@@ -1,6 +1,6 @@
 // hooks/useFacilities.ts
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import type { Facility, FacilityCategory, UserPreferences } from '@/lib/types';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { Facility } from '@/lib/types';
 
 export interface UseFacilitiesOptions {
   userLocation?: { lat: number; lng: number };

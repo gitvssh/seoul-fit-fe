@@ -145,7 +145,7 @@ describe('EngagementPanel', () => {
       )
     );
     const notice = await screen.findByText('저장한 장소에서 뺐어요.');
-    expect(notice).toHaveAttribute('role', 'status');
+    expect(notice).toHaveRole('status');
   });
 
   it('explains a failed load and offers a retry', async () => {

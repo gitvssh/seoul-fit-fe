@@ -8,6 +8,6 @@ interface RouteErrorProps {
 }
 
 /** Root route error boundary. */
-export default function RouteError(props: RouteErrorProps) {
+export default function RouteError(props: Readonly<RouteErrorProps>) {
   return <RouteErrorState {...props} />;
 }

@@ -76,20 +76,20 @@ interface ExploreContextValue {
 
 const ExploreContext = createContext<ExploreContextValue | null>(null);
 
-export function ExploreProvider({ children }: { children: React.ReactNode }) {
+export function ExploreProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const searchParams = useSearchParams();
   const { activateCategories, currentLocation, updateLocation, facilities } = useFacilityContext();
   const { setCenter, setZoom, mapStatus, getCenter } = useMapContext();
   const live = useLiveData();
   const geolocation = useGeolocation();
 
-  const [filters, setFiltersState] = useState<PlaceFilterState>(DEFAULT_PLACE_FILTERS);
+  const [filtersState, setFiltersState] = useState<PlaceFilterState>(DEFAULT_PLACE_FILTERS);
   const [activePreset, setActivePreset] = useState<RecommendationPreset>(() => {
     const param = searchParams?.get('preset');
     return param && PRESET_IDS.has(param) ? (param as RecommendationPreset) : 'available_now';
   });
-  const [isListOpen, setListOpen] = useState(false);
-  const [isEngagementOpen, setEngagementOpen] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [isEngagementOpen, setIsEngagementOpen] = useState(false);
   const [selectedRegionCode, setSelectedRegionCode] = useState('');
   const [visibleFacilities, setVisibleFacilities] = useState<Facility[]>([]);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -108,7 +108,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
     setFiltersState({ categories: appliedRule.categories, ...appliedRule.filters });
     if (appliedRule.preset) setActivePreset(appliedRule.preset);
     if (appliedRule.categories.length > 0) activateCategories(appliedRule.categories);
-    setListOpen(true);
+    setIsListOpen(true);
   }, [activateCategories, appliedRule, ruleRevision]);
 
   const origin = geolocation.position ?? currentLocation;
@@ -121,13 +121,9 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   // 이미 허용된 권한이면 프롬프트 없이 조용히 위치를 읽는다. 아니면 사용자 행동을 기다린다.
   const locateMe = useCallback(async () => {
     const position = await geolocation.request();
-    trackEvent('geolocation_result', {
-      location_permission: position
-        ? 'granted'
-        : geolocation.status === 'denied'
-          ? 'denied'
-          : 'unavailable',
-    });
+    let permission: 'granted' | 'denied' | 'unavailable' = 'granted';
+    if (!position) permission = geolocation.status === 'denied' ? 'denied' : 'unavailable';
+    trackEvent('geolocation_result', { location_permission: permission });
     if (!position) return false;
     setCenter(position);
     setZoom(4);
@@ -188,8 +184,8 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const facilitiesInView = useMemo(
-    () => applyPlaceFilters(visibleFacilities, origin, filters),
-    [filters, origin, visibleFacilities]
+    () => applyPlaceFilters(visibleFacilities, origin, filtersState),
+    [filtersState, origin, visibleFacilities]
   );
 
   const recommendations = useMemo(
@@ -221,12 +217,12 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
   }, [activePreset, recommendations]);
 
   const activeFilterCount =
-    (filters.openOnly ? 1 : 0) +
-    (filters.reservableOnly ? 1 : 0) +
-    (filters.indoorOnly ? 1 : 0) +
-    (filters.lowCongestionOnly ? 1 : 0) +
-    (filters.maxDistanceKm === null ? 0 : 1) +
-    filters.categories.length;
+    (filtersState.openOnly ? 1 : 0) +
+    (filtersState.reservableOnly ? 1 : 0) +
+    (filtersState.indoorOnly ? 1 : 0) +
+    (filtersState.lowCongestionOnly ? 1 : 0) +
+    (filtersState.maxDistanceKm === null ? 0 : 1) +
+    filtersState.categories.length;
 
   const geolocationBanner: GeolocationBannerState = useMemo(() => {
     if (bannerDismissed || geolocation.position) return 'none';
@@ -239,16 +235,16 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<ExploreContextValue>(
     () => ({
-      filters,
+      filters: filtersState,
       setFilters,
       resetFilters,
       activeFilterCount,
       activePreset,
       setPreset,
       isListOpen,
-      setListOpen,
+      setListOpen: setIsListOpen,
       isEngagementOpen,
-      setEngagementOpen,
+      setEngagementOpen: setIsEngagementOpen,
       selectedRegionCode,
       setSelectedRegionCode,
       visibleFacilities,
@@ -273,7 +269,7 @@ export function ExploreProvider({ children }: { children: React.ReactNode }) {
       appliedRule,
       clearRule,
       facilitiesInView,
-      filters,
+      filtersState,
       geolocation,
       geolocationBanner,
       isEngagementOpen,

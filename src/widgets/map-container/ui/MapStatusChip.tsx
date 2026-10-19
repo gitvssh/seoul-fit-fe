@@ -30,7 +30,7 @@ export function MapStatusChip({
   onRetryFailed,
   onLocate,
   onDismissBanner,
-}: MapStatusChipProps) {
+}: Readonly<MapStatusChipProps>) {
   const { t } = useI18n();
   const base =
     'pointer-events-auto flex max-w-[min(100%,32rem)] items-center gap-2 rounded-lg border border-border bg-surface-elevated px-3 py-2 text-caption text-surface-elevated-foreground shadow-float-md md:text-body-sm';
@@ -40,25 +40,27 @@ export function MapStatusChip({
       .map(category => t(`category.${category}` as MessageKey))
       .join(', ');
     return (
-      <div role='status' className={base}>
+      <output className={base}>
         <AlertTriangle className='size-4 shrink-0 text-warning' aria-hidden='true' />
         <span className='min-w-0 flex-1'>{t('map.status.failed', { categories: names })}</span>
         <Button type='button' size='sm' variant='secondary' onClick={onRetryFailed}>
           {t('map.status.retry')}
         </Button>
-      </div>
+      </output>
     );
   }
 
   if (geolocationBanner !== 'none') {
-    const messageKey: MessageKey =
-      geolocationBanner === 'denied'
-        ? 'map.status.locationDenied'
-        : geolocationBanner === 'unavailable'
-          ? 'map.status.locationUnavailable'
-          : 'map.status.locationPrompt';
+    let messageKey: MessageKey;
+    if (geolocationBanner === 'denied') {
+      messageKey = 'map.status.locationDenied';
+    } else if (geolocationBanner === 'unavailable') {
+      messageKey = 'map.status.locationUnavailable';
+    } else {
+      messageKey = 'map.status.locationPrompt';
+    }
     return (
-      <div role='status' className={base}>
+      <output className={base}>
         <MapPinOff className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
         <span className='min-w-0 flex-1'>{t(messageKey)}</span>
         {geolocationBanner === 'prompt' && (
@@ -69,16 +71,16 @@ export function MapStatusChip({
         <Button type='button' size='sm' variant='ghost' onClick={onDismissBanner}>
           {t('map.status.keepDefault')}
         </Button>
-      </div>
+      </output>
     );
   }
 
   if (loading || locationLoading) {
     return (
-      <div role='status' aria-live='polite' className={base}>
+      <output aria-live='polite' className={base}>
         <Loader2 className='size-4 shrink-0 animate-spin text-primary' aria-hidden='true' />
         <span>{loading ? t('map.status.loading') : t('map.status.locationLoading')}</span>
-      </div>
+      </output>
     );
   }
 

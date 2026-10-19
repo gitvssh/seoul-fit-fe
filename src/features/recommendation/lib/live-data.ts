@@ -13,7 +13,7 @@ export type LiveDataFreshness = FreshnessStatus;
 export type LiveDataLabelKey = `freshness.${FreshnessStatus}`;
 
 export interface LiveDataStatus {
-  freshness: LiveDataFreshness;
+  freshness: FreshnessStatus;
   /** i18n 키. 화면에서는 `t(labelKey)` 또는 `FreshnessBadge`를 쓴다 */
   labelKey: LiveDataLabelKey;
   /** 한국어 라벨(공통 사전 `freshness.*`의 ko 값). 레거시 호출부 호환용 */

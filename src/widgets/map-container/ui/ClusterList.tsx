@@ -17,7 +17,7 @@ interface ClusterListProps {
 }
 
 /** 작은 클러스터를 눌렀을 때의 장소 목록. 항목을 고르면 상세로 넘어간다. */
-export function ClusterList({ cluster, onBack }: ClusterListProps) {
+export function ClusterList({ cluster, onBack }: Readonly<ClusterListProps>) {
   const { t } = useI18n();
   const { selectFacility } = useFacilityContext();
   const { revealPosition } = useMapContext();

@@ -230,23 +230,21 @@ export type {
 
 export type KakaoEventTarget = KakaoMap | KakaoMarker | KakaoCustomOverlay | KakaoMarkerClusterer;
 
+export type KakaoEventType = MapEventType | MarkerEventType | ClustererEventType;
+
 // 이벤트 관리
 export interface KakaoEventManager {
   addListener<T = unknown>(
     target: KakaoEventTarget,
-    type: MapEventType | MarkerEventType | ClustererEventType,
+    type: KakaoEventType,
     handler: (event: T) => void
   ): void;
   removeListener<T = unknown>(
     target: KakaoEventTarget,
-    type: MapEventType | MarkerEventType | ClustererEventType,
+    type: KakaoEventType,
     handler: (event: T) => void
   ): void;
-  trigger<T = unknown>(
-    target: KakaoEventTarget,
-    type: MapEventType | MarkerEventType | ClustererEventType,
-    data?: T
-  ): void;
+  trigger<T = unknown>(target: KakaoEventTarget, type: KakaoEventType, data?: T): void;
   /** CustomOverlay 콘텐츠의 이벤트가 지도까지 전달되지 않게 막는다 */
   preventMap?(): void;
 }

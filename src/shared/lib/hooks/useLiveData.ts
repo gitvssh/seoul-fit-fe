@@ -49,7 +49,7 @@ export function useLiveData() {
   const load = useCallback(async (position: Position, options: { force?: boolean } = {}) => {
     const key = `${position.lat.toFixed(3)},${position.lng.toFixed(3)}`;
     const last = lastRequestRef.current;
-    if (!options.force && last && last.key === key && Date.now() - last.at < 60_000) {
+    if (!options.force && last?.key === key && Date.now() - last.at < 60_000) {
       return inFlightRef.current ?? undefined;
     }
     lastRequestRef.current = { key, at: Date.now() };

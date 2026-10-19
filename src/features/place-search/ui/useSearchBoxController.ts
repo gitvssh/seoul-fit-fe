@@ -148,8 +148,9 @@ export function useSearchBoxController(input: SearchBoxControllerInput) {
     event.stopPropagation();
     if (event.key === 'Escape') {
       event.preventDefault();
-      setOpen(false);
       inputRef.current?.focus();
+      // Focusing the input opens suggestions; closing must be the last update.
+      setOpen(false);
     }
   };
 

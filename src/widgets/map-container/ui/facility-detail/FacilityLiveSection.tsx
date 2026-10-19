@@ -14,7 +14,7 @@ interface FacilityLiveSectionProps {
 }
 
 /** 선택 장소 주변의 지금: 데이터가 있을 때만 렌더한다. 실패 문구를 네 번 반복하지 않는다. */
-export function FacilityLiveSection({ weather, congestion }: FacilityLiveSectionProps) {
+export function FacilityLiveSection({ weather, congestion }: Readonly<FacilityLiveSectionProps>) {
   const { t } = useI18n();
   if (!weather.data && !congestion.data) {
     if (weather.status === 'unavailable' || weather.status === 'error') {

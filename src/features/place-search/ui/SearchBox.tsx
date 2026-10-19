@@ -124,7 +124,7 @@ const subscribeToNothing = () => () => {};
 function findOptionId(value: string | undefined): string | undefined {
   if (!value) return undefined;
   for (const option of document.querySelectorAll<HTMLElement>('[cmdk-item]')) {
-    if (option.getAttribute('data-value') === value) return option.id || undefined;
+    if (option.dataset.value === value) return option.id || undefined;
   }
   return undefined;
 }

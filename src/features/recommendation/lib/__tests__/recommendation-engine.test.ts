@@ -161,6 +161,21 @@ describe('recommendation engine', () => {
     expect(recommendations[0].facility.routes).toEqual(['1호선', '2호선']);
   });
 
+  it.each([
+    ['(가(나)다)', '다)'],
+    ['가()(나)다', '가다'],
+    ['가)나(다)라', '가)나라'],
+    ['가(나', '가(나'],
+    ['시청 (1호선) (2호선)', '시청'],
+  ])('preserves delimiter semantics for %s', (name, expected) => {
+    expect(normalizePlaceName(name)).toBe(expected);
+  });
+
+  it('handles long unclosed parenthetical input without repeated scans', () => {
+    const name = `시청${'('.repeat(100_000)}`;
+    expect(normalizePlaceName(name)).toBe(name);
+  });
+
   it('returns neutral points and warnings when hours, freshness and live data are missing', () => {
     const recommendation = scoreFacility(
       { ...library, operatingHours: undefined },

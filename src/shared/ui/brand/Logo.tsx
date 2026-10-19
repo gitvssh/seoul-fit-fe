@@ -14,7 +14,7 @@ export interface LogoMarkProps {
  * The brand mark: the pin glyph on a primary-coloured rounded square.
  * Decorative by default; give the surrounding link or heading the accessible name.
  */
-export function LogoMark({ size = 32, className, style }: LogoMarkProps) {
+export function LogoMark({ size = 32, className, style }: Readonly<LogoMarkProps>) {
   return (
     <span
       aria-hidden='true'
@@ -45,7 +45,7 @@ export interface WordmarkProps {
 }
 
 /** The text wordmark. Inherits colour so it works on any surface. */
-export function Wordmark({ className }: WordmarkProps) {
+export function Wordmark({ className }: Readonly<WordmarkProps>) {
   return (
     <span data-slot='wordmark' className={cn('font-semibold tracking-tight', className)}>
       {SITE_NAME}
@@ -61,7 +61,7 @@ export interface LogoProps {
 }
 
 /** Mark + wordmark lockup used by headers, footers and empty states. */
-export function Logo({ size = 28, className, wordmarkClassName }: LogoProps) {
+export function Logo({ size = 28, className, wordmarkClassName }: Readonly<LogoProps>) {
   return (
     <span data-slot='logo' className={cn('inline-flex items-center gap-2', className)}>
       <LogoMark size={size} />

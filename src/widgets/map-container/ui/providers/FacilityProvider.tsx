@@ -197,18 +197,18 @@ export function FacilityProvider({
   const [sourceStatus, setSourceStatus] = useState(initialSourceStatus);
   const [initialLoading, setInitialLoading] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [currentLocation, setCurrentLocationState] = useState<Position>(DEFAULT_ORIGIN);
+  const [currentLocationState, setCurrentLocationState] = useState<Position>(DEFAULT_ORIGIN);
   const [lastLoadedLocation, setLastLoadedLocation] = useState<Position | null>(null);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [selectedCluster, setSelectedCluster] = useState<ClusteredFacility | null>(null);
   const [transientFacilities, setTransientFacilities] = useState<Facility[]>([]);
-  const [localCategories, setActiveCategoriesState] = useState<FacilityCategory[]>(() =>
+  const [activeCategoriesState, setActiveCategoriesState] = useState<FacilityCategory[]>(() =>
     userPreferences?.preferredCategories && userPreferences.preferredCategories.length > 0
       ? userPreferences.preferredCategories
       : ALL_CATEGORIES
   );
   const isControlled = controlledCategories !== undefined;
-  const activeCategories = controlledCategories ?? localCategories;
+  const activeCategories = controlledCategories ?? activeCategoriesState;
   const activeCategoriesRef = useRef(activeCategories);
   activeCategoriesRef.current = activeCategories;
   const lastLoadedRef = useRef<Position | null>(null);
@@ -326,11 +326,13 @@ export function FacilityProvider({
     push(culturalSpaces, convertCulturalSpaceToFacility);
     push(culturalEvents, convertCulturalEventToFacility);
     push(culturalReservations, convertCulturalReservationToFacility);
-    combined.push(...(coolingShelters ?? []));
-    combined.push(...(subwayStations ?? []));
-    combined.push(...(bikeStations ?? []));
-    combined.push(...(sportsFacilities ?? []));
-    combined.push(...(restaurantFacilities ?? []));
+    combined.push(
+      ...(coolingShelters ?? []),
+      ...(subwayStations ?? []),
+      ...(bikeStations ?? []),
+      ...(sportsFacilities ?? []),
+      ...(restaurantFacilities ?? [])
+    );
 
     transientFacilities.forEach(transient => {
       const existingIndex = combined.findIndex(
@@ -466,7 +468,7 @@ export function FacilityProvider({
       selectedCluster,
       activeCategories,
       userPreferences: userPreferences || null,
-      currentLocation,
+      currentLocation: currentLocationState,
       lastLoadedLocation,
       selectFacility,
       selectCluster,
@@ -491,7 +493,7 @@ export function FacilityProvider({
       selectedCluster,
       activeCategories,
       userPreferences,
-      currentLocation,
+      currentLocationState,
       lastLoadedLocation,
       selectFacility,
       selectCluster,

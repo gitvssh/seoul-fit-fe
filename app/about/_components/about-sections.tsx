@@ -28,12 +28,12 @@ export function Section({
   title,
   lead,
   children,
-}: {
+}: Readonly<{
   id: string;
   title: string;
   lead?: string;
   children: ReactNode;
-}) {
+}>) {
   return (
     <section id={id} aria-labelledby={`${id}-heading`} className='border-t border-border pt-10'>
       <h2 id={`${id}-heading`} className='text-title text-foreground'>
@@ -45,7 +45,7 @@ export function Section({
   );
 }
 
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+function ExternalLink({ href, children }: Readonly<{ href: string; children: ReactNode }>) {
   return (
     <a
       href={href}

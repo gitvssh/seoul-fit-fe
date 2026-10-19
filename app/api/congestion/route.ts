@@ -40,6 +40,75 @@ function toResponsePayload(data: CongestionData, cached: boolean) {
   };
 }
 
+async function fetchNearestCongestionResponse(
+  candidates: ReturnType<typeof findNearestAreaMatches>
+) {
+  // 캐시가 없거나 만료된 경우 API 호출
+  const fetchTime = new Date().toISOString();
+  let lastUpstreamCode: string | null = null;
+
+  for (const candidate of candidates) {
+    const areaCode = candidate.location.code;
+    if (isAreaUnavailable(areaCode)) {
+      continue;
+    }
+
+    const apiResponse = await fetchSeoulCongestionData(areaCode);
+
+    // API 응답 검증
+    if (!validateApiResponse(apiResponse)) {
+      const upstream = getUpstreamResult(apiResponse);
+      lastUpstreamCode = upstream.code;
+      console.error(
+        `서울시 실시간 인구데이터 응답 오류 (${areaCode}): ${upstream.code} ${upstream.message}`
+      );
+      if (isAreaNotFoundResult(upstream.code)) {
+        markAreaUnavailable(areaCode);
+      }
+      continue;
+    }
+
+    // 데이터 변환
+    const congestionData = transformCongestionData(areaCode, apiResponse, fetchTime);
+    if (!congestionData) {
+      markAreaUnavailable(areaCode);
+      continue;
+    }
+
+    // 캐시 저장
+    saveCongestionToCache(areaCode, congestionData);
+
+    return NextResponse.json({
+      success: true,
+      data: toResponsePayload(congestionData, false),
+    });
+  }
+
+  if (lastUpstreamCode) {
+    // 502/504는 Cloudflare가 본문을 자체 오류 페이지로 바꾸므로 503으로 내려 원인 코드를 보존한다.
+    return NextResponse.json(
+      {
+        success: false,
+        error: '서울시 실시간 인구데이터를 불러오지 못했습니다.',
+        code: 'UPSTREAM_ERROR',
+        upstreamCode: lastUpstreamCode,
+        data: null,
+      },
+      { status: 503 }
+    );
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: '주변 지역의 혼잡도 데이터가 없습니다.',
+      code: 'NO_DATA',
+      data: null,
+    },
+    { status: 404 }
+  );
+}
+
 /**
  * GET 서울시 실시간 인구데이터 API 호출
  * Query Parameters: lat(위도), lng(경도)
@@ -105,70 +174,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 캐시가 없거나 만료된 경우 API 호출
-    const fetchTime = new Date().toISOString();
-    let lastUpstreamCode: string | null = null;
-
-    for (const candidate of candidates) {
-      const areaCode = candidate.location.code;
-      if (isAreaUnavailable(areaCode)) {
-        continue;
-      }
-
-      const apiResponse = await fetchSeoulCongestionData(areaCode);
-
-      // API 응답 검증
-      if (!validateApiResponse(apiResponse)) {
-        const upstream = getUpstreamResult(apiResponse);
-        lastUpstreamCode = upstream.code;
-        console.error(
-          `서울시 실시간 인구데이터 응답 오류 (${areaCode}): ${upstream.code} ${upstream.message}`
-        );
-        if (isAreaNotFoundResult(upstream.code)) {
-          markAreaUnavailable(areaCode);
-        }
-        continue;
-      }
-
-      // 데이터 변환
-      const congestionData = transformCongestionData(areaCode, apiResponse, fetchTime);
-      if (!congestionData) {
-        markAreaUnavailable(areaCode);
-        continue;
-      }
-
-      // 캐시 저장
-      saveCongestionToCache(areaCode, congestionData);
-
-      return NextResponse.json({
-        success: true,
-        data: toResponsePayload(congestionData, false),
-      });
-    }
-
-    if (lastUpstreamCode) {
-      // 502/504는 Cloudflare가 본문을 자체 오류 페이지로 바꾸므로 503으로 내려 원인 코드를 보존한다.
-      return NextResponse.json(
-        {
-          success: false,
-          error: '서울시 실시간 인구데이터를 불러오지 못했습니다.',
-          code: 'UPSTREAM_ERROR',
-          upstreamCode: lastUpstreamCode,
-          data: null,
-        },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: '주변 지역의 혼잡도 데이터가 없습니다.',
-        code: 'NO_DATA',
-        data: null,
-      },
-      { status: 404 }
-    );
+    return await fetchNearestCongestionResponse(candidates);
   } catch (error) {
     console.error('서울시 실시간 인구데이터 API 처리 중 오류: ', error);
     return NextResponse.json(

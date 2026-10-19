@@ -8,7 +8,7 @@ import { Logo } from '@/shared/ui/brand/Logo';
 import { useI18n } from '@/shared/i18n/I18nProvider';
 
 /** Compact page frame for the profile screens: back to the map, brand, content column. */
-export function ProfileFrame({ children }: { children: ReactNode }) {
+export function ProfileFrame({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useI18n();
   return (
     <div className='flex min-h-screen flex-col bg-background'>

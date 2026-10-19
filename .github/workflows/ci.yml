@@ -71,9 +71,13 @@ jobs:
     name: Type check and test
     runs-on: homelab-seoul-fit-fe
     timeout-minutes: 30
+    outputs:
+      sonar_verified: ${{ steps.sonar_gate.outputs.verified }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with: { persist-credentials: false, fetch-depth: 1 }
+        with:
+          persist-credentials: false
+          fetch-depth: ${{ github.event_name == 'push' && '0' || '1' }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
@@ -84,22 +88,8 @@ jobs:
       - run: npm run test:runtime
       - run: npm run build
 
-  sonar:
-    name: SonarQube quality gate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: [quality]
-    runs-on: homelab-seoul-fit-fe
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with: { persist-credentials: false, fetch-depth: 0 }
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: "22"
-      - run: npm ci
-      - name: Rebuild scanner coverage input
-        run: npm run test:coverage -- --runInBand
       - name: Scan
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         with:
           skipSignatureVerification: true
@@ -108,6 +98,27 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
       - name: Wait for and report the quality gate
-        run: python3 .github/scripts/wait_for_sonar_quality_gate.py --timeout 300
+        id: sonar_gate
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/wait_for_sonar_quality_gate.py --timeout 300
+          echo 'verified=true' >> "$GITHUB_OUTPUT"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  sonar:
+    name: SonarQube quality gate
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [quality]
+    runs-on: homelab-seoul-fit-fe
+    timeout-minutes: 5
+    steps:
+      - name: Require this workflow's successful analysis
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          SONAR_VERIFIED: ${{ needs.quality.outputs.sonar_verified }}
+        run: |
+          set -euo pipefail
+          test "$QUALITY_RESULT" = success
+          test "$SONAR_VERIFIED" = true

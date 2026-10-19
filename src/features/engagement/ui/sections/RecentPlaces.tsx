@@ -22,7 +22,7 @@ export function RecentPlaces({
   places,
   isLoading = false,
   onPlaceSelect,
-}: RecentPlacesProps) {
+}: Readonly<RecentPlacesProps>) {
   const { t } = useI18n();
   // 서버가 돌려주는 category 문자열이 사전에 없으면 원문을 그대로 보여 준다.
   const categoryLabel = (category: string) => {

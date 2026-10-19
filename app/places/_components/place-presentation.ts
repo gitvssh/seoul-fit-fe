@@ -15,8 +15,16 @@ export interface PlacePresentation {
 const MAX_VISIBLE_TAGS = 3;
 
 function stripHtml(value: string): string {
-  return value
-    .replace(/<[^>]+>/g, ' ')
+  const parts = value.split('>');
+  return parts
+    .map((part, index) => {
+      if (index === parts.length - 1) return part;
+      const opening = part.indexOf('<');
+      // The old expression requires at least one character inside a tag.
+      if (opening < 0 || opening === part.length - 1) return `${part}>`;
+      return `${part.slice(0, opening)} `;
+    })
+    .join('')
     .replace(/\s+/g, ' ')
     .trim();
 }

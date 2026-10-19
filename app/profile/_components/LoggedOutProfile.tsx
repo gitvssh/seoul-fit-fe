@@ -30,7 +30,7 @@ export interface LoggedOutProfileProps {
 }
 
 /** Honest logged-out state: what the profile does, one Kakao CTA, and that local saving still works. */
-export function LoggedOutProfile({ onLogin }: LoggedOutProfileProps) {
+export function LoggedOutProfile({ onLogin }: Readonly<LoggedOutProfileProps>) {
   const { t } = useI18n();
   return (
     <section

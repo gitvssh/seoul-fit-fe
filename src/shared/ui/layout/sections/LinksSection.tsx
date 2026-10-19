@@ -16,7 +16,7 @@ interface LinksSectionProps {
   onNavigate?: (href: string) => void;
 }
 
-export function LinksSection({ onNavigate }: LinksSectionProps) {
+export function LinksSection({ onNavigate }: Readonly<LinksSectionProps>) {
   const { t } = useI18n();
 
   return (

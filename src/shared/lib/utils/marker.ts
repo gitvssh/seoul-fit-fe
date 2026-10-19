@@ -138,7 +138,10 @@ const playSelectEnter = (root: HTMLElement): void => {
   root.addEventListener('animationcancel', finish);
 };
 
-export const setFacilityMarkerSelected = (root: HTMLElement, selected: boolean): void => {
+export const setFacilityMarkerSelected = (
+  root: HTMLElement,
+  { selected }: Readonly<{ selected: boolean }>
+): void => {
   if (selected) {
     // 이미 선택된 요소의 데이터 갱신(syncFocusEntry)에서는 다시 재생하지 않는다.
     if (!('selected' in root.dataset)) playSelectEnter(root);
@@ -153,13 +156,19 @@ export const setFacilityMarkerSelected = (root: HTMLElement, selected: boolean):
   }
 };
 
-export const setFacilityMarkerHover = (root: HTMLElement, hover: boolean): void => {
+export const setFacilityMarkerHover = (
+  root: HTMLElement,
+  { hover }: Readonly<{ hover: boolean }>
+): void => {
   if (hover) root.dataset.hover = '';
   else delete root.dataset.hover;
 };
 
 /** 선택 시설은 포커스 계층 오버레이가 대신 그리므로 벌크 계층의 원본은 숨긴다. */
-export const setFacilityMarkerHidden = (root: HTMLElement, hidden: boolean): void => {
+export const setFacilityMarkerHidden = (
+  root: HTMLElement,
+  { hidden }: Readonly<{ hidden: boolean }>
+): void => {
   if (hidden) root.dataset.hidden = '';
   else delete root.dataset.hidden;
 };
@@ -187,18 +196,18 @@ export const updateFacilityMarkerElement = (
     root.style.removeProperty('--sf-marker-crowd');
   }
 
-  const glyph = root.querySelector('.sf-marker__glyph');
-  if (glyph && glyph.getAttribute('data-category') !== facility.category) {
+  const glyph = root.querySelector<HTMLElement>('.sf-marker__glyph');
+  if (glyph && glyph.dataset.category !== facility.category) {
     glyph.replaceChildren();
     const svg = createGlyph(facility.category);
     if (svg) glyph.appendChild(svg);
-    glyph.setAttribute('data-category', facility.category);
+    glyph.dataset.category = facility.category;
   }
 
   const label = root.querySelector('.sf-marker__label');
   if (label) label.textContent = facility.name;
 
-  if (selected !== undefined) setFacilityMarkerSelected(root, selected);
+  if (selected !== undefined) setFacilityMarkerSelected(root, { selected });
 };
 
 /**

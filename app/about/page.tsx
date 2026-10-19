@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Github, Map } from 'lucide-react';
+import { GitFork, Map } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { SiteFooter } from '@/shared/ui/layout/SiteFooter';
 import { SiteHeader } from '@/shared/ui/layout/SiteHeader';
@@ -50,7 +50,7 @@ export default function AboutPage() {
             </Button>
             <Button asChild variant='outline' size='lg'>
               <a href={SITE_REPOSITORY_URL} target='_blank' rel='noreferrer'>
-                <Github aria-hidden='true' />
+                <GitFork aria-hidden='true' />
                 GitHub 저장소
               </a>
             </Button>

@@ -11,7 +11,7 @@ export interface PlaceCardProps {
 }
 
 /** List card. The whole card is the link target; the title carries the accessible name. */
-export function PlaceCard({ place, facilityCategory }: PlaceCardProps) {
+export function PlaceCard({ place, facilityCategory }: Readonly<PlaceCardProps>) {
   const { tags, text } = presentPlace(place.category, place.description);
   const { shown, hidden } = visibleTags(tags);
 

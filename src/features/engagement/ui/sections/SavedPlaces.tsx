@@ -29,7 +29,7 @@ export function SavedPlaces({
   isMutating = false,
   onRemove,
   onPlaceSelect,
-}: SavedPlacesProps) {
+}: Readonly<SavedPlacesProps>) {
   const { t } = useI18n();
 
   return (

@@ -27,7 +27,7 @@ interface PanelHostProps {
  * 탐색·상세·클러스터 목록을 하나의 호스트에서 전환한다.
  * 데스크톱은 좌측 solid 패널, 모바일은 비모달 3단 바텀시트다.
  */
-export function PanelHost({ onReady, onLogin }: PanelHostProps) {
+export function PanelHost({ onReady, onLogin }: Readonly<PanelHostProps>) {
   const { t } = useI18n();
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const { selectedFacility, selectedCluster, clearSelection } = useFacilityContext();
@@ -35,12 +35,19 @@ export function PanelHost({ onReady, onLogin }: PanelHostProps) {
   const { isListOpen } = useExploreContext();
   const [snap, setSnap] = useState<SheetSnap>('peek');
 
-  const mode: PanelMode = selectedFacility ? 'detail' : selectedCluster ? 'cluster' : 'explore';
+  let mode: PanelMode;
+  if (selectedFacility) {
+    mode = 'detail';
+  } else if (selectedCluster) {
+    mode = 'cluster';
+  } else {
+    mode = 'explore';
+  }
 
   // 상세·클러스터가 열리면 반쯤, 탐색으로 돌아오면 피크로.
   useEffect(() => {
     if (isDesktop) return;
-    setSnap(mode === 'explore' ? (isListOpen ? 'half' : 'peek') : 'half');
+    setSnap(mode === 'explore' && !isListOpen ? 'peek' : 'half');
   }, [isDesktop, isListOpen, mode]);
 
   useEffect(() => {
@@ -64,18 +71,20 @@ export function PanelHost({ onReady, onLogin }: PanelHostProps) {
     onReady?.({ onMapTap });
   }, [onMapTap, onReady]);
 
-  const content =
-    mode === 'detail' && selectedFacility ? (
+  let content;
+  if (mode === 'detail' && selectedFacility) {
+    content = (
       <FacilityDetail
         facility={selectedFacility}
         onBack={clearSelection}
         compact={!isDesktop && snap === 'peek'}
       />
-    ) : mode === 'cluster' && selectedCluster ? (
-      <ClusterList cluster={selectedCluster} onBack={clearSelection} />
-    ) : (
-      <ExplorerPanelConnected compact={!isDesktop && snap === 'peek'} onLogin={onLogin} />
     );
+  } else if (mode === 'cluster' && selectedCluster) {
+    content = <ClusterList cluster={selectedCluster} onBack={clearSelection} />;
+  } else {
+    content = <ExplorerPanelConnected compact={!isDesktop && snap === 'peek'} onLogin={onLogin} />;
+  }
 
   if (isDesktop) {
     return (

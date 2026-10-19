@@ -59,6 +59,59 @@ export function NotificationsMenu() {
     if (isSafeAppDeepLink(notification.deepLink)) window.location.assign(notification.deepLink);
   };
 
+  let notificationContent;
+  if (isLoadingHistory) {
+    notificationContent = (
+      <DropdownMenuItem>
+        <div className='flex w-full items-center justify-center gap-2 py-4 text-body-sm text-muted-foreground'>
+          <Loader2 className='size-4 animate-spin' aria-hidden='true' />
+          {t('header.loading')}
+        </div>
+      </DropdownMenuItem>
+    );
+  } else if (notifications.length > 0) {
+    notificationContent = notifications.map(notification => (
+      <DropdownMenuItem
+        key={notification.id}
+        className={cn(
+          'cursor-pointer border-b border-border last:border-b-0',
+          notification.status === 'SENT' && 'bg-accent/60'
+        )}
+        onClick={() => handleClick(notification)}
+      >
+        <div className='flex w-full items-start gap-3 py-1'>
+          <span
+            className={cn(
+              'mt-1.5 size-2 shrink-0 rounded-full',
+              TYPE_DOT[notification.type] ?? 'bg-muted-foreground'
+            )}
+            aria-hidden='true'
+          />
+          <div className='min-w-0 flex-1'>
+            <p className='truncate text-body-sm font-medium'>{notification.title}</p>
+            <p className='mt-0.5 line-clamp-2 text-caption text-muted-foreground'>
+              {notification.message}
+            </p>
+            {notification.reason && (
+              <p className='mt-0.5 line-clamp-2 text-caption text-primary'>{notification.reason}</p>
+            )}
+            <p className='mt-1 text-caption text-muted-foreground'>
+              {formatRelative(notification.sentAt || notification.createdAt, locale)}
+            </p>
+          </div>
+        </div>
+      </DropdownMenuItem>
+    ));
+  } else {
+    notificationContent = (
+      <DropdownMenuItem>
+        <div className='flex w-full items-center justify-center py-8 text-body-sm text-muted-foreground'>
+          {t('header.notificationsEmpty')}
+        </div>
+      </DropdownMenuItem>
+    );
+  }
+
   return (
     <DropdownMenu onOpenChange={open => open && fetchNotificationHistory(user.id, accessToken)}>
       <DropdownMenuTrigger asChild>
@@ -94,55 +147,7 @@ export function NotificationsMenu() {
             </button>
           )}
         </div>
-        {isLoadingHistory ? (
-          <DropdownMenuItem>
-            <div className='flex w-full items-center justify-center gap-2 py-4 text-body-sm text-muted-foreground'>
-              <Loader2 className='size-4 animate-spin' aria-hidden='true' />
-              {t('header.loading')}
-            </div>
-          </DropdownMenuItem>
-        ) : notifications.length > 0 ? (
-          notifications.map(notification => (
-            <DropdownMenuItem
-              key={notification.id}
-              className={cn(
-                'cursor-pointer border-b border-border last:border-b-0',
-                notification.status === 'SENT' && 'bg-accent/60'
-              )}
-              onClick={() => handleClick(notification)}
-            >
-              <div className='flex w-full items-start gap-3 py-1'>
-                <span
-                  className={cn(
-                    'mt-1.5 size-2 shrink-0 rounded-full',
-                    TYPE_DOT[notification.type] ?? 'bg-muted-foreground'
-                  )}
-                  aria-hidden='true'
-                />
-                <div className='min-w-0 flex-1'>
-                  <p className='truncate text-body-sm font-medium'>{notification.title}</p>
-                  <p className='mt-0.5 line-clamp-2 text-caption text-muted-foreground'>
-                    {notification.message}
-                  </p>
-                  {notification.reason && (
-                    <p className='mt-0.5 line-clamp-2 text-caption text-primary'>
-                      {notification.reason}
-                    </p>
-                  )}
-                  <p className='mt-1 text-caption text-muted-foreground'>
-                    {formatRelative(notification.sentAt || notification.createdAt, locale)}
-                  </p>
-                </div>
-              </div>
-            </DropdownMenuItem>
-          ))
-        ) : (
-          <DropdownMenuItem>
-            <div className='flex w-full items-center justify-center py-8 text-body-sm text-muted-foreground'>
-              {t('header.notificationsEmpty')}
-            </div>
-          </DropdownMenuItem>
-        )}
+        {notificationContent}
       </DropdownMenuContent>
     </DropdownMenu>
   );

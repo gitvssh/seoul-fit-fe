@@ -9,7 +9,7 @@ interface AuthErrorProps {
 }
 
 /** Segment error boundary for /auth/*: runtime failures of the callback screen itself. */
-export default function AuthError(props: AuthErrorProps) {
+export default function AuthError(props: Readonly<AuthErrorProps>) {
   const { t } = useI18n();
   return (
     <RouteErrorState

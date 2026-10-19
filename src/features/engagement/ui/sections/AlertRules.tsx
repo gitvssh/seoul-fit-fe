@@ -51,18 +51,20 @@ function AlertRuleForm({
   zones,
   isMutating,
   onCreate,
-}: Pick<AlertRulesProps, 'zones' | 'isMutating' | 'onCreate'>) {
+}: Readonly<Pick<AlertRulesProps, 'zones' | 'isMutating' | 'onCreate'>>) {
   const { t } = useI18n();
   const typeLabel = useAlertTypeLabel();
   const [selectedZoneId, setSelectedZoneId] = React.useState<number | null>(null);
   const [alertType, setAlertType] = React.useState<AlertRuleType>('AIR_QUALITY');
   const [quietHours, setQuietHours] = React.useState(true);
-  const zoneId =
-    selectedZoneId !== null && zones.some(zone => zone.id === selectedZoneId)
-      ? selectedZoneId
-      : zones.length > 0
-        ? zones[0].id
-        : null;
+  let zoneId;
+  if (selectedZoneId !== null && zones.some(zone => zone.id === selectedZoneId)) {
+    zoneId = selectedZoneId;
+  } else if (zones.length > 0) {
+    zoneId = zones[0].id;
+  } else {
+    zoneId = null;
+  }
 
   return (
     <div className='mt-2 space-y-2'>
@@ -189,7 +191,7 @@ export function AlertRules({
   onToggle,
   onDelete,
   onEvaluate,
-}: AlertRulesProps) {
+}: Readonly<AlertRulesProps>) {
   const { t } = useI18n();
 
   return (
@@ -231,13 +233,13 @@ export function AlertRules({
         </Button>
       )}
       {evaluation && (
-        <p className='mt-2 text-caption tabular-nums text-muted-foreground' role='status'>
+        <output className='block mt-2 text-caption tabular-nums text-muted-foreground'>
           {t('engagement.alertEvaluation', {
             evaluated: evaluation.evaluated,
             generated: evaluation.generated,
             deferred: evaluation.deferred,
           })}
-        </p>
+        </output>
       )}
       <p className='mt-2 text-caption text-muted-foreground'>{t('engagement.alertChannelNote')}</p>
     </section>

@@ -17,7 +17,7 @@ import { cn } from '@/shared/lib/utils';
 
 export interface FreshnessBadgeProps {
   /** 원천 데이터의 기준 시각. 없거나 해석할 수 없으면 `unknown` */
-  timestamp?: TimestampInput;
+  timestamp?: Exclude<TimestampInput, undefined>;
   /** 수집기가 이미 판정한 신선도가 있으면 그 값을 우선한다 */
   status?: FreshnessStatus;
   /** 테스트·SSR에서 기준 시각을 고정할 때 */
@@ -40,7 +40,7 @@ export function FreshnessBadge({
   thresholds,
   showRelativeTime = true,
   className,
-}: FreshnessBadgeProps) {
+}: Readonly<FreshnessBadgeProps>) {
   const { locale, t } = useI18n();
   const reference = now ?? new Date();
   const parsed = parseTimestamp(timestamp);

@@ -37,7 +37,7 @@ export function FilterRow({
   selectedRegionCode,
   onRegionSelect,
   onFilterChange,
-}: FilterRowProps) {
+}: Readonly<FilterRowProps>) {
   const { locale, t } = useI18n();
   return (
     <div

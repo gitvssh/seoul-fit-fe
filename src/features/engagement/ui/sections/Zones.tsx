@@ -31,7 +31,7 @@ export function Zones({
   onCreate,
   onRecenter,
   onDelete,
-}: ZonesProps) {
+}: Readonly<ZonesProps>) {
   const { t } = useI18n();
   const [label, setLabel] = React.useState(() => t('engagement.zoneDefaultLabel'));
   const [radiusMeters, setRadiusMeters] = React.useState<number>(1500);

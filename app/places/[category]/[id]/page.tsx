@@ -39,7 +39,8 @@ function hasCoordinates(
 
 function directionsHref(place: PublicPlace, name: string): string | null {
   if (!hasCoordinates(place)) return null;
-  return `https://map.kakao.com/link/to/${encodeURIComponent(`${name},${place.latitude},${place.longitude}`)}`;
+  const destination = `${name},${place.latitude},${place.longitude}`;
+  return `https://map.kakao.com/link/to/${encodeURIComponent(destination)}`;
 }
 
 function schemaType(place: PublicPlace): string {

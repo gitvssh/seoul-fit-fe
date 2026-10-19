@@ -23,11 +23,11 @@ function InfoRow({
   icon,
   label,
   children,
-}: {
+}: Readonly<{
   icon: React.ReactNode;
   label: string;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <div className='flex gap-3 py-2.5'>
       <span
@@ -44,17 +44,19 @@ function InfoRow({
   );
 }
 
-export function FacilityInfo({ facility }: { facility: Facility }) {
+export function FacilityInfo({ facility }: Readonly<{ facility: Facility }>) {
   const { locale, t } = useI18n();
   const provenance = getFacilityProvenance(facility);
   const sourceUrl = getSafeExternalUrl(provenance.sourceUrl);
-  const updatedLabel =
-    facility.sourceUpdatedAt && Number.isFinite(Date.parse(facility.sourceUpdatedAt))
-      ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ko-KR', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }).format(new Date(facility.sourceUpdatedAt))
-      : t('facility.unknown');
+  let updatedLabel;
+  if (facility.sourceUpdatedAt && Number.isFinite(Date.parse(facility.sourceUpdatedAt))) {
+    updatedLabel = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ko-KR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(facility.sourceUpdatedAt));
+  } else {
+    updatedLabel = t('facility.unknown');
+  }
   const event = facility.culturalEvent;
 
   return (
@@ -129,7 +131,7 @@ export function FacilityInfo({ facility }: { facility: Facility }) {
           <dd className='text-right'>
             {facility.isReservable ? t('facility.reservableYes') : t('facility.reservableNo')}
           </dd>
-          {facility.bikeFacility && facility.bikeFacility.parkingBikeTotCnt !== undefined && (
+          {facility.bikeFacility?.parkingBikeTotCnt !== undefined && (
             <>
               <dt className='text-muted-foreground'>{t('category.bike')}</dt>
               <dd className='text-right tabular-nums'>

@@ -40,7 +40,7 @@ export interface BreadcrumbItem {
 }
 
 /** Breadcrumb trail; the last item is the current page. */
-export function SiteBreadcrumb({ items }: { items: BreadcrumbItem[] }) {
+export function SiteBreadcrumb({ items }: Readonly<{ items: BreadcrumbItem[] }>) {
   return (
     <nav aria-label='경로' className='text-body-sm text-muted-foreground'>
       <ol className='flex flex-wrap items-center gap-1'>

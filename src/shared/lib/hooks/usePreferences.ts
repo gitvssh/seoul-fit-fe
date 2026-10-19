@@ -52,10 +52,12 @@ const INTEREST_TO_FACILITY: Record<string, FacilityCategory> = Object.fromEntrie
 export function interestsToCategories(
   interests: Array<{ category?: string; interestCategory?: string }>
 ): FacilityCategory[] {
-  const categories = interests
-    .map(interest => INTEREST_TO_FACILITY[interest.category ?? interest.interestCategory ?? ''])
-    .filter((category): category is FacilityCategory => Boolean(category));
-  return FACILITY_PREFERENCE_KEYS.filter(category => categories.includes(category));
+  const categories = new Set(
+    interests
+      .map(interest => INTEREST_TO_FACILITY[interest.category ?? interest.interestCategory ?? ''])
+      .filter((category): category is FacilityCategory => Boolean(category))
+  );
+  return FACILITY_PREFERENCE_KEYS.filter(category => categories.has(category));
 }
 
 function normalizeCategories(categories: readonly FacilityCategory[]): FacilityCategory[] {
