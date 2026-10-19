@@ -253,10 +253,9 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
       className='relative h-full w-full overflow-hidden bg-muted'
       style={{ '--sheet-visible': `${bottomInset}px` } as React.CSSProperties}
     >
-      <div
+      <section
         id={containerId}
         className='h-full w-full outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50'
-        role='region'
         aria-label={t('map.canvasLabel')}
       />
 
