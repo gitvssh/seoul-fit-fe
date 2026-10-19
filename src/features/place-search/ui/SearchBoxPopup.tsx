@@ -60,7 +60,7 @@ export function SearchBoxPopup({
   onResetFilters,
   onMouseDown,
   onKeyDown,
-}: SearchBoxPopupProps) {
+}: Readonly<SearchBoxPopupProps>) {
   const { t } = useI18n();
   const hasList = mode === 'results' || mode === 'recent';
 

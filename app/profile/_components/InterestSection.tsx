@@ -21,7 +21,7 @@ interface OptionGroupProps {
   onToggle: (key: string) => void;
 }
 
-function OptionGroup({ title, options, selected, editing, onToggle }: OptionGroupProps) {
+function OptionGroup({ title, options, selected, editing, onToggle }: Readonly<OptionGroupProps>) {
   const { t } = useI18n();
   return (
     <fieldset className='min-w-0'>
@@ -32,6 +32,7 @@ function OptionGroup({ title, options, selected, editing, onToggle }: OptionGrou
           return (
             <li key={option.key}>
               <label
+                aria-label={t(option.labelKey)}
                 className={cn(
                   'flex min-h-[4.5rem] cursor-pointer items-start gap-3 rounded-lg border p-3 transition-[border-color,background-color] duration-fast ease-standard has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50',
                   checked ? 'border-primary bg-accent' : 'border-border bg-card',
@@ -80,7 +81,7 @@ export interface InterestSectionProps {
 }
 
 /** Loads, edits and saves the account's interest categories. */
-export function InterestSection({ fallbackInterests, onChange }: InterestSectionProps) {
+export function InterestSection({ fallbackInterests, onChange }: Readonly<InterestSectionProps>) {
   const { t } = useI18n();
   const [saved, setSaved] = useState<string[]>(fallbackInterests);
   const [draft, setDraft] = useState<string[]>(fallbackInterests);

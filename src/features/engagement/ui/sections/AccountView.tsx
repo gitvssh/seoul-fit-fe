@@ -22,7 +22,7 @@ interface AccountViewProps {
 }
 
 /** 로그인 사용자의 본문: 인사·안내·네 섹션 */
-export function AccountView({ userName, data, actions, onPlaceSelect }: AccountViewProps) {
+export function AccountView({ userName, data, actions, onPlaceSelect }: Readonly<AccountViewProps>) {
   const { t } = useI18n();
   const busy = data.isLoading || data.isMutating;
 
@@ -49,21 +49,19 @@ export function AccountView({ userName, data, actions, onPlaceSelect }: AccountV
         </Alert>
       )}
       {data.notice?.kind === 'success' && (
-        <p
-          className='rounded-lg bg-success-soft px-3 py-2 text-body-sm text-success-soft-foreground'
-          role='status'
+        <output
+          className='block rounded-lg bg-success-soft px-3 py-2 text-body-sm text-success-soft-foreground'
         >
           {t(data.notice.key)}
-        </p>
+        </output>
       )}
       {data.isLoading && (
-        <p
-          className='flex items-center justify-center gap-2 py-6 text-body-sm text-muted-foreground'
-          role='status'
+        <output
+          className='block flex items-center justify-center gap-2 py-6 text-body-sm text-muted-foreground'
         >
           <Loader2 className='size-4 animate-spin' aria-hidden='true' />
           {t('engagement.loading')}
-        </p>
+        </output>
       )}
 
       <SavedPlaces

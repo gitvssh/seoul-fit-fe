@@ -11,7 +11,7 @@ interface PlacesErrorProps {
  * Backend failures while loading public place data land here (a 404 from the
  * backend still renders not-found). Retry re-requests the segment.
  */
-export default function PlacesError(props: PlacesErrorProps) {
+export default function PlacesError(props: Readonly<PlacesErrorProps>) {
   return (
     <RouteErrorState
       {...props}

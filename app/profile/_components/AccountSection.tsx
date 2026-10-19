@@ -74,9 +74,8 @@ export function AccountSection() {
         </Button>
       </div>
       {confirmDelete && (
-        <div
+        <section
           id='delete-account-panel'
-          role='region'
           aria-label={t('profile.account.delete')}
           className='mt-4 rounded-lg border border-destructive/40 bg-muted p-4'
         >
@@ -89,7 +88,7 @@ export function AccountSection() {
               {t('profile.account.deleteCancel')}
             </Button>
           </div>
-        </div>
+        </section>
       )}
       <LogoutModal
         showLogoutModal={confirmLogout}

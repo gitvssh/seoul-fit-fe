@@ -174,7 +174,7 @@ const MAX_TAGS = 8;
  * Returns the tags when the whole value looks like a short tag list, otherwise [].
  */
 export function splitPlaceTags(value: string | null | undefined): string[] {
-  if (!value || !value.includes(',')) return [];
+  if (!value?.includes(',')) return [];
   const parts = value
     .split(',')
     .map(part => part.trim())

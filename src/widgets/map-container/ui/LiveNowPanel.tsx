@@ -32,10 +32,10 @@ const FRESHNESS_VARIANT = {
 export function WeatherConditionIcon({
   condition,
   className,
-}: {
+}: Readonly<{
   condition?: string;
   className?: string;
-}) {
+}>) {
   if (condition && (condition.includes('비') || /rain/i.test(condition))) {
     return <CloudRain className={className} aria-hidden='true' />;
   }
@@ -63,7 +63,7 @@ export function LiveNowPanel({
   onRefresh,
   onClose,
   className,
-}: LiveNowPanelProps) {
+}: Readonly<LiveNowPanelProps>) {
   const { t } = useI18n();
   const status = getCombinedLiveDataStatus(weather.data, congestion.data);
   const unavailable =

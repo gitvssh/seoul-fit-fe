@@ -35,7 +35,7 @@ interface MarkerRowProps {
   onToggle: (category: FacilityCategory) => void;
 }
 
-function MarkerRow({ category, checked, onToggle }: MarkerRowProps) {
+function MarkerRow({ category, checked, onToggle }: Readonly<MarkerRowProps>) {
   const { t } = useI18n();
   const config = FACILITY_CONFIGS[category];
   const Icon = config.Icon;
@@ -77,7 +77,7 @@ function MarkerRow({ category, checked, onToggle }: MarkerRowProps) {
   );
 }
 
-export function MarkerSection({ activeCategories, onCategoryToggle }: MarkerSectionProps) {
+export function MarkerSection({ activeCategories, onCategoryToggle }: Readonly<MarkerSectionProps>) {
   const { t } = useI18n();
   const selected = SIDEBAR_CATEGORIES.filter(category => activeCategories.includes(category));
   const allSelected = selected.length === SIDEBAR_CATEGORIES.length;

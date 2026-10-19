@@ -51,7 +51,7 @@ function AlertRuleForm({
   zones,
   isMutating,
   onCreate,
-}: Pick<AlertRulesProps, 'zones' | 'isMutating' | 'onCreate'>) {
+}: Readonly<Pick<AlertRulesProps, 'zones' | 'isMutating' | 'onCreate'>>) {
   const { t } = useI18n();
   const typeLabel = useAlertTypeLabel();
   const [selectedZoneId, setSelectedZoneId] = React.useState<number | null>(null);
@@ -189,7 +189,7 @@ export function AlertRules({
   onToggle,
   onDelete,
   onEvaluate,
-}: AlertRulesProps) {
+}: Readonly<AlertRulesProps>) {
   const { t } = useI18n();
 
   return (
@@ -231,13 +231,13 @@ export function AlertRules({
         </Button>
       )}
       {evaluation && (
-        <p className='mt-2 text-caption tabular-nums text-muted-foreground' role='status'>
+        <output className='block mt-2 text-caption tabular-nums text-muted-foreground'>
           {t('engagement.alertEvaluation', {
             evaluated: evaluation.evaluated,
             generated: evaluation.generated,
             deferred: evaluation.deferred,
           })}
-        </p>
+        </output>
       )}
       <p className='mt-2 text-caption text-muted-foreground'>{t('engagement.alertChannelNote')}</p>
     </section>

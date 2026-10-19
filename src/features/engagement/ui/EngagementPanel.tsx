@@ -27,11 +27,11 @@ function AccountSection({
   token,
   currentLocation,
   onPlaceSelect,
-}: {
+}: Readonly<{
   token: string;
   currentLocation: { lat: number; lng: number };
   onPlaceSelect?: (place: EngagementPlaceSummary) => void;
-}) {
+}>) {
   const { t } = useI18n();
   const user = useAuthStore(state => state.user);
   const data = useEngagementData({ accessToken: token, enabled: true });

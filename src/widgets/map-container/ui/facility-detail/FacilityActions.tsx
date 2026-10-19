@@ -24,7 +24,7 @@ interface FacilityActionsProps {
   compact?: boolean;
 }
 
-export function FacilityActions({ facility, compact = false }: FacilityActionsProps) {
+export function FacilityActions({ facility, compact = false }: Readonly<FacilityActionsProps>) {
   const { t } = useI18n();
   const {
     isFavorite,
@@ -141,9 +141,9 @@ export function FacilityActions({ facility, compact = false }: FacilityActionsPr
         {!compact && secondary}
       </div>
       {favoriteError && (
-        <p className='mt-2 text-caption text-warning-soft-foreground' role='status'>
+        <output className='block mt-2 text-caption text-warning-soft-foreground'>
           {favoriteError}
-        </p>
+        </output>
       )}
     </div>
   );

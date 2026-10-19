@@ -49,7 +49,7 @@ function readSystemDark() {
   return window.matchMedia(DARK_QUERY).matches;
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   // Server render and first client render agree on 'system'; the inline script already
   // applied the stored preference to <html>, so there is no flash.
   const [preference, setPreferenceState] = React.useState<ThemePreference>('system');
@@ -77,8 +77,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     const root = document.documentElement;
-    if (mapDark) root.setAttribute('data-map-dark', 'true');
-    else root.removeAttribute('data-map-dark');
+    if (mapDark) root.dataset.mapDark = 'true';
+    else delete root.dataset.mapDark;
   }, [mapDark]);
 
   const setPreference = React.useCallback((next: ThemePreference) => {

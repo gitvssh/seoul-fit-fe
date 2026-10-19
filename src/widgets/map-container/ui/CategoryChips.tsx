@@ -26,9 +26,9 @@ export function CategoryChips({
   activeCategories,
   onToggle,
   className,
-}: CategoryChipsProps) {
+}: Readonly<CategoryChipsProps>) {
   const { t } = useI18n();
-  const rowRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLFieldSetElement>(null);
   const lastToggledRef = useRef<FacilityCategory | null>(null);
 
   useEffect(() => {
@@ -40,12 +40,11 @@ export function CategoryChips({
   }, [activeCategories]);
 
   return (
-    <div
+    <fieldset
       ref={rowRef}
-      role='group'
       aria-label={t('map.chipsLabel')}
       className={cn(
-        'pointer-events-none flex snap-x gap-2 overflow-x-auto px-3 py-2 scrollbar-none edge-fade-x',
+        'min-w-0 pointer-events-none flex snap-x gap-2 overflow-x-auto px-3 py-2 scrollbar-none edge-fade-x',
         className
       )}
     >
@@ -97,6 +96,6 @@ export function CategoryChips({
           </button>
         );
       })}
-    </div>
+    </fieldset>
   );
 }

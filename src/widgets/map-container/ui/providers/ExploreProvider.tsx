@@ -76,7 +76,7 @@ interface ExploreContextValue {
 
 const ExploreContext = createContext<ExploreContextValue | null>(null);
 
-export function ExploreProvider({ children }: { children: React.ReactNode }) {
+export function ExploreProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const searchParams = useSearchParams();
   const { activateCategories, currentLocation, updateLocation, facilities } = useFacilityContext();
   const { setCenter, setZoom, mapStatus, getCenter } = useMapContext();

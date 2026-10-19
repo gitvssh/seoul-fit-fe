@@ -326,11 +326,13 @@ export function FacilityProvider({
     push(culturalSpaces, convertCulturalSpaceToFacility);
     push(culturalEvents, convertCulturalEventToFacility);
     push(culturalReservations, convertCulturalReservationToFacility);
-    combined.push(...(coolingShelters ?? []));
-    combined.push(...(subwayStations ?? []));
-    combined.push(...(bikeStations ?? []));
-    combined.push(...(sportsFacilities ?? []));
-    combined.push(...(restaurantFacilities ?? []));
+    combined.push(
+      ...(coolingShelters ?? []),
+      ...(subwayStations ?? []),
+      ...(bikeStations ?? []),
+      ...(sportsFacilities ?? []),
+      ...(restaurantFacilities ?? [])
+    );
 
     transientFacilities.forEach(transient => {
       const existingIndex = combined.findIndex(

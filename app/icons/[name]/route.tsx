@@ -30,7 +30,7 @@ export function generateStaticParams() {
   return Object.keys(ICONS).map(name => ({ name }));
 }
 
-function Mark({ size }: { size: number }) {
+function Mark({ size }: Readonly<{ size: number }>) {
   return (
     <svg
       width={size}

@@ -31,7 +31,7 @@ export function MapControls({
   liveTemperature,
   className,
   style,
-}: MapControlsProps) {
+}: Readonly<MapControlsProps>) {
   const { t } = useI18n();
   return (
     <div

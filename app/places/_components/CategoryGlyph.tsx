@@ -15,7 +15,7 @@ export interface CategoryGlyphProps {
 }
 
 /** Category colour disc with the lucide glyph from FACILITY_CONFIGS (decorative; the label sits next to it). */
-export function CategoryGlyph({ category, size = 'md', className }: CategoryGlyphProps) {
+export function CategoryGlyph({ category, size = 'md', className }: Readonly<CategoryGlyphProps>) {
   const config = FACILITY_CONFIGS[category];
   const Icon = config.Icon;
   return (

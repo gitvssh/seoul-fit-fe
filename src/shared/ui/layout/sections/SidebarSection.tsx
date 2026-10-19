@@ -12,7 +12,7 @@ interface SidebarSectionProps {
 }
 
 /** 설정 메뉴의 한 구역: `text-section` 제목 + 44px 행들. */
-export function SidebarSection({ id, title, aside, className, children }: SidebarSectionProps) {
+export function SidebarSection({ id, title, aside, className, children }: Readonly<SidebarSectionProps>) {
   const headingId = `${id}-heading`;
   return (
     <section aria-labelledby={headingId} className={cn('border-b border-border py-2', className)}>

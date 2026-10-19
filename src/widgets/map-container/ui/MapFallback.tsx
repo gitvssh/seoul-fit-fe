@@ -10,7 +10,7 @@ interface MapFallbackProps {
 }
 
 /** 지도 SDK를 불러오지 못했을 때의 정적 미리보기. 목록·상세는 SDK와 무관하게 동작한다. */
-export function MapFallback({ onRetry }: MapFallbackProps) {
+export function MapFallback({ onRetry }: Readonly<MapFallbackProps>) {
   const { t } = useI18n();
   return (
     <div

@@ -25,7 +25,7 @@ function CheckingState() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: number }) {
+function StatTile({ label, value }: Readonly<{ label: string; value: number }>) {
   return (
     <div className='rounded-lg bg-muted p-3 text-center'>
       <p className='text-title text-foreground tabular-nums'>{value}</p>

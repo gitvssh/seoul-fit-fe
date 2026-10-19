@@ -29,7 +29,7 @@ function useRestoreFocus({ onOpenAutoFocus, onCloseAutoFocus }: AutoFocusProps):
       onCloseAutoFocus?.(event);
       const opener = openerRef.current;
       openerRef.current = null;
-      if (event.defaultPrevented || !opener || !opener.isConnected) return;
+      if (event.defaultPrevented || !opener?.isConnected) return;
       event.preventDefault();
       opener.focus();
     },
@@ -40,7 +40,7 @@ function useRestoreFocus({ onOpenAutoFocus, onCloseAutoFocus }: AutoFocusProps):
  * 진짜 모달(로그아웃·경고·설정)에만 쓰는 Dialog. Radix가 role=dialog, aria-modal,
  * 포커스 트랩, Escape, 포커스 복귀를 제공한다. 표면은 solid `bg-card`, 레이어는 `z-dialog`.
  */
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog({ ...props }: Readonly<React.ComponentProps<typeof DialogPrimitive.Root>>) {
   return <DialogPrimitive.Root data-slot='dialog' {...props} />;
 }
 
@@ -48,7 +48,7 @@ function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive
   return <DialogPrimitive.Trigger data-slot='dialog-trigger' {...props} />;
 }
 
-function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal({ ...props }: Readonly<React.ComponentProps<typeof DialogPrimitive.Portal>>) {
   return <DialogPrimitive.Portal data-slot='dialog-portal' {...props} />;
 }
 
@@ -78,7 +78,7 @@ interface DialogContentProps extends React.ComponentProps<typeof DialogPrimitive
   closeLabel?: string;
 }
 
-function DialogContent({ className, children, closeLabel, ...props }: DialogContentProps) {
+function DialogContent({ className, children, closeLabel, ...props }: Readonly<DialogContentProps>) {
   const restoreFocus = useRestoreFocus(props);
   return (
     <DialogPortal>

@@ -23,7 +23,7 @@ interface GuestWelcomeProps {
  * 이 기기에 저장된 장소를 그대로 보여 준다. 패널이 열릴 때마다 새로 마운트되므로
  * 저장 목록은 마운트 시점에 한 번 읽는다.
  */
-export function GuestWelcome({ onLogin, onPlaceSelect }: GuestWelcomeProps) {
+export function GuestWelcome({ onLogin, onPlaceSelect }: Readonly<GuestWelcomeProps>) {
   const { t } = useI18n();
   const [localFavorites, setLocalFavorites] = React.useState<LocalFavorite[]>(() =>
     readLocalFavorites()

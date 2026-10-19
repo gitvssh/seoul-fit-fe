@@ -15,7 +15,7 @@ interface AppShellProps {
  * 지도 우선 레이아웃. 데스크톱(md+)은 [헤더+패널 400px | 지도], 모바일은 지도 전면 위에 헤더 띠,
  * 패널은 바텀시트(포털)로 뜬다. 헤더·패널은 한 번만 렌더되며 그리드 영역만 바뀐다.
  */
-export function AppShell({ header, panel, map, className }: AppShellProps) {
+export function AppShell({ header, panel, map, className }: Readonly<AppShellProps>) {
   return (
     <div
       className={cn(

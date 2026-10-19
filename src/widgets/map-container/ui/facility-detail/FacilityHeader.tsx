@@ -26,7 +26,7 @@ interface FacilityHeaderProps {
   titleId: string;
 }
 
-export function FacilityHeader({ facility, onBack, titleId }: FacilityHeaderProps) {
+export function FacilityHeader({ facility, onBack, titleId }: Readonly<FacilityHeaderProps>) {
   const { t } = useI18n();
   const config = FACILITY_CONFIGS[facility.category];
   const Icon = config.Icon;

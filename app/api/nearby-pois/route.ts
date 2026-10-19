@@ -31,8 +31,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '올바른 좌표 형식이 아닙니다.' }, { status: 400 });
     }
 
-    if (process.env.NODE_ENV === 'development') {
-    }
 
     // 백엔드 API 호출 - 전체 POI 인덱스 가져오기 (페이징 처리)
     const pageSize = 1000; // 한 번에 가져올 개수
@@ -70,8 +68,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-    }
 
     // 거리 계산 및 필터링
     const radiusInMeters = radius * 1000;

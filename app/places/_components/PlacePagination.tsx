@@ -15,7 +15,7 @@ function pageHref(category: PublicPlaceCategory, page: number): string {
   return page <= 1 ? `/places/${category}` : `/places/${category}?page=${page}`;
 }
 
-export function PlacePagination({ category, page, totalPages, hasNext }: PlacePaginationProps) {
+export function PlacePagination({ category, page, totalPages, hasNext }: Readonly<PlacePaginationProps>) {
   const hasPrevious = page > 1;
   return (
     <nav aria-label='페이지 이동' className='mt-10 flex items-center justify-between gap-3'>

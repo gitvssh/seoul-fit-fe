@@ -19,7 +19,7 @@ interface WelcomeCardProps {
 }
 
 /** 첫 방문에 한 번만 보이는 환영 카드. 모달이 아니며 지도 조작을 막지 않는다. */
-export function WelcomeCard({ onPreset, className }: WelcomeCardProps) {
+export function WelcomeCard({ onPreset, className }: Readonly<WelcomeCardProps>) {
   const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 

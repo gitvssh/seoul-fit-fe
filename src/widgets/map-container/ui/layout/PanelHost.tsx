@@ -27,7 +27,7 @@ interface PanelHostProps {
  * 탐색·상세·클러스터 목록을 하나의 호스트에서 전환한다.
  * 데스크톱은 좌측 solid 패널, 모바일은 비모달 3단 바텀시트다.
  */
-export function PanelHost({ onReady, onLogin }: PanelHostProps) {
+export function PanelHost({ onReady, onLogin }: Readonly<PanelHostProps>) {
   const { t } = useI18n();
   const isDesktop = useMediaQuery(DESKTOP_QUERY, true);
   const { selectedFacility, selectedCluster, clearSelection } = useFacilityContext();

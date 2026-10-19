@@ -44,11 +44,11 @@ function StopItem({
   stop,
   index,
   onSelect,
-}: {
+}: Readonly<{
   stop: ActivityPlanStop;
   index: number;
   onSelect: (facility: Facility) => void;
-}) {
+}>) {
   const { t } = useI18n();
   const config = FACILITY_CONFIGS[stop.facility.category];
   const Icon = config.Icon;
@@ -144,10 +144,9 @@ export function ActivityPlanner({
       <p className='mt-0.5 text-caption text-muted-foreground'>{t('activity.description')}</p>
 
       <div className='mt-2 flex items-center gap-2'>
-        <div
-          role='group'
+        <fieldset
           aria-label={t('activity.budget')}
-          className='flex min-w-0 flex-1 flex-wrap gap-1'
+          className='min-w-0 flex min-w-0 flex-1 flex-wrap gap-1'
         >
           {BUDGETS.map(minutes => {
             const selected = budget === minutes;
@@ -168,7 +167,7 @@ export function ActivityPlanner({
               </button>
             );
           })}
-        </div>
+        </fieldset>
         <Button type='button' size='default' className='shrink-0' onClick={generate}>
           {plan ? t('activity.recreate') : t('activity.create')}
         </Button>

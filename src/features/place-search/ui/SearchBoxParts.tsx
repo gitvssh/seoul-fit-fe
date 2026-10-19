@@ -29,11 +29,11 @@ export function HighlightedText({
   text,
   query,
   fuzzy = true,
-}: {
+}: Readonly<{
   text: string;
   query: string;
   fuzzy?: boolean;
-}) {
+}>) {
   const match = matchText(text, query, { hangul: getLoadedHangul(), fuzzy });
   if (!match || match.end <= match.start) return <>{text}</>;
   return (
@@ -48,7 +48,7 @@ export function HighlightedText({
 }
 
 /** 28px 카테고리 글리프. 색·아이콘·글리프 극성은 마커와 같은 단일 소스를 쓴다. */
-export function CategoryGlyph({ category }: { category: SearchItem['category'] }) {
+export function CategoryGlyph({ category }: Readonly<{ category: SearchItem['category'] }>) {
   const config = FACILITY_CONFIGS[SEARCH_TO_FACILITY_CATEGORY[category]];
   const Icon = config.Icon;
   return (
@@ -62,7 +62,7 @@ export function CategoryGlyph({ category }: { category: SearchItem['category'] }
   );
 }
 
-function SubwayLineBadge({ line }: { line: string }) {
+function SubwayLineBadge({ line }: Readonly<{ line: string }>) {
   return (
     <Badge variant='muted' className='shrink-0 gap-1'>
       <span
@@ -80,12 +80,12 @@ export function PlaceResultRow({
   item,
   query,
   onSelect,
-}: {
+}: Readonly<{
   valuePrefix: string;
   item: SearchItem;
   query: string;
   onSelect: (item: SearchItem) => void;
-}) {
+}>) {
   const isSubway = item.category === 'subway';
   const line = isSubway ? firstSegment(item.remark) : undefined;
   const secondary = firstSegment(item.address);
@@ -117,13 +117,13 @@ export function RecentSearchRow({
   removeLabel,
   onSelect,
   onRemove,
-}: {
+}: Readonly<{
   valuePrefix: string;
   entry: SearchHistoryItem;
   removeLabel: string;
   onSelect: (entry: SearchHistoryItem) => void;
   onRemove: (historyId: string) => void;
-}) {
+}>) {
   const secondary = firstSegment(entry.selectedItem?.address);
   return (
     <Command.Item
@@ -161,11 +161,11 @@ export function RuleRow({
   title,
   summary,
   onApply,
-}: {
+}: Readonly<{
   title: string;
   summary: string;
   onApply: () => void;
-}) {
+}>) {
   return (
     <button
       type='button'
@@ -202,11 +202,11 @@ export function ErrorState({
   message,
   retryLabel,
   onRetry,
-}: {
+}: Readonly<{
   message: string;
   retryLabel: string;
   onRetry: () => void;
-}) {
+}>) {
   return (
     <div className='flex flex-wrap items-center justify-between gap-2 px-3 py-3'>
       <p className='text-body-sm text-destructive'>{message}</p>
@@ -222,12 +222,12 @@ export function EmptyState({
   hint,
   resetLabel,
   onReset,
-}: {
+}: Readonly<{
   message: string;
   hint: string;
   resetLabel: string;
   onReset: () => void;
-}) {
+}>) {
   return (
     <div className='px-3 py-3'>
       <p className='text-body'>{message}</p>

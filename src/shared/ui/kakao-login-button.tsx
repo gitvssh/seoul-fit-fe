@@ -21,7 +21,7 @@ export interface KakaoLoginButtonProps {
   disabled?: boolean;
 }
 
-function KakaoSymbol({ className }: { className?: string }) {
+function KakaoSymbol({ className }: Readonly<{ className?: string }>) {
   return (
     <svg
       viewBox='0 0 24 24'
@@ -43,7 +43,7 @@ export function KakaoLoginButton({
   className,
   size = 'default',
   disabled,
-}: KakaoLoginButtonProps) {
+}: Readonly<KakaoLoginButtonProps>) {
   const { t } = useI18n();
   const text = label ?? t('sidebar.login');
 

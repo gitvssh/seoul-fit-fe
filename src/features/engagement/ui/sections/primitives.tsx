@@ -12,13 +12,13 @@ export function SectionHeading({
   title,
   count,
   className,
-}: {
+}: Readonly<{
   id: string;
   icon: LucideIcon;
   title: string;
   count?: number;
   className?: string;
-}) {
+}>) {
   return (
     <h3 id={id} className={cn('flex items-center gap-2 text-section text-foreground', className)}>
       <Icon className='size-4 shrink-0 text-primary' aria-hidden='true' />
@@ -33,10 +33,10 @@ export function SectionHeading({
 export function EmptyState({
   children,
   className,
-}: {
+}: Readonly<{
   children: React.ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <p
       className={cn('rounded-lg bg-muted px-3 py-3 text-body-sm text-muted-foreground', className)}
@@ -63,12 +63,12 @@ export function PlaceLink({
   caption,
   onSelect,
   className,
-}: {
+}: Readonly<{
   place: EngagementPlaceSummary;
   caption: string;
   onSelect?: (place: EngagementPlaceSummary) => void;
   className?: string;
-}) {
+}>) {
   const { t } = useI18n();
   const body = (
     <>

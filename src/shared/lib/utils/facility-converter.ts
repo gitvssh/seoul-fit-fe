@@ -33,13 +33,13 @@ export function convertParkToFacility(park: any, index: number): Facility | null
   let position;
   if (park.latitude !== undefined && park.longitude !== undefined) {
     position = {
-      lat: parseFloat(String(park.latitude)) || 0,
-      lng: parseFloat(String(park.longitude)) || 0,
+      lat: Number.parseFloat(String(park.latitude)) || 0,
+      lng: Number.parseFloat(String(park.longitude)) || 0,
     };
   } else if (park.lat !== undefined && park.lng !== undefined) {
     position = {
-      lat: parseFloat(String(park.lat)) || 0,
-      lng: parseFloat(String(park.lng)) || 0,
+      lat: Number.parseFloat(String(park.lat)) || 0,
+      lng: Number.parseFloat(String(park.lng)) || 0,
     };
   } else if (park.position) {
     position = park.position;

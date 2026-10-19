@@ -22,7 +22,7 @@ interface SeoulNowCardProps {
 }
 
 /** 탐색 패널 상단의 "서울 지금" 한 줄 요약. 권한이 없어도 기준 위치의 실제 값을 보여준다. */
-export function SeoulNowCard({ weatherData, congestionData, loading }: SeoulNowCardProps) {
+export function SeoulNowCard({ weatherData, congestionData, loading }: Readonly<SeoulNowCardProps>) {
   const { t } = useI18n();
   const status = getCombinedLiveDataStatus(weatherData, congestionData);
   const hasData = Boolean(weatherData || congestionData);

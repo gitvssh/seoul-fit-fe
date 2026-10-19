@@ -17,7 +17,7 @@ interface AccountSectionProps {
   onNavigate?: (href: string) => void;
 }
 
-function Avatar({ imageUrl, name }: { imageUrl?: string; name: string }) {
+function Avatar({ imageUrl, name }: Readonly<{ imageUrl?: string; name: string }>) {
   if (imageUrl) {
     return (
       <Image
@@ -40,7 +40,7 @@ function Avatar({ imageUrl, name }: { imageUrl?: string; name: string }) {
   );
 }
 
-export function AccountSection({ onLogin, onLogout, onNavigate }: AccountSectionProps) {
+export function AccountSection({ onLogin, onLogout, onNavigate }: Readonly<AccountSectionProps>) {
   const { t } = useI18n();
   const { isAuthenticated, user } = useAuthStore();
 

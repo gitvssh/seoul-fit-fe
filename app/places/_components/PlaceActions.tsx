@@ -23,7 +23,7 @@ export function PlaceActions({
   phone,
   website,
   reservable,
-}: PlaceActionsProps) {
+}: Readonly<PlaceActionsProps>) {
   return (
     <div className='mt-8 flex flex-wrap gap-3'>
       <Button asChild size='lg'>

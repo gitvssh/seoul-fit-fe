@@ -21,7 +21,7 @@ const PREFERENCE_ICONS: Record<ThemePreference, React.ReactNode> = {
   dark: <Moon className='size-4' aria-hidden='true' />,
 };
 
-export function ThemeToggle({ variant = 'segmented', className }: ThemeToggleProps) {
+export function ThemeToggle({ variant = 'segmented', className }: Readonly<ThemeToggleProps>) {
   const { preference, resolved, setPreference } = useTheme();
   const { t } = useI18n();
 

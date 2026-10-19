@@ -14,13 +14,12 @@ interface PresetChipsProps {
 }
 
 /** 상황 프리셋 6개. 라벨 고정, 선택은 색 + aria-pressed. */
-export function PresetChips({ activePreset, onPresetChange, className }: PresetChipsProps) {
+export function PresetChips({ activePreset, onPresetChange, className }: Readonly<PresetChipsProps>) {
   const { t } = useI18n();
   return (
-    <div
-      role='group'
+    <fieldset
       aria-label={t('explorer.presetsLabel')}
-      className={cn('flex snap-x gap-2 overflow-x-auto py-1 scrollbar-none edge-fade-x', className)}
+      className={cn('min-w-0 flex snap-x gap-2 overflow-x-auto py-1 scrollbar-none edge-fade-x', className)}
     >
       {RECOMMENDATION_PRESETS.map(preset => {
         const active = activePreset === preset.id;
@@ -41,6 +40,6 @@ export function PresetChips({ activePreset, onPresetChange, className }: PresetC
           </button>
         );
       })}
-    </div>
+    </fieldset>
   );
 }

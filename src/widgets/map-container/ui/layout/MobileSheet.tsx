@@ -49,7 +49,7 @@ export function MobileSheet({
   label,
   mode,
   children,
-}: MobileSheetProps) {
+}: Readonly<MobileSheetProps>) {
   const { t } = useI18n();
   const snapPoints = useMemo(() => SNAP_ORDER.map(key => SNAP_VALUES[key]), []);
 

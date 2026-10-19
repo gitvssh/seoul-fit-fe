@@ -46,7 +46,15 @@ function normalize(value: string | undefined): string {
 
 /** "시청 (2호선)" → "시청" 처럼 괄호·공백을 뺀 비교용 이름 */
 export function normalizePlaceName(name: string): string {
-  return normalize(name.replace(/\([^)]*\)/g, ''));
+  // Split once at closing delimiters so an unclosed run of '(' cannot cause
+  // repeated scans. Preserve the original first-opening/first-closing behavior.
+  const parts = name.split(')');
+  return normalize(parts.map((part, index) => {
+    if (index === parts.length - 1) return part;
+    const opening = part.indexOf('(');
+    if (opening < 0) return `${part})`;
+    return part.slice(0, opening);
+  }).join(''));
 }
 
 export function isRainyWeather(weather: WeatherData | null | undefined): boolean {

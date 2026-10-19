@@ -142,7 +142,7 @@ export const syncSelection = (
   }
 
   state.lastSelected = { markerId: selectedFacilityId, facility };
-  if (state.entry && state.entry.markerId === selectedFacilityId) {
+  if (state.entry?.markerId === selectedFacilityId) {
     syncFocusEntry(handle, state.entry, facility, labels);
     return;
   }

@@ -73,8 +73,6 @@ export async function fetchAllParks(page: number = 0, size: number = 100): Promi
       ? response.data
       : (response.data as any).parks || (response.data as any).data || [];
 
-    if (parks.length > 0) {
-    }
 
     return {
       parks,

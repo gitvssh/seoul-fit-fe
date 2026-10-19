@@ -57,7 +57,7 @@ function SheetContent({
   side = 'right',
   closeLabel,
   ...props
-}: SheetContentProps) {
+}: Readonly<SheetContentProps>) {
   const restoreFocus = useRestoreFocus(props);
   return (
     <SheetPortal>

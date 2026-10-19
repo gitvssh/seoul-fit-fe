@@ -29,7 +29,7 @@ export function PlaceList({
   onFacilitySelect,
   onReset,
   hasActiveFilters,
-}: PlaceListProps) {
+}: Readonly<PlaceListProps>) {
   const { t } = useI18n();
   const openLabel = (facility: Facility) => {
     const state = getFacilityOpenState(facility.operatingHours);

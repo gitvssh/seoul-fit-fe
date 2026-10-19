@@ -17,7 +17,7 @@ interface ExplorerPanelConnectedProps {
 }
 
 /** 탐색 패널에 컨텍스트 상태와 지도 동작을 연결한다. */
-export function ExplorerPanelConnected({ compact, onLogin }: ExplorerPanelConnectedProps) {
+export function ExplorerPanelConnected({ compact, onLogin }: Readonly<ExplorerPanelConnectedProps>) {
   const { selectedFacility, selectFacility, activeCategories, currentLocation } =
     useFacilityContext();
   const { setCenter, setZoom, revealPosition } = useMapContext();

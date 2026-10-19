@@ -16,7 +16,7 @@ type ArrivalStatus = 'loading' | 'ok' | 'empty' | 'unavailable';
 const MAX_ROWS = 3;
 
 /** 역 상세의 실시간 도착 목록. 상위 3건만 보여주고, 상류 오류는 '받을 수 없음'으로 구분해 알린다. */
-export function SubwayArrivals({ stationName }: SubwayArrivalsProps) {
+export function SubwayArrivals({ stationName }: Readonly<SubwayArrivalsProps>) {
   const { t } = useI18n();
   const [arrivals, setArrivals] = useState<FormattedSubwayArrival[]>([]);
   const [status, setStatus] = useState<ArrivalStatus>('loading');

@@ -58,7 +58,7 @@ export type TimestampInput = string | number | Date | null | undefined;
 /** 문자열·숫자·Date를 Date로 바꾼다. 비어 있거나 해석할 수 없으면 null */
 export function parseTimestamp(timestamp: TimestampInput): Date | null {
   if (timestamp === null || timestamp === undefined || timestamp === '') return null;
-  const parsed = timestamp instanceof Date ? new Date(timestamp.getTime()) : new Date(timestamp);
+  const parsed = new Date(timestamp);
   return Number.isFinite(parsed.getTime()) ? parsed : null;
 }
 
@@ -95,7 +95,7 @@ export function getOldestFreshness(statuses: FreshnessStatus[]): FreshnessStatus
   const known = statuses.filter(status => status !== 'unknown');
   if (known.length === 0) return 'unknown';
   return known.reduce((oldest, status) =>
-    FRESHNESS_RANK[status] < FRESHNESS_RANK[oldest] ? status : oldest
+    FRESHNESS_RANK[status] < FRESHNESS_RANK[oldest] ? status : oldest, known[0]
   );
 }
 
