@@ -131,10 +131,14 @@ export const syncSelection = (
   onActivate: (facility: Facility) => void
 ): void => {
   const cached = state.lastSelected;
-  const facility = selectedFacilityId
-    ? (facilityIndex.get(selectedFacilityId) ??
-      (cached?.markerId === selectedFacilityId ? cached.facility : null))
-    : null;
+  let facility;
+  if (selectedFacilityId) {
+    facility =
+      facilityIndex.get(selectedFacilityId) ??
+      (cached?.markerId === selectedFacilityId ? cached.facility : null);
+  } else {
+    facility = null;
+  }
 
   if (!selectedFacilityId || !facility) {
     clearFocus(state);

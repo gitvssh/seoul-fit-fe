@@ -256,9 +256,8 @@ export const MapView: React.FC<MapViewProps> = ({ onMapTap }) => {
       <div
         id={containerId}
         className='h-full w-full outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50'
-        role='application'
+        role='region'
         aria-label={t('map.canvasLabel')}
-        tabIndex={0}
       />
 
       {mapStatus.loading && !mapStatus.error && (

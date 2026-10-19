@@ -10,6 +10,12 @@ import { useI18n } from '@/shared/i18n/I18nProvider';
 import type { MessageKey } from '@/shared/i18n/messages';
 import { cn } from '@/shared/lib/utils';
 
+const CONGESTION_LABELS = {
+  low: 'explorer.lowCongestion',
+  medium: 'explorer.mediumCongestion',
+  high: 'explorer.highCongestion',
+} as const;
+
 interface PlaceListProps {
   facilities: Facility[];
   selectedFacility: Facility | null;
@@ -33,11 +39,13 @@ export function PlaceList({
   const { t } = useI18n();
   const openLabel = (facility: Facility) => {
     const state = getFacilityOpenState(facility.operatingHours);
-    return state === 'open'
-      ? t('explorer.open')
-      : state === 'closed'
-        ? t('explorer.closed')
-        : t('explorer.hoursUnknown');
+    if (state === 'open') {
+      return t('explorer.open');
+    } else if (state === 'closed') {
+      return t('explorer.closed');
+    } else {
+      return t('explorer.hoursUnknown');
+    }
   };
 
   if (facilities.length === 0) {
@@ -106,11 +114,7 @@ export function PlaceList({
                   {openLabel(facility)}
                   {isFacilityReservable(facility) && ` · ${t('explorer.reservable')}`}
                   {' · '}
-                  {facility.congestionLevel === 'low'
-                    ? t('explorer.lowCongestion')
-                    : facility.congestionLevel === 'medium'
-                      ? t('explorer.mediumCongestion')
-                      : t('explorer.highCongestion')}
+                  {t(CONGESTION_LABELS[facility.congestionLevel] ?? 'explorer.highCongestion')}
                 </span>
               </span>
             </button>

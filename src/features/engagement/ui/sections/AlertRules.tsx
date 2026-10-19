@@ -57,12 +57,14 @@ function AlertRuleForm({
   const [selectedZoneId, setSelectedZoneId] = React.useState<number | null>(null);
   const [alertType, setAlertType] = React.useState<AlertRuleType>('AIR_QUALITY');
   const [quietHours, setQuietHours] = React.useState(true);
-  const zoneId =
-    selectedZoneId !== null && zones.some(zone => zone.id === selectedZoneId)
-      ? selectedZoneId
-      : zones.length > 0
-        ? zones[0].id
-        : null;
+  let zoneId;
+  if (selectedZoneId !== null && zones.some(zone => zone.id === selectedZoneId)) {
+    zoneId = selectedZoneId;
+  } else if (zones.length > 0) {
+    zoneId = zones[0].id;
+  } else {
+    zoneId = null;
+  }
 
   return (
     <div className='mt-2 space-y-2'>

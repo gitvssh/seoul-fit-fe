@@ -62,11 +62,11 @@ const bindBulkElement = (
   // hover는 데스크톱에서만 z-order를 올린다. 모양은 CSS `(hover: hover)`가 맡는다.
   const raise = () => {
     if (!context.isHoverEnabled()) return;
-    setFacilityMarkerHover(element, true);
+    setFacilityMarkerHover(element, { hover: true });
     overlay.setZIndex(MARKER_Z.hover);
   };
   const lower = () => {
-    setFacilityMarkerHover(element, false);
+    setFacilityMarkerHover(element, { hover: false });
     overlay.setZIndex(MARKER_Z.marker);
   };
   const handleFocus = () => overlay.setZIndex(MARKER_Z.hover);
@@ -187,12 +187,12 @@ export const applyHiddenSelection = (
   const selectedKey = selectedFacilityId ? `facility:${selectedFacilityId}` : null;
   if (state.hiddenKey && state.hiddenKey !== selectedKey) {
     const previous = entries.get(state.hiddenKey);
-    if (previous) setFacilityMarkerHidden(previous.element, false);
+    if (previous) setFacilityMarkerHidden(previous.element, { hidden: false });
     state.hiddenKey = null;
   }
   const entry = selectedKey ? entries.get(selectedKey) : undefined;
   if (selectedKey && entry) {
-    setFacilityMarkerHidden(entry.element, true);
+    setFacilityMarkerHidden(entry.element, { hidden: true });
     state.hiddenKey = selectedKey;
   }
 };

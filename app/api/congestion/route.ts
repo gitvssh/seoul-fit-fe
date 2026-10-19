@@ -40,7 +40,9 @@ function toResponsePayload(data: CongestionData, cached: boolean) {
   };
 }
 
-async function fetchNearestCongestionResponse(candidates: ReturnType<typeof findNearestAreaMatches>) {
+async function fetchNearestCongestionResponse(
+  candidates: ReturnType<typeof findNearestAreaMatches>
+) {
   // 캐시가 없거나 만료된 경우 API 호출
   const fetchTime = new Date().toISOString();
   let lastUpstreamCode: string | null = null;

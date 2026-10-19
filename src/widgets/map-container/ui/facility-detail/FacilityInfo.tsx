@@ -48,13 +48,15 @@ export function FacilityInfo({ facility }: Readonly<{ facility: Facility }>) {
   const { locale, t } = useI18n();
   const provenance = getFacilityProvenance(facility);
   const sourceUrl = getSafeExternalUrl(provenance.sourceUrl);
-  const updatedLabel =
-    facility.sourceUpdatedAt && Number.isFinite(Date.parse(facility.sourceUpdatedAt))
-      ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ko-KR', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }).format(new Date(facility.sourceUpdatedAt))
-      : t('facility.unknown');
+  let updatedLabel;
+  if (facility.sourceUpdatedAt && Number.isFinite(Date.parse(facility.sourceUpdatedAt))) {
+    updatedLabel = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'ko-KR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(facility.sourceUpdatedAt));
+  } else {
+    updatedLabel = t('facility.unknown');
+  }
   const event = facility.culturalEvent;
 
   return (

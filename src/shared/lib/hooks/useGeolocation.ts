@@ -61,6 +61,9 @@ export function useGeolocation() {
       return Promise.resolve(null);
     }
     setState(previous => ({ ...previous, status: 'requesting' }));
+    const updateFailure = (error: GeolocationPositionError) => {
+      setState(previous => ({ ...previous, status: statusFromError(error) }));
+    };
     return new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(
         result => {
@@ -74,7 +77,7 @@ export function useGeolocation() {
           resolve(position);
         },
         error => {
-          setState(previous => ({ ...previous, status: statusFromError(error) }));
+          updateFailure(error);
           resolve(null);
         },
         FIRST_REQUEST_OPTIONS

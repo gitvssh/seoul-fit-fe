@@ -244,11 +244,7 @@ export interface KakaoEventManager {
     type: KakaoEventType,
     handler: (event: T) => void
   ): void;
-  trigger<T = unknown>(
-    target: KakaoEventTarget,
-    type: KakaoEventType,
-    data?: T
-  ): void;
+  trigger<T = unknown>(target: KakaoEventTarget, type: KakaoEventType, data?: T): void;
   /** CustomOverlay 콘텐츠의 이벤트가 지도까지 전달되지 않게 막는다 */
   preventMap?(): void;
 }

@@ -71,45 +71,54 @@ export function FacilityActions({ facility, compact = false }: Readonly<Facility
     });
   }, [facility.category, toggleFavorite]);
 
-  const secondary = reservationUrl ? (
-    <Button asChild variant='outline' className='h-11'>
-      <a
-        href={reservationUrl}
-        target='_blank'
-        rel='noopener noreferrer'
-        onClick={() => track('reservation')}
-      >
-        <TicketCheck aria-hidden='true' />
-        {t('facility.reservation')}
-      </a>
-    </Button>
-  ) : websiteUrl ? (
-    <Button asChild variant='outline' className='h-11'>
-      <a
-        href={websiteUrl}
-        target='_blank'
-        rel='noopener noreferrer'
-        onClick={() => track('website')}
-      >
-        <ExternalLink aria-hidden='true' />
-        {t('facility.website')}
-      </a>
-    </Button>
-  ) : facility.phone ? (
-    <Button asChild variant='outline' className='h-11'>
-      <a href={`tel:${facility.phone}`} onClick={() => track('phone')}>
-        <Phone aria-hidden='true' />
-        {t('facility.phoneAction')}
-      </a>
-    </Button>
-  ) : null;
+  let secondary;
+  if (reservationUrl) {
+    secondary = (
+      <Button asChild variant='outline' className='h-11'>
+        <a
+          href={reservationUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          onClick={() => track('reservation')}
+        >
+          <TicketCheck aria-hidden='true' />
+          {t('facility.reservation')}
+        </a>
+      </Button>
+    );
+  } else if (websiteUrl) {
+    secondary = (
+      <Button asChild variant='outline' className='h-11'>
+        <a
+          href={websiteUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          onClick={() => track('website')}
+        >
+          <ExternalLink aria-hidden='true' />
+          {t('facility.website')}
+        </a>
+      </Button>
+    );
+  } else if (facility.phone) {
+    secondary = (
+      <Button asChild variant='outline' className='h-11'>
+        <a href={`tel:${facility.phone}`} onClick={() => track('phone')}>
+          <Phone aria-hidden='true' />
+          {t('facility.phoneAction')}
+        </a>
+      </Button>
+    );
+  } else {
+    secondary = null;
+  }
 
   return (
     <div>
       <div
         className={cn(
           'grid gap-2',
-          compact ? 'grid-cols-3' : secondary ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
+          !compact && secondary ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'
         )}
       >
         <Button asChild className='h-11'>

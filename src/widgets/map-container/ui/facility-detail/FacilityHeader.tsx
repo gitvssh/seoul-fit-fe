@@ -32,12 +32,14 @@ export function FacilityHeader({ facility, onBack, titleId }: Readonly<FacilityH
   const Icon = config.Icon;
   const showsHours = categoryHasOperatingHours(facility.category);
   const openState = getFacilityOpenState(facility.operatingHours);
-  const openBadge =
-    openState === 'open'
-      ? { variant: 'success' as const, label: t('explorer.open') }
-      : openState === 'closed'
-        ? { variant: 'muted' as const, label: t('explorer.closed') }
-        : { variant: 'muted' as const, label: t('explorer.hoursUnknown') };
+  let openBadge;
+  if (openState === 'open') {
+    openBadge = { variant: 'success' as const, label: t('explorer.open') };
+  } else if (openState === 'closed') {
+    openBadge = { variant: 'muted' as const, label: t('explorer.closed') };
+  } else {
+    openBadge = { variant: 'muted' as const, label: t('explorer.hoursUnknown') };
+  }
 
   return (
     <header className='flex items-start gap-3'>

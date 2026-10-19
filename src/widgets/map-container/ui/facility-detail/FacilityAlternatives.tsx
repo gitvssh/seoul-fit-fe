@@ -12,7 +12,10 @@ interface FacilityAlternativesProps {
   onSelect: (recommendation: FacilityRecommendation) => void;
 }
 
-export function FacilityAlternatives({ alternatives, onSelect }: Readonly<FacilityAlternativesProps>) {
+export function FacilityAlternatives({
+  alternatives,
+  onSelect,
+}: Readonly<FacilityAlternativesProps>) {
   const { t } = useI18n();
   if (alternatives.length === 0) return null;
   return (

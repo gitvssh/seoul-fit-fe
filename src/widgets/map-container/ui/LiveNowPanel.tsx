@@ -82,6 +82,98 @@ export function LiveNowPanel({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
+  let liveContent;
+  if (loading && !weather.data && !congestion.data) {
+    liveContent = (
+      <div className='space-y-2' aria-busy='true'>
+        <Skeleton className='h-12 w-full' />
+        <Skeleton className='h-8 w-2/3' />
+        <span className='sr-only'>{t('map.live.loading')}</span>
+      </div>
+    );
+  } else if (unavailable) {
+    liveContent = <p className='text-body-sm text-muted-foreground'>{t('map.live.unavailable')}</p>;
+  } else if (outside) {
+    liveContent = <p className='text-body-sm text-muted-foreground'>{t('map.live.outsideArea')}</p>;
+  } else {
+    liveContent = (
+      <>
+        {weather.data && (
+          <div className='flex items-center gap-3'>
+            <span className='flex size-11 shrink-0 items-center justify-center rounded-full bg-info-soft text-info-soft-foreground'>
+              <WeatherConditionIcon condition={weather.data.WEATHER_STTS} className='size-6' />
+            </span>
+            <div className='min-w-0 flex-1'>
+              <p className='text-title tabular-nums'>
+                {Math.round(Number(weather.data.TEMP))}°
+                <span className='ml-2 text-body-sm font-normal text-muted-foreground'>
+                  {weather.data.WEATHER_STTS}
+                </span>
+              </p>
+              <p className='text-caption text-muted-foreground'>
+                {[
+                  Number.isFinite(Number(weather.data.SENSIBLE_TEMP))
+                    ? t('map.live.feelsLike', {
+                        value: Math.round(Number(weather.data.SENSIBLE_TEMP)),
+                      })
+                    : null,
+                  weather.data.HUMIDITY
+                    ? t('map.live.humidity', { value: weather.data.HUMIDITY })
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            </div>
+          </div>
+        )}
+        {weather.data && (weather.data.PM10_INDEX || weather.data.PM25_INDEX) && (
+          <div className='flex flex-wrap gap-1.5'>
+            {weather.data.PM10_INDEX && (
+              <Badge variant='muted'>
+                <Wind aria-hidden='true' />
+                {t('map.live.pm10', { value: weather.data.PM10_INDEX })}
+              </Badge>
+            )}
+            {weather.data.PM25_INDEX && (
+              <Badge variant='muted'>
+                {t('map.live.pm25', { value: weather.data.PM25_INDEX })}
+              </Badge>
+            )}
+          </div>
+        )}
+        {weather.data?.PCP_MSG && (
+          <p className='flex gap-2 rounded-md bg-info-soft px-3 py-2 text-body-sm text-info-soft-foreground'>
+            <Droplets className='mt-0.5 size-4 shrink-0' aria-hidden='true' />
+            <span>{weather.data.PCP_MSG}</span>
+          </p>
+        )}
+        {congestion.data && (
+          <div className='rounded-md border border-border px-3 py-2'>
+            <div className='flex items-center gap-2'>
+              <Users className='size-4 text-muted-foreground' aria-hidden='true' />
+              <span className='text-body-sm font-medium'>{t('map.live.congestion')}</span>
+              <Badge
+                variant={congestionVariant(congestion.data.AREA_CONGEST_LVL)}
+                className='ml-auto'
+              >
+                {congestion.data.AREA_CONGEST_LVL}
+              </Badge>
+            </div>
+            {congestion.data.AREA_CONGEST_MSG && (
+              <p className='mt-1.5 text-caption text-muted-foreground'>
+                {congestion.data.AREA_CONGEST_MSG}
+              </p>
+            )}
+          </div>
+        )}
+        {!weather.data && congestion.data && weather.status === 'unavailable' && (
+          <p className='text-caption text-muted-foreground'>{t('map.live.unavailable')}</p>
+        )}
+      </>
+    );
+  }
+
   return (
     <section
       aria-label={t('map.liveNow')}
@@ -123,92 +215,7 @@ export function LiveNowPanel({
       </header>
 
       <div className='space-y-3 px-4 py-3'>
-        {loading && !weather.data && !congestion.data ? (
-          <div className='space-y-2' aria-busy='true'>
-            <Skeleton className='h-12 w-full' />
-            <Skeleton className='h-8 w-2/3' />
-            <span className='sr-only'>{t('map.live.loading')}</span>
-          </div>
-        ) : unavailable ? (
-          <p className='text-body-sm text-muted-foreground'>{t('map.live.unavailable')}</p>
-        ) : outside ? (
-          <p className='text-body-sm text-muted-foreground'>{t('map.live.outsideArea')}</p>
-        ) : (
-          <>
-            {weather.data && (
-              <div className='flex items-center gap-3'>
-                <span className='flex size-11 shrink-0 items-center justify-center rounded-full bg-info-soft text-info-soft-foreground'>
-                  <WeatherConditionIcon condition={weather.data.WEATHER_STTS} className='size-6' />
-                </span>
-                <div className='min-w-0 flex-1'>
-                  <p className='text-title tabular-nums'>
-                    {Math.round(Number(weather.data.TEMP))}°
-                    <span className='ml-2 text-body-sm font-normal text-muted-foreground'>
-                      {weather.data.WEATHER_STTS}
-                    </span>
-                  </p>
-                  <p className='text-caption text-muted-foreground'>
-                    {[
-                      Number.isFinite(Number(weather.data.SENSIBLE_TEMP))
-                        ? t('map.live.feelsLike', {
-                            value: Math.round(Number(weather.data.SENSIBLE_TEMP)),
-                          })
-                        : null,
-                      weather.data.HUMIDITY
-                        ? t('map.live.humidity', { value: weather.data.HUMIDITY })
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                </div>
-              </div>
-            )}
-            {weather.data && (weather.data.PM10_INDEX || weather.data.PM25_INDEX) && (
-              <div className='flex flex-wrap gap-1.5'>
-                {weather.data.PM10_INDEX && (
-                  <Badge variant='muted'>
-                    <Wind aria-hidden='true' />
-                    {t('map.live.pm10', { value: weather.data.PM10_INDEX })}
-                  </Badge>
-                )}
-                {weather.data.PM25_INDEX && (
-                  <Badge variant='muted'>
-                    {t('map.live.pm25', { value: weather.data.PM25_INDEX })}
-                  </Badge>
-                )}
-              </div>
-            )}
-            {weather.data?.PCP_MSG && (
-              <p className='flex gap-2 rounded-md bg-info-soft px-3 py-2 text-body-sm text-info-soft-foreground'>
-                <Droplets className='mt-0.5 size-4 shrink-0' aria-hidden='true' />
-                <span>{weather.data.PCP_MSG}</span>
-              </p>
-            )}
-            {congestion.data && (
-              <div className='rounded-md border border-border px-3 py-2'>
-                <div className='flex items-center gap-2'>
-                  <Users className='size-4 text-muted-foreground' aria-hidden='true' />
-                  <span className='text-body-sm font-medium'>{t('map.live.congestion')}</span>
-                  <Badge
-                    variant={congestionVariant(congestion.data.AREA_CONGEST_LVL)}
-                    className='ml-auto'
-                  >
-                    {congestion.data.AREA_CONGEST_LVL}
-                  </Badge>
-                </div>
-                {congestion.data.AREA_CONGEST_MSG && (
-                  <p className='mt-1.5 text-caption text-muted-foreground'>
-                    {congestion.data.AREA_CONGEST_MSG}
-                  </p>
-                )}
-              </div>
-            )}
-            {!weather.data && congestion.data && weather.status === 'unavailable' && (
-              <p className='text-caption text-muted-foreground'>{t('map.live.unavailable')}</p>
-            )}
-          </>
-        )}
+        {liveContent}
         <p className='text-caption text-muted-foreground'>
           {t('map.live.source')}
           {status.referenceTimeLabel

@@ -30,7 +30,11 @@ interface FacilityDetailProps {
   compact?: boolean;
 }
 
-export function FacilityDetail({ facility, onBack, compact = false }: Readonly<FacilityDetailProps>) {
+export function FacilityDetail({
+  facility,
+  onBack,
+  compact = false,
+}: Readonly<FacilityDetailProps>) {
   const { t } = useI18n();
   const titleId = useId();
   const { facilities, selectFacility } = useFacilityContext();

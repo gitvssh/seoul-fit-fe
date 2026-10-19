@@ -77,7 +77,10 @@ function MarkerRow({ category, checked, onToggle }: Readonly<MarkerRowProps>) {
   );
 }
 
-export function MarkerSection({ activeCategories, onCategoryToggle }: Readonly<MarkerSectionProps>) {
+export function MarkerSection({
+  activeCategories,
+  onCategoryToggle,
+}: Readonly<MarkerSectionProps>) {
   const { t } = useI18n();
   const selected = SIDEBAR_CATEGORIES.filter(category => activeCategories.includes(category));
   const allSelected = selected.length === SIDEBAR_CATEGORIES.length;

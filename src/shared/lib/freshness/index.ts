@@ -94,8 +94,9 @@ export function getFreshnessBadgeVariant(status: FreshnessStatus): FreshnessBadg
 export function getOldestFreshness(statuses: FreshnessStatus[]): FreshnessStatus {
   const known = statuses.filter(status => status !== 'unknown');
   if (known.length === 0) return 'unknown';
-  return known.reduce((oldest, status) =>
-    FRESHNESS_RANK[status] < FRESHNESS_RANK[oldest] ? status : oldest, known[0]
+  return known.reduce(
+    (oldest, status) => (FRESHNESS_RANK[status] < FRESHNESS_RANK[oldest] ? status : oldest),
+    known[0]
   );
 }
 

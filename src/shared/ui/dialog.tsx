@@ -78,7 +78,12 @@ interface DialogContentProps extends React.ComponentProps<typeof DialogPrimitive
   closeLabel?: string;
 }
 
-function DialogContent({ className, children, closeLabel, ...props }: Readonly<DialogContentProps>) {
+function DialogContent({
+  className,
+  children,
+  closeLabel,
+  ...props
+}: Readonly<DialogContentProps>) {
   const restoreFocus = useRestoreFocus(props);
   return (
     <DialogPortal>

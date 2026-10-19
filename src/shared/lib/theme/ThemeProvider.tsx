@@ -52,8 +52,8 @@ function readSystemDark() {
 export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   // Server render and first client render agree on 'system'; the inline script already
   // applied the stored preference to <html>, so there is no flash.
-  const [preference, setPreferenceState] = React.useState<ThemePreference>('system');
-  const [mapDark, setMapDarkState] = React.useState(false);
+  const [preferenceState, setPreferenceState] = React.useState<ThemePreference>('system');
+  const [mapDarkState, setMapDarkState] = React.useState(false);
   const systemDark = React.useSyncExternalStore(subscribeSystem, readSystemDark, () => false);
 
   React.useEffect(() => {
@@ -67,7 +67,7 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const resolved = resolveTheme(preference, systemDark);
+  const resolved = resolveTheme(preferenceState, systemDark);
 
   React.useEffect(() => {
     const root = document.documentElement;
@@ -77,9 +77,9 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
 
   React.useEffect(() => {
     const root = document.documentElement;
-    if (mapDark) root.dataset.mapDark = 'true';
+    if (mapDarkState) root.dataset.mapDark = 'true';
     else delete root.dataset.mapDark;
-  }, [mapDark]);
+  }, [mapDarkState]);
 
   const setPreference = React.useCallback((next: ThemePreference) => {
     setPreferenceState(next);
@@ -100,8 +100,14 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
   }, []);
 
   const value = React.useMemo(
-    () => ({ preference, resolved, setPreference, mapDark, setMapDark }),
-    [preference, resolved, setPreference, mapDark, setMapDark]
+    () => ({
+      preference: preferenceState,
+      resolved,
+      setPreference,
+      mapDark: mapDarkState,
+      setMapDark,
+    }),
+    [preferenceState, resolved, setPreference, mapDarkState, setMapDark]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

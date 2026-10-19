@@ -76,7 +76,6 @@ export async function fetchAllLibraries(
       ? response.data
       : (response.data as any).libraries || (response.data as any).data || [];
 
-
     return {
       libraries,
       totalCount: libraries.length,

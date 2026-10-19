@@ -13,7 +13,10 @@ interface RecommendationCardsProps {
   onSelect: (recommendation: FacilityRecommendation) => void;
 }
 
-export function RecommendationCards({ recommendations, onSelect }: Readonly<RecommendationCardsProps>) {
+export function RecommendationCards({
+  recommendations,
+  onSelect,
+}: Readonly<RecommendationCardsProps>) {
   const { t } = useI18n();
   return (
     <section aria-labelledby='recommendations-title'>

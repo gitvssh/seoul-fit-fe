@@ -49,12 +49,16 @@ export function normalizePlaceName(name: string): string {
   // Split once at closing delimiters so an unclosed run of '(' cannot cause
   // repeated scans. Preserve the original first-opening/first-closing behavior.
   const parts = name.split(')');
-  return normalize(parts.map((part, index) => {
-    if (index === parts.length - 1) return part;
-    const opening = part.indexOf('(');
-    if (opening < 0) return `${part})`;
-    return part.slice(0, opening);
-  }).join(''));
+  return normalize(
+    parts
+      .map((part, index) => {
+        if (index === parts.length - 1) return part;
+        const opening = part.indexOf('(');
+        if (opening < 0) return `${part})`;
+        return part.slice(0, opening);
+      })
+      .join('')
+  );
 }
 
 export function isRainyWeather(weather: WeatherData | null | undefined): boolean {
@@ -179,10 +183,16 @@ const indoorPoints = (facility: Facility, score: number): PresetPoints =>
     ? { score, reasons: ['indoor', 'weather_safe'] }
     : { score: 0, reasons: [] };
 
+const OPEN_PRESET_POINTS = { open: 20, unknown: 8, closed: 0 } as const;
+const RESERVATION_PRESET_POINTS: Partial<Record<Facility['category'], number>> = {
+  cultural_reservation: 10,
+};
+const BIKE_PRESET_POINTS: Partial<Record<Facility['category'], number>> = { bike: 20, park: 16 };
+
 const PRESET_SCORERS: Record<RecommendationContext['preset'], PresetScorer> = {
   none: () => ({ score: 0, reasons: [] }),
   available_now: (_facility, _context, openState) => ({
-    score: openState === 'open' ? 20 : openState === 'unknown' ? 8 : 0,
+    score: OPEN_PRESET_POINTS[openState],
     reasons: [],
   }),
   quiet: (facility, context) => {
@@ -198,13 +208,11 @@ const PRESET_SCORERS: Record<RecommendationContext['preset'], PresetScorer> = {
   today_event: (facility, context) => ({
     score: isEventActiveToday(facility, context.now)
       ? 20
-      : facility.category === 'cultural_reservation'
-        ? 10
-        : 0,
+      : (RESERVATION_PRESET_POINTS[facility.category] ?? 0),
     reasons: [],
   }),
   bike_trip: facility => ({
-    score: facility.category === 'bike' ? 20 : facility.category === 'park' ? 16 : 0,
+    score: BIKE_PRESET_POINTS[facility.category] ?? 0,
     reasons: [],
   }),
   cool_down: facility =>
@@ -266,13 +274,27 @@ export function scoreFacility(
   const reasonCodes: RecommendationReasonCode[] = [];
   const warningCodes: RecommendationWarningCode[] = [];
   const preferred = context.preferredCategories || [];
-  const interest = preferred.length === 0 ? 12 : preferred.includes(facility.category) ? 25 : 0;
+  let interest;
+  if (preferred.length === 0) {
+    interest = 12;
+  } else if (preferred.includes(facility.category)) {
+    interest = 25;
+  } else {
+    interest = 0;
+  }
   if (interest === 25) reasonCodes.push('interest_match');
 
   const distancePoints = distanceScore(distance);
   if (distancePoints >= 15) reasonCodes.push('nearby');
 
-  const open = openState === 'open' ? 15 : openState === 'unknown' ? 7 : 0;
+  let open;
+  if (openState === 'open') {
+    open = 15;
+  } else if (openState === 'unknown') {
+    open = 7;
+  } else {
+    open = 0;
+  }
   if (openState === 'open') reasonCodes.push('open_now');
   if (openState === 'closed') warningCodes.push('closed_now');
   if (openState === 'unknown') warningCodes.push('hours_unknown');

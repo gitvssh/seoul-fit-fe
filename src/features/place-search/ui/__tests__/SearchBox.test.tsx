@@ -274,6 +274,26 @@ describe('SearchBox', () => {
     });
   });
 
+  it('preserves input focus for popup mouse actions and restores it after a button Escape', async () => {
+    const cache = mockCache({
+      searchHistory: [{ id: 'h1', query: '서울숲', timestamp: 1 }],
+    });
+    render(<Harness />);
+    const user = userEvent.setup();
+    await user.click(combobox());
+    const remove = await screen.findByRole('button', { name: '서울숲 검색 기록 삭제' });
+
+    await user.click(remove);
+    expect(cache.removeFromHistory).toHaveBeenCalledWith('h1');
+    expect(combobox()).toHaveFocus();
+
+    act(() => remove.focus());
+    fireEvent.keyDown(remove, { key: 'Escape' });
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(combobox()).toHaveFocus();
+    expect(combobox()).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('shows a loading skeleton instead of "no results" while the index loads', async () => {
     mockCache({ isLoading: true, search: jest.fn(() => []) });
     render(<Harness />);

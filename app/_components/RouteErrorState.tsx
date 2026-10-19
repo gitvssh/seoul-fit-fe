@@ -19,7 +19,12 @@ export interface RouteErrorStateProps {
  * Shared body for route error boundaries: an honest message, a retry that
  * re-renders the failed segment, a way back to the map, and the digest for support.
  */
-export function RouteErrorState({ error, reset, title, description }: Readonly<RouteErrorStateProps>) {
+export function RouteErrorState({
+  error,
+  reset,
+  title,
+  description,
+}: Readonly<RouteErrorStateProps>) {
   const { t } = useI18n();
 
   useEffect(() => {

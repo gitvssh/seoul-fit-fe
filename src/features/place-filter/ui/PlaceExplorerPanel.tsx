@@ -143,9 +143,7 @@ export function PlaceExplorerPanel({
       {compact ? null : (
         <>
           {naturalLanguageSummary && (
-            <output
-              className='block rounded-md bg-accent px-3 py-2 text-caption text-accent-foreground'
-            >
+            <output className='block rounded-md bg-accent px-3 py-2 text-caption text-accent-foreground'>
               {t('explorer.ruleApplied', { summary: naturalLanguageSummary })}
             </output>
           )}

@@ -51,12 +51,14 @@ export function MapStatusChip({
   }
 
   if (geolocationBanner !== 'none') {
-    const messageKey: MessageKey =
-      geolocationBanner === 'denied'
-        ? 'map.status.locationDenied'
-        : geolocationBanner === 'unavailable'
-          ? 'map.status.locationUnavailable'
-          : 'map.status.locationPrompt';
+    let messageKey: MessageKey;
+    if (geolocationBanner === 'denied') {
+      messageKey = 'map.status.locationDenied';
+    } else if (geolocationBanner === 'unavailable') {
+      messageKey = 'map.status.locationUnavailable';
+    } else {
+      messageKey = 'map.status.locationPrompt';
+    }
     return (
       <output className={base}>
         <MapPinOff className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />

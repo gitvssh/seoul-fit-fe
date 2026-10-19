@@ -1,5 +1,5 @@
 // hooks/useFacilities.ts
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Facility } from '@/lib/types';
 
 export interface UseFacilitiesOptions {

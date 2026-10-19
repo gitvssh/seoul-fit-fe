@@ -157,6 +157,11 @@ export const loadKakaoSdk = ({
       resolve(maps);
     };
 
+    const isSettled = () => settled;
+    const waitUntilReady = (loaded: KakaoMapsAPI) => {
+      waitForLibraries(loaded, libraries, () => succeed(loaded), isSettled);
+    };
+
     const initialize = () => {
       const maps = getPendingKakaoMaps();
       if (!maps) {
@@ -170,12 +175,7 @@ export const loadKakaoSdk = ({
           fail('sdk_load_failed');
           return;
         }
-        waitForLibraries(
-          loaded,
-          libraries,
-          () => succeed(loaded),
-          () => settled
-        );
+        waitUntilReady(loaded);
       });
     };
 

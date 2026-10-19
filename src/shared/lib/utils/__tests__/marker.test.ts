@@ -80,13 +80,13 @@ describe('createFacilityMarkerElement', () => {
     expect(element.getAttribute('aria-current')).toBe('true');
     expect(element.tabIndex).toBe(0);
 
-    setFacilityMarkerSelected(element, false);
+    setFacilityMarkerSelected(element, { selected: false });
     expect(element.dataset.selected).toBeUndefined();
     expect(element.hasAttribute('aria-current')).toBe(false);
     expect(element.tabIndex).toBe(-1);
     expect(element.querySelector('.sf-marker__pin')).toBe(pin);
 
-    setFacilityMarkerHidden(element, true);
+    setFacilityMarkerHidden(element, { hidden: true });
     expect(element.dataset.hidden).toBe('');
   });
 
@@ -113,9 +113,9 @@ describe('createFacilityMarkerElement', () => {
     expect(element.dataset.enter).toBeUndefined();
 
     // 선택을 풀었다가 다시 고르면 다시 한 번 재생한다.
-    setFacilityMarkerSelected(element, false);
+    setFacilityMarkerSelected(element, { selected: false });
     expect(element.dataset.enter).toBeUndefined();
-    setFacilityMarkerSelected(element, true);
+    setFacilityMarkerSelected(element, { selected: true });
     expect(element.dataset.enter).toBe('');
   });
 

@@ -135,6 +135,49 @@ export function ActivityPlanner({
     }
   };
 
+  let planContent;
+  if (plan) {
+    planContent = (
+      <div className='rounded-lg border border-border bg-card p-3 shadow-float-sm'>
+        <p className='flex items-center gap-1.5 text-body-sm font-semibold tabular-nums text-foreground'>
+          <CalendarClock className='size-4 shrink-0 text-primary' aria-hidden='true' />
+          {t('activity.summary', {
+            budget: plan.budgetMinutes,
+            count: plan.stops.length,
+            travel: plan.travelMinutes,
+            stay: plan.stayMinutes,
+          })}
+        </p>
+        <ol className='mt-3 space-y-2' aria-label={t('activity.result')}>
+          {plan.stops.map((stop, index) => (
+            <StopItem
+              key={`${stop.order}:${stop.facility.category}:${stop.facility.id}`}
+              stop={stop}
+              index={index}
+              onSelect={onStopSelect}
+            />
+          ))}
+        </ol>
+        <ul className='mt-3 space-y-1'>
+          {plan.warningCodes.map(code => (
+            <li key={code} className='flex gap-1.5 text-caption text-muted-foreground'>
+              <Info className='mt-0.5 size-3.5 shrink-0' aria-hidden='true' />
+              <span>{t(WARNING_KEYS[code])}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  } else if (hasTried) {
+    planContent = (
+      <p className='rounded-lg bg-muted px-3 py-4 text-center text-body-sm text-muted-foreground'>
+        {t('activity.empty')}
+      </p>
+    );
+  } else {
+    planContent = null;
+  }
+
   return (
     <section className='mt-3 border-t border-border pt-3' aria-labelledby='activity-plan-title'>
       <h3 id='activity-plan-title' className='flex items-center gap-1.5 text-section'>
@@ -174,41 +217,7 @@ export function ActivityPlanner({
       </div>
 
       <div className='mt-3' aria-live='polite'>
-        {plan ? (
-          <div className='rounded-lg border border-border bg-card p-3 shadow-float-sm'>
-            <p className='flex items-center gap-1.5 text-body-sm font-semibold tabular-nums text-foreground'>
-              <CalendarClock className='size-4 shrink-0 text-primary' aria-hidden='true' />
-              {t('activity.summary', {
-                budget: plan.budgetMinutes,
-                count: plan.stops.length,
-                travel: plan.travelMinutes,
-                stay: plan.stayMinutes,
-              })}
-            </p>
-            <ol className='mt-3 space-y-2' aria-label={t('activity.result')}>
-              {plan.stops.map((stop, index) => (
-                <StopItem
-                  key={`${stop.order}:${stop.facility.category}:${stop.facility.id}`}
-                  stop={stop}
-                  index={index}
-                  onSelect={onStopSelect}
-                />
-              ))}
-            </ol>
-            <ul className='mt-3 space-y-1'>
-              {plan.warningCodes.map(code => (
-                <li key={code} className='flex gap-1.5 text-caption text-muted-foreground'>
-                  <Info className='mt-0.5 size-3.5 shrink-0' aria-hidden='true' />
-                  <span>{t(WARNING_KEYS[code])}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : hasTried ? (
-          <p className='rounded-lg bg-muted px-3 py-4 text-center text-body-sm text-muted-foreground'>
-            {t('activity.empty')}
-          </p>
-        ) : null}
+        {planContent}
       </div>
     </section>
   );
